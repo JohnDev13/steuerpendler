@@ -56,12 +56,15 @@ export async function buildProfile(sources: Sources, civil: Civil, kids: number)
   const representatives = new Map<string, TaxLocation>();
   for (const loc of sources.locations) if (!representatives.has(loc.Canton)) representatives.set(loc.Canton, loc);
   const cantons: Record<string, TaxRow[]> = {};
+  const precision: Record<string, import('../../src/tax').PreciseCanton> = {};
+  const { compilePrecision } = await import('./precision');
   for (const [canton, loc] of [...representatives].sort(([a], [b]) => a.localeCompare(b, 'en'))) {
     const rows: TaxRow[] = [];
     for (let i = 0; i < INCOMES.count; i++) rows.push(await buildRow(makeInput(loc, civil, kids, INCOMES.from + i * INCOMES.step)));
     cantons[canton] = rows;
+    precision[canton] = await compilePrecision(makeInput(loc,civil,kids,120000));
   }
-  return { meta: { ...metadata(), civil, kids, incomes: INCOMES }, cantons };
+  return { meta: { ...metadata(), schemaVersion: 2, civil, kids, incomes: INCOMES }, cantons, precision };
 }
 
 export function buildGemeinden(sources: Sources) {

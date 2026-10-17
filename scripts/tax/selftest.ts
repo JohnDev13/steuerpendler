@@ -4,9 +4,11 @@ import { pathToFileURL } from 'node:url';
 import { createHash } from 'node:crypto';
 import type { TaxLocation } from '../../vendor/swisstaxcalculator/lib/taxes/typesClient';
 import { calculateTaxesIncomeAndFortune } from '../../vendor/swisstaxcalculator/lib/taxes/income';
+import { reconstructPrecision } from './reconstruct';
+import type { PreciseCanton } from '../../src/tax';
 import { ROOT, SOURCE, INCOMES, loadSources, makeInput, type Gemeinde, type TaxRow, type Sources, type Civil, type Church } from './build';
 
-export interface Profile { meta: { year: number; incomes: typeof INCOMES }; cantons: Record<string, TaxRow[]> }
+export interface Profile { meta: { year: number; incomes: typeof INCOMES }; cantons: Record<string, TaxRow[]>; precision?:Record<string,PreciseCanton> }
 export interface Artifacts { profiles: Record<string, Profile>; gemeinden: Record<string, Gemeinde>; sha256: Record<string, string> }
 
 export async function loadArtifacts(directory = `${ROOT}site/data`): Promise<Artifacts> {
@@ -41,7 +43,13 @@ export function reconstruct(artifacts: Artifacts, sample: Sample): number {
   if (!rows?.[i] || !rows[i + 1]) throw new Error(`Missing profile ${sample.civil}-${sample.kids}/${g[1]}`);
   const row = rows[i].map((v, k) => v + (rows[i + 1][k] - v) * t);
   const rateChurch = sample.church === 'reformed' ? g[4] : sample.church === 'catholic' ? g[5] : 0;
-  const total = row[0] + row[1] * g[2] / 100 + row[1] * g[3] / 100 + row[1] * rateChurch / 100 + row[2];
+  const precise=artifacts.profiles[`${sample.civil}-${sample.kids}`].precision?.[g[1]];
+  if(precise&&t!==0&&t!==1)return reconstructPrecision(precise,sample.income,[g[2],g[3],rateChurch]);
+  // Separate monetary rounding at each final component, ties to even.
+  const round=(v:number)=>{const f=Math.floor(v);return Math.abs(v-f-.5)<1e-8?(f%2===0?f:f+1):Math.round(v);};
+  const r=precise?round:(v:number)=>v;
+  const churchRate=precise?Math.round(rateChurch/precise.persons*100)/100*precise.persons:rateChurch;
+  const total = row[0] + r(row[1] * g[2] / 100) + r(row[1] * g[3] / 100) + r(row[1] * churchRate / 100) + row[2];
   if (!Number.isFinite(total)) throw new Error('Nonfinite reconstructed total');
   return total;
 }
