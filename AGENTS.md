@@ -1,0 +1,3 @@
+# Steuerpendler reconstruction
+
+Read SPEC.md fully. This is a reconstruction, not recovery of the lost commit. Never manufacture ESTV/SBB reference values or real travel files. No backend, cookies, analytics or user accounts. Keep official checks and owner approvals pending until evidenced. Use one branch per task; do not push main. No remote repository may be created implicitly: O4 is owner-controlled. Follow test-first RED/GREEN for new functions. Record all vendor modifications in STEUERPENDLER-PATCHES.md. Data schema changes must update SPEC.md. Branches and local tests do not mean CI/PR or official acceptance has passed. The original docs/prototype.html is unavailable: never claim pixel fidelity.
