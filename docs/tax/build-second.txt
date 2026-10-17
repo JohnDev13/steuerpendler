@@ -1,0 +1,9 @@
+Wrote tax-2026-s-0.json: 26 cantons × 461 rows
+Wrote tax-2026-s-1.json: 26 cantons × 461 rows
+Wrote tax-2026-s-2.json: 26 cantons × 461 rows
+Wrote tax-2026-s-3.json: 26 cantons × 461 rows
+Wrote tax-2026-m-0.json: 26 cantons × 461 rows
+Wrote tax-2026-m-1.json: 26 cantons × 461 rows
+Wrote tax-2026-m-2.json: 26 cantons × 461 rows
+Wrote tax-2026-m-3.json: 26 cantons × 461 rows
+Wrote gemeinden-2026.json: 2110 authentic BFS IDs; official verification pending
