@@ -29,7 +29,7 @@ Five targeted anonymous POSTs to the official `API_calculateTaxBudget` endpoint 
 | 90,721 | 3,213 | first franc above boundary; whole-CHF rounding |
 | 500,000 | 17,538 | requested upper bound |
 
-Raw probe responses are retained at `/tmp/estv-bvg-{income}.json` for this worker run; they are not repository fixtures or approvals.
+Two further anonymous official-budget probes on 2026-10-17 tested exact half-franc candidates: CHF 40,010 gives raw CHF 677.50 and returned CHF 678; CHF 90,820 gives raw CHF 3,216.50 and returned CHF 3,217. Both returned HTTP 200, establishing half-up rather than half-even for this profile. `tests/reference/bvg-rounding.json` preserves each exact request body, exact response body, URL, UTC timestamp, status, and SHA-256 hashes. These sampled responses evidence observed calculator behavior; they are not a published backend source or an approval.
 
 ## Statutory minimum versus ESTV assumption
 
@@ -39,7 +39,7 @@ The additional **3.5% of gross salary above CHF 90,720** is not part of that sta
 
 ## Boundaries and rounding
 
-Within CHF 40,000–90,720 the first term is 5% of `x − 26,460`. Above CHF 90,720, CHF 3,213 is retained and 3.5% of excess income is added. ESTV rounds the final annual result to whole CHF; the captures and probes are consistent with half-up rounding (for example 75,000 → 2,427.00 and 95,000 → 3,362.80 → 3,363). No curve was fitted silently: the legal coordinated-salary boundaries supply the break, while official ESTV observations establish its separate excess-income assumption.
+Within CHF 40,000–90,720 the first term is 5% of `x − 26,460`. Above CHF 90,720, CHF 3,213 is retained and 3.5% of excess income is added. ESTV rounds the final annual result to whole CHF, with exact ties rounded up: 40,010 → 677.50 → 678 and 90,820 → 3,216.50 → 3,217. No curve was fitted silently: the legal coordinated-salary boundaries supply the break, while sampled official ESTV observations establish its separate excess-income assumption. The sampled rule must not be described as published backend logic.
 
 ## Sources
 
