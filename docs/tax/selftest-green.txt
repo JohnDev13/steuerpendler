@@ -1,0 +1,14 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (scripts/tax/vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v5.0.5 /home/hermes/projects/steuerpendler-tax
+
+ ✓ scripts/tax/selftest.test.ts (2 tests) 937ms
+   ✓ runner evaluates files against the full engine and fails closed on a corrupted artifact 907ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  23:21:04
+   Duration  1.18s (tests 88%, import 11%, transform 1%)
+
