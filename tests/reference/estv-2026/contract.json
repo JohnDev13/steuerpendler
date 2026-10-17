@@ -1,0 +1,43 @@
+{
+  "bundle_url": "https://swisstaxcalculator.estv.admin.ch/assets/index-BjwCt7r_.js",
+  "bundle_sha256": "3ff4786e1bc412fca341e986dfafbc03b6df69e303caec54d6fc6c7f23aff587",
+  "retrieved_utc": "2026-10-17T10:58:06.796164+00:00",
+  "snippets": [
+    {
+      "offset": 231596,
+      "text": "e[e.SINGLE=1]=`SINGLE`,e[e.MARRIED=2]=`MARRIED`,e[e.CONCUBINAGE=3]=`CONCUBINAGE`,e[e.REGISTRED_PARTNERSHIP=4]=`REGISTRED_PARTNERSHIP`,e}({}),ai=function(e){return e[e.NOT_AVAILABLE=0]=`NOT_AVAILABLE`,e[e.EMPLOYED=1]=`EMPLOYED`,e[e.SELF_EMPLOYED=2]=`SELF_EMPLOYED`,e[e.PENSIONER=3]=`PENSIONER`,e[e.UNEMPLOYED=4]=`UNEMPLOYED`,e}({}),oi=function(e){return e.USER_LANG=`user-lang`,e}("
+    },
+    {
+      "offset": 228021,
+      "text": "e[e.REFORMED=1]=`REFORMED`,e[e.ROMAN_CATHOLIC=2]=`ROMAN_CATHOLIC`,e[e.CHRIST_CATHOLIC=3]=`CHRIST_CATHOLIC`,e[e.NO_CONFESSION=4]=`NO_CONFESSION`,e[e.OTHERS=5]=`OTHERS`,e}({}),ei=function(e){return e.DEV=`DEV`,e.TEST=`TEST"
+    },
+    {
+      "offset": 797402,
+      "text": "function lb(e){let t=null;if(e==null||e===ri.TAXABLE)return null;switch(e){case ni.BRUTTO:t=ai.EMPLOYED;break;case ni.NETTO:t=ai.SELF_EMPLOYED;break;case ni.RETIREMENT:t=ai.PENSIONER;break;case ni.OTHER:t=ai.UNEMPLOYED;break;case ni.NONE:t=0;break;default:}return t}function ub(e){return(e.incomeBudgetsVisible==null?[]:e.incomeBudgetsVisible).concat(e.expendi"
+    },
+    {
+      "offset": 797259,
+      "text": "function sb(e,t){let n=[];return e&&t!=null&&(n=t.map(e=>({Age:K(e,0)}))),n}function cb(e){return e===ii.MARRIED||e===ii.REGISTRED_PARTNERSHIP}function lb(e){let t=null;if(e==null||e===ri.TAXABLE)retu"
+    },
+    {
+      "offset": 83623,
+      "text": "function Ms(e,t){try{console.error(t.value)}catch(e){setTimeout(function(){throw e})}}var Ns=typeof WeakMap==`function`?WeakMap:Map;function Ps(e,t,n){n=ao(-1,n),n.tag=3,n.payload={element:null};var r=t.value;return n.callback=function(){dl||(dl=!0,fl=r),Ms(e,t)},n}function Fs(e,t,n){n=ao(-1,n),n.tag=3;var r=e.type.getDerivedStateFromError;if(typeof r==`function`){var i=t.value;n.payload=function(){return r(i)},n.callback=function(){Ms(e,t)}}var a=e.stateNode;return a!==null&&typeof a.componentDidCatch==`function`&&(n.callback=function(){Ms(e,t),typeof r!=`function`&&(pl===null?pl=new Set([this]):pl.add(this));var n=t.stack;this.componentDidCatch(t.value,{componentStack:n===null?``:n})}),n}function Is(e,t,n){var r=e.pingCache;if(r===null){r=e.pingCache=new Ns;var i=new Set;r.set(t,i)}else i=r.get(t),i===void 0&&(i=new Set,r.set(t,i));i.has(n)||(i.add(n),e=ql.bind(null,e,t,n),t.then(e,e))}function Ls(e){do{var t;if((t=e.tag===13)&&(t=e.memoizedState,t=t===null?!0:t.dehydrated!==null),t)return e;e=e.return}while(e!==null);return null}function Rs(e,t,n,r,i){return e.mode&1?(e.flags|=65536,e.lanes=i,e):(e===t?e.flags|=65536:(e.flags|=128,n.flags|=131072,n.flags&=-52805,n.tag===1&&(n.alternate===null?n.tag=17:(t=ao(-1,1),t.tag=2,oo(n,t,1))),n.lanes|=1),e)}var zs=C.ReactCurrentOwner,W=!1;function Bs(e,t,n,r){t.child=e===null?Ha(t,null,n,r):Va(t,e.child,n,r)}function Vs(e,t,n,r,i){n=n.render;var a=t.ref;return Xa(t,i),r=Lo(e,t,n,r,a,i),n=Ro(),e!==null&&!W?(t.updateQueue=e.updateQueu"
+    },
+    {
+      "offset": 1041397,
+      "text": "qe=()=>{let t={};if(Te()){t.SimKey=e.simulation==null?null:e.simulation.SimKey,t.TaxYear=K(e.TaxYear,new Date().getFullYear()),t.TaxLocationID=e.taxLocation==null?0:e.taxLocation.TaxLocationID,t.Relationship=e.Relationship==null?ii.SINGLE:e.Relationship,t.Confession1=e.Confession1==null?R.ROMAN_CATHOLIC:e.Confession1,t.Children=sb(e.hasChildren,e.childrenAge),t.Age1=K(e.Age1,0);let n=lb(e.incomeType1);t.RevenueType1=n??ai.EMPLOYED,t.Revenue1=e.income1!=null&&n!=null&&n>0?e.income1:0,t.Fortune=e.fortune==null?0:e.fortune,cb(t.Relationship)?(t.Confession2=e.Confession2==null?R.ROMAN_CATHOLIC:e.Confession2,t.Age2=K(e.Age2,0),n=lb(e.incomeType2),t.RevenueType2=n??ai.EMPLOYED,t.Revenue2=e.income2!=null&&n!=null&&n>0?e.income2:0):(t.Confession2=0,t.Age2=0,t.RevenueType2=0,t.Revenue2=0),e.calculatorMode===Wb.DETAILED_TAX?(t.Fortune=0,t.Budget=ub(e.budget)):(t.Fortune=e.fortune==null?0:e.fortune,t.Budget=[])}return t},Je=()=>{let t={};if(Te()){t.SimKey=e.simulation==null?null:e.simulation.SimKey,t.TaxYear=K(e.TaxYear,new Date().getFullYear()),t.TaxGroupID=e.taxLocation!=null&&e.taxLocation.TaxLocationID!=null?e.taxLocation.TaxLocationID:EE(e.taxLocation==null?null:e.taxLocation.Canton),t.Relationship=e.Relationship==null?ii.SINGLE:e.Relationship,t.Confession1=e.Confession1==null?R.ROMAN_CATHOLIC:e.Confession1,t.Children=sb(e.hasChildren,e.childrenAge),t.Age1=K(e.Age1,0);let n=lb(e.inco"
+    },
+    {
+      "offset": 819148,
+      "text": ",isRelationshipTouched:!1,hasPartner:!1,Age1:35,Age2:35,hasChildren:null,isHasChildrenTouched:!1,childrenAge:[],Confessi"
+    }
+  ],
+  "spec_sha256": "b63c1249507fca42005ec1f54eb3f97604912855b13f659e33aba906e32bce03",
+  "source_revision": "4361c1ca8b4f0ba9ea13285b04719cf15cc89992",
+  "approvals": {
+    "child_age_10": "owner_pending",
+    "partner_age_35_same_confession": "owner_pending",
+    "default_budget_comparability": "owner_pending",
+    "official_frontend_gate": "pending"
+  }
+}

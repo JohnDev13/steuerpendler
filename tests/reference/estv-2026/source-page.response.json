@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <meta name="theme-color" content="#000000">
+        <link rel="manifest" href="/manifest.json">
+        <!-- Favicons -->
+        <link rel="apple-touch-icon-precomposed" sizes="57x57" href="/img/ico/apple-touch-icon-57x57.png">
+        <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/img/ico/apple-touch-icon-114x114.png">
+        <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/img/ico/apple-touch-icon-72x72.png">
+        <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/img/ico/apple-touch-icon-144x144.png">
+        <link rel="apple-touch-icon-precomposed" sizes="60x60" href="/img/ico/apple-touch-icon-60x60.png">
+        <link rel="apple-touch-icon-precomposed" sizes="120x120" href="/img/ico/apple-touch-icon-120x120.png">
+        <link rel="apple-touch-icon-precomposed" sizes="76x76" href="/img/ico/apple-touch-icon-76x76.png">
+        <link rel="apple-touch-icon-precomposed" sizes="152x152" href="/img/ico/apple-touch-icon-152x152.png">
+        <link rel="icon" type="image/png" href="/img/ico/favicon-196x196.png" sizes="196x196">
+        <link rel="icon" type="image/png" href="/img/ico/favicon-96x96.png" sizes="96x96">
+        <link rel="icon" type="image/png" href="/img/ico/favicon-32x32.png" sizes="32x32">
+        <link rel="icon" type="image/png" href="/img/ico/favicon-16x16.png" sizes="16x16">
+        <link rel="icon" type="image/png" href="/img/ico/favicon-128.png" sizes="128x128">
+        <link id="favicon" rel="shortcut icon" href="/img/ico/favicon.ico" type="image/vnd.microsoft.icon">
+        <meta name="msapplication-TileImage" content="/img/ico/mstile-144x144.png">
+        <meta name="msapplication-square70x70logo" content="/img/ico/mstile-70x70.png">
+        <meta name="msapplication-square150x150logo" content="/img/ico/mstile-150x150.png">
+        <meta name="msapplication-wide310x150logo" content="/img/ico/mstile-310x150.png">
+        <meta name="msapplication-square310x310logo" content="/img/ico/mstile-310x310.png">
+        <meta name="description" content="Mit diesem Online-Tool kann man Individuelle Steuerberechnungen, historische Steuerbelastungsstatistiken und kantonale Steuerdaten interaktiv generieren.">
+        <meta property="og:description" content="Mit diesem Online-Tool kann man Individuelle Steuerberechnungen, historische Steuerbelastungsstatistiken und kantonale Steuerdaten interaktiv generieren.">
+        <meta name="keywords" content="Steuerrechner, Steuern berechnen, Steuern vergleichen, Steuern optimieren, Swisstaxcalculator">
+        <style>@font-face{font-family:'Roboto';font-style:normal;font-weight:300;font-display:swap;src:url(https://fonts.gstatic.com/s/roboto/v30/KFOlCnqEu92Fr1MmSU5fBBc4AMP6lQ.woff2) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;}@font-face{font-family:'Roboto';font-style:normal;font-weight:400;font-display:swap;src:url(https://fonts.gstatic.com/s/roboto/v30/KFOmCnqEu92Fr1Mu4mxKKTU1Kg.woff2) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;}@font-face{font-family:'Roboto';font-style:normal;font-weight:500;font-display:swap;src:url(https://fonts.gstatic.com/s/roboto/v30/KFOlCnqEu92Fr1MmEU9fBBc4AMP6lQ.woff2) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;}</style>
+        <title>ESTV Steuerrechner</title>
+      <script type="module" crossorigin src="/assets/index-BjwCt7r_.js"></script>
+      <link rel="stylesheet" crossorigin href="/assets/index-5uHXISUW.css">
+    </head>
+    <body>
+        <noscript>
+            You need to enable JavaScript to run this app.
+        </noscript>
+        <div id="root" class="root"></div>
+    </body>
+</html>
