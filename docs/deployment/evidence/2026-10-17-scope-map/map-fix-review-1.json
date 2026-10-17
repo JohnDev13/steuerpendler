@@ -1,0 +1,41 @@
+{
+  "status": "fixed_and_verified",
+  "role": "independent_fix_agent",
+  "root_cause": "Click suppression expired 500 ms after the last pointer movement, allowing a drag held stationary for 650 ms before release to select the captured municipality.",
+  "fix": "Track moved/pinched state for the entire active pointer gesture. Start the existing 500 ms compatibility-click suppression window only on final pointer release. Ignore duplicate release events. Reset suppression on a fresh gesture; keyboard clicks remain exempt through detail=0.",
+  "files_changed": [
+    "/home/hermes/projects/steuerpendler-destinations/src/map-navigation.ts",
+    "/home/hermes/projects/steuerpendler-destinations/tests/e2e/map-navigation.spec.ts"
+  ],
+  "report_created": "/home/hermes/artifacts/steuerpendler-update/map-fix-review-1.json",
+  "tests": {
+    "red": {
+      "command": "PAGES_BASE=/steuerpendler/ LD_LIBRARY_PATH=/home/hermes/.cache/steuerpendler-browser-deps/root/usr/lib/x86_64-linux-gnu npx playwright test tests/e2e/map-navigation.spec.ts -g 'drag held stationary'",
+      "workdir": "/home/hermes/projects/steuerpendler-destinations",
+      "exit_code": 1,
+      "outcome": "Expected regression failure before production changes: viewport panned, but selected municipality changed from BFS 261 to BFS 6792 after a 650 ms stationary hold. One test failed."
+    },
+    "green": {
+      "command": "PAGES_BASE=/steuerpendler/ LD_LIBRARY_PATH=/home/hermes/.cache/steuerpendler-browser-deps/root/usr/lib/x86_64-linux-gnu npx playwright test",
+      "workdir": "/home/hermes/projects/steuerpendler-destinations",
+      "exit_code": 0,
+      "outcome": "14 passed (17.7s): all 13 existing E2E tests plus the new stationary-drag regression. Includes ordinary municipality mouse selection, keyboard zoom/reset/selection, wheel/pan, real CDP pinch/touch, 19 workplaces and all-residence scope checks. Configured web server rebuilt production output with TypeScript checking."
+    },
+    "diff_check": {
+      "command": "git diff --check",
+      "exit_code": 0,
+      "outcome": "No whitespace errors."
+    }
+  },
+  "scope": {
+    "commits": false,
+    "staging": false,
+    "refactors": false,
+    "data_or_scope_changes": false,
+    "notes": "Only the two authorized source/test files were explicitly edited, plus this requested external report. Existing staged work and previously modified generated manifests were left untouched. README.md and SPEC.md acquired additional unstaged changes during execution; this agent did not edit either file. Playwright generated ignored build/test artifacts."
+  },
+  "issues": [
+    "execute_code was blocked by the runtime approval policy before making any calls; normal tools used instead.",
+    "Multi-file patch mode failed with an internal fuzzy_match import error without applying changes; targeted replace mode succeeded."
+  ]
+}

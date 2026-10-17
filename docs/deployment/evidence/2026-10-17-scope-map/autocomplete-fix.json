@@ -1,0 +1,36 @@
+{
+  "status": "passed",
+  "task": "Review round 2 autocomplete touch selection and stale ARIA regression fixes",
+  "repository": "/home/hermes/projects/steuerpendler-destinations",
+  "files_modified": ["src/municipality-search.ts", "tests/e2e/destinations.spec.ts"],
+  "report_created": "/home/hermes/artifacts/steuerpendler-update/autocomplete-fix.json",
+  "staged_or_committed": false,
+  "existing_staged_changes_preserved": true,
+  "implementation": {
+    "selection": "Pointerdown no longer selects. Only completed click selects pointer options. Mouse pointerdown prevents focus loss; mousedown also prevents compatibility mouse-event focus loss after a completed touch tap. Touch pointerdown is not prevented, allowing native scroll cancellation.",
+    "aria": "Remove aria-activedescendant when refreshing the candidate list, alongside resetting the active index.",
+    "keyboard": "Existing ArrowUp/ArrowDown/Enter/Escape handling unchanged.",
+    "candidate_sources": "Unchanged: all 2110 residential candidates, 19 workplace candidates, and 2113 geographic paths. Existing E2E assertions passed."
+  },
+  "commands": [
+    {"command": "git status --short", "exit_code": 0, "purpose": "Confirm existing parent-owned staged changes before touching only the two allowed files."},
+    {"command": "LD_LIBRARY_PATH=/home/hermes/.cache/steuerpendler-browser-deps/root/usr/lib/x86_64-linux-gnu PAGES_BASE=/steuerpendler/ npx playwright test tests/e2e/destinations.spec.ts --grep 'real touch|refreshing input'", "phase": "RED", "exit_code": 1, "total": 2, "failed": 2, "passed": 0},
+    {"command": "LD_LIBRARY_PATH=/home/hermes/.cache/steuerpendler-browser-deps/root/usr/lib/x86_64-linux-gnu PAGES_BASE=/steuerpendler/ npx playwright test", "phase": "GREEN", "exit_code": 0, "total": 16, "passed": 16, "failed": 0, "reported_duration_seconds": 21.1},
+    {"command": "git diff -- src/municipality-search.ts tests/e2e/destinations.spec.ts && git diff --name-only", "exit_code": 0, "unstaged_modified_files": ["src/municipality-search.ts", "tests/e2e/destinations.spec.ts"]}
+  ],
+  "red": {
+    "touch": {"test": "real touch swipe scrolls options without selecting; completed tap selects", "failure": "Immediately after genuine CDP touchStart, expected empty input but received Basel. The implementation selected on pointerdown before the swipe could proceed."},
+    "aria": {"test": "refreshing input clears stale active descendant and mouse selection works", "failure": "After ArrowDown followed by input refresh to Bern, expected null aria-activedescendant but received workplace-option-4001."}
+  },
+  "green": {
+    "new_regressions": 2,
+    "touch_evidence": ["Real browser context hasTouch=true, actual CDP Input.dispatchTouchEvent touchStart/touchMove/touchEnd sequence", "Input remains empty after touchStart and completed swipe", "Popup remains visible and actual scrollTop becomes positive", "Observed pointerdown has pointerType touch", "Swipe produces no click", "Completed locator.tap on Aarau produces a click, selects Aarau, closes the popup and updates the workplace map marker"],
+    "aria_mouse_evidence": ["ArrowDown sets active descendant", "Input refresh removes active descendant", "Mouse click selects Bern and updates its workplace marker"],
+    "full_suite": ["controls.spec.ts: 1 passed", "destinations.spec.ts: 4 passed", "map-navigation.spec.ts: 5 passed", "pages.spec.ts: 5 passed", "smoke.spec.ts: 1 passed"],
+    "total": 16,
+    "passed": 16,
+    "failed": 0
+  },
+  "issues": [],
+  "scope_notes": ["No refactor, commit, staging, or other authored repository changes.", "Playwright/build commands generate normal ignored build/test artifacts.", "Local E2E success does not establish official tax, travel, CI, or launch acceptance."]
+}

@@ -1,0 +1,269 @@
+{
+  "url": "https://johndev13.github.io/steuerpendler/",
+  "checked": "2026-10-17T10:37:40.833Z",
+  "browser": "156.0.8078.4",
+  "status": "passed_preview_checks_not_production_acceptance",
+  "initialTransferBytes": 377151,
+  "initialRequests": [
+    {
+      "url": "https://johndev13.github.io/steuerpendler/",
+      "method": "GET"
+    },
+    {
+      "url": "https://johndev13.github.io/steuerpendler/assets/index.html-sf-Mli3v.js",
+      "method": "GET"
+    },
+    {
+      "url": "https://johndev13.github.io/steuerpendler/assets/index-D-XGJ7UR.css",
+      "method": "GET"
+    },
+    {
+      "url": "https://johndev13.github.io/steuerpendler/data/gemeinden-2026.json?v=02e571458ba6c8ad172f984dfc0b89b6e8e52b2b5b90c78208ccfb16799e31b9",
+      "method": "GET"
+    },
+    {
+      "url": "https://johndev13.github.io/steuerpendler/data/map/switzerland-2026.json?v=02e571458ba6c8ad172f984dfc0b89b6e8e52b2b5b90c78208ccfb16799e31b9",
+      "method": "GET"
+    },
+    {
+      "url": "https://johndev13.github.io/steuerpendler/data/tax-2026-s-0.json?v=02e571458ba6c8ad172f984dfc0b89b6e8e52b2b5b90c78208ccfb16799e31b9",
+      "method": "GET"
+    }
+  ],
+  "initialResponses": [
+    {
+      "id": "A81735366A88DC6AD7C9A11FAC7206B5",
+      "url": "https://johndev13.github.io/steuerpendler/",
+      "status": 200,
+      "mime": "text/html",
+      "headers": {
+        "accept-ranges": "bytes",
+        "access-control-allow-origin": "*",
+        "age": "0",
+        "cache-control": "max-age=600",
+        "content-encoding": "gzip",
+        "content-length": "351",
+        "content-type": "text/html; charset=utf-8",
+        "date": "Sat, 17 Oct 2026 10:37:37 GMT",
+        "etag": "W/\"6ad34fcf-230\"",
+        "expires": "Sat, 17 Oct 2026 10:47:37 GMT",
+        "last-modified": "Sat, 17 Oct 2026 10:37:03 GMT",
+        "server": "GitHub.com",
+        "strict-transport-security": "max-age=31556952",
+        "vary": "Accept-Encoding",
+        "via": "1.1 varnish",
+        "x-cache": "MISS",
+        "x-cache-hits": "0",
+        "x-fastly-request-id": "572273f721a408821510ae8dc1dc9e4ccff5aafd",
+        "x-github-edge-region": "fra",
+        "x-github-request-id": "3BD0:3228B2:283E001:28AE486:6AD34FF1",
+        "x-proxy-cache": "MISS",
+        "x-served-by": "cache-fra-etou8220125-FRA",
+        "x-timer": "S1792233457.397196,VS0,VE114"
+      },
+      "encodedBytes": 770
+    },
+    {
+      "id": "1518065.3",
+      "url": "https://johndev13.github.io/steuerpendler/assets/index-D-XGJ7UR.css",
+      "status": 200,
+      "mime": "text/css",
+      "headers": {
+        "x-fastly-request-id": "b27e2063a7272ab73773f6224927b7da16fa7a1e",
+        "content-encoding": "gzip",
+        "etag": "W/\"6ad34fcf-22bd\"",
+        "age": "0",
+        "x-github-request-id": "DDDA:27AD18:279DF43:280E417:6AD34FF1",
+        "expires": "Sat, 17 Oct 2026 10:47:37 GMT",
+        "x-proxy-cache": "MISS",
+        "x-cache": "MISS",
+        "date": "Sat, 17 Oct 2026 10:37:37 GMT",
+        "content-type": "text/css; charset=utf-8",
+        "last-modified": "Sat, 17 Oct 2026 10:37:03 GMT",
+        "x-served-by": "cache-fra-etou8220125-FRA",
+        "x-cache-hits": "0",
+        "vary": "Accept-Encoding",
+        "strict-transport-security": "max-age=31556952",
+        "cache-control": "max-age=600",
+        "x-github-edge-region": "fra",
+        "x-timer": "S1792233458.523037,VS0,VE120",
+        "via": "1.1 varnish",
+        "accept-ranges": "bytes",
+        "access-control-allow-origin": "*",
+        "content-length": "2861",
+        "server": "GitHub.com"
+      },
+      "encodedBytes": 3025
+    },
+    {
+      "id": "1518065.2",
+      "url": "https://johndev13.github.io/steuerpendler/assets/index.html-sf-Mli3v.js",
+      "status": 200,
+      "mime": "application/javascript",
+      "headers": {
+        "x-fastly-request-id": "c6932dd2e9781cb559bbda08850f9e2017543b87",
+        "content-encoding": "gzip",
+        "etag": "W/\"6ad34fcf-ce56\"",
+        "age": "0",
+        "x-github-request-id": "51BC:1A2F77:48F23B:4CFED1:6AD34FF1",
+        "expires": "Sat, 17 Oct 2026 10:47:37 GMT",
+        "x-proxy-cache": "MISS",
+        "x-cache": "MISS",
+        "date": "Sat, 17 Oct 2026 10:37:37 GMT",
+        "content-type": "application/javascript; charset=utf-8",
+        "last-modified": "Sat, 17 Oct 2026 10:37:03 GMT",
+        "x-served-by": "cache-fra-etou8220125-FRA",
+        "x-cache-hits": "0",
+        "vary": "Accept-Encoding",
+        "strict-transport-security": "max-age=31556952",
+        "cache-control": "max-age=600",
+        "x-github-edge-region": "switzerlandnorth",
+        "x-timer": "S1792233458.522346,VS0,VE120",
+        "via": "1.1 varnish",
+        "accept-ranges": "bytes",
+        "access-control-allow-origin": "*",
+        "content-length": "20798",
+        "server": "GitHub.com"
+      },
+      "encodedBytes": 20995
+    },
+    {
+      "id": "1518065.6",
+      "url": "https://johndev13.github.io/steuerpendler/data/gemeinden-2026.json?v=02e571458ba6c8ad172f984dfc0b89b6e8e52b2b5b90c78208ccfb16799e31b9",
+      "status": 200,
+      "mime": "application/json",
+      "headers": {
+        "x-fastly-request-id": "de6f4a956372e36e6e3479043c21f3ea9dc141bd",
+        "content-encoding": "gzip",
+        "etag": "W/\"6ad34fcf-1576b\"",
+        "age": "0",
+        "x-github-request-id": "5C4C:EC597:282F4C5:289F8AC:6AD34FF1",
+        "expires": "Sat, 17 Oct 2026 10:47:37 GMT",
+        "x-proxy-cache": "MISS",
+        "x-cache": "MISS",
+        "date": "Sat, 17 Oct 2026 10:37:37 GMT",
+        "content-type": "application/json; charset=utf-8",
+        "last-modified": "Sat, 17 Oct 2026 10:37:03 GMT",
+        "x-served-by": "cache-fra-etou8220125-FRA",
+        "x-cache-hits": "0",
+        "vary": "Accept-Encoding",
+        "strict-transport-security": "max-age=31556952",
+        "cache-control": "max-age=600",
+        "x-github-edge-region": "fra",
+        "x-timer": "S1792233458.661327,VS0,VE101",
+        "via": "1.1 varnish",
+        "accept-ranges": "bytes",
+        "access-control-allow-origin": "*",
+        "content-length": "25417",
+        "x-origin-cache": "HIT",
+        "server": "GitHub.com"
+      },
+      "encodedBytes": 25821
+    },
+    {
+      "id": "1518065.7",
+      "url": "https://johndev13.github.io/steuerpendler/data/map/switzerland-2026.json?v=02e571458ba6c8ad172f984dfc0b89b6e8e52b2b5b90c78208ccfb16799e31b9",
+      "status": 200,
+      "mime": "application/json",
+      "headers": {
+        "x-fastly-request-id": "d11e9c3f61c0730dab7f02fb5a6d5ecec2a0c884",
+        "content-encoding": "gzip",
+        "etag": "W/\"6ad34fcf-aa7ac\"",
+        "age": "0",
+        "x-github-request-id": "BE3A:19488B:49C384:4DD08E:6AD34FF1",
+        "expires": "Sat, 17 Oct 2026 10:47:37 GMT",
+        "x-proxy-cache": "MISS",
+        "x-cache": "MISS",
+        "date": "Sat, 17 Oct 2026 10:37:37 GMT",
+        "content-type": "application/json; charset=utf-8",
+        "last-modified": "Sat, 17 Oct 2026 10:37:03 GMT",
+        "x-served-by": "cache-fra-etou8220125-FRA",
+        "x-cache-hits": "0",
+        "vary": "Accept-Encoding",
+        "strict-transport-security": "max-age=31556952",
+        "cache-control": "max-age=600",
+        "x-github-edge-region": "switzerlandnorth",
+        "x-timer": "S1792233458.775642,VS0,VE163",
+        "via": "1.1 varnish",
+        "accept-ranges": "bytes",
+        "access-control-allow-origin": "*",
+        "content-length": "249464",
+        "server": "GitHub.com"
+      },
+      "encodedBytes": 249761
+    },
+    {
+      "id": "1518065.8",
+      "url": "https://johndev13.github.io/steuerpendler/data/tax-2026-s-0.json?v=02e571458ba6c8ad172f984dfc0b89b6e8e52b2b5b90c78208ccfb16799e31b9",
+      "status": 200,
+      "mime": "application/json",
+      "headers": {
+        "x-fastly-request-id": "33e87b7338caad332a63227266f73ba7602c3d7e",
+        "content-encoding": "gzip",
+        "etag": "W/\"6ad34fcf-33390\"",
+        "age": "0",
+        "x-github-request-id": "746C:1AB5C4:49D9AE:4DE629:6AD34FF1",
+        "expires": "Sat, 17 Oct 2026 10:47:38 GMT",
+        "x-proxy-cache": "MISS",
+        "x-cache": "MISS",
+        "date": "Sat, 17 Oct 2026 10:37:38 GMT",
+        "content-type": "application/json; charset=utf-8",
+        "last-modified": "Sat, 17 Oct 2026 10:37:03 GMT",
+        "x-served-by": "cache-fra-etou8220125-FRA",
+        "x-cache-hits": "0",
+        "vary": "Accept-Encoding",
+        "strict-transport-security": "max-age=31556952",
+        "cache-control": "max-age=600",
+        "x-github-edge-region": "switzerlandnorth",
+        "x-timer": "S1792233458.040317,VS0,VE125",
+        "via": "1.1 varnish",
+        "accept-ranges": "bytes",
+        "access-control-allow-origin": "*",
+        "content-length": "76548",
+        "x-origin-cache": "HIT",
+        "server": "GitHub.com"
+      },
+      "encodedBytes": 76779
+    }
+  ],
+  "municipalityPaths": 2113,
+  "withheldTaxRows": 0,
+  "content": [
+    {
+      "name": "impressum",
+      "status": 200
+    },
+    {
+      "name": "datenschutz",
+      "status": 200
+    },
+    {
+      "name": "methode",
+      "status": 200
+    }
+  ],
+  "missingDataStatus": 404,
+  "cookies": [],
+  "errors": [],
+  "checks": {
+    "all2110ResidentialCandidates": true,
+    "capitalOnlyWorkplaceSelector19": true,
+    "nonCapitalCrossCantonResidenceSearch": true,
+    "aarau20Transit15WalkControls": true,
+    "zoomResetAndPersistentViewport": true,
+    "map": true,
+    "searchBern": true,
+    "selectZug": true,
+    "viewport400NoOverflow": true,
+    "noUnverifiedTaxAmounts": true,
+    "noThirdPartyRequests": true,
+    "noCookies": true
+  },
+  "limitations": [
+    "All-origin to capital timetable/access data remain incomplete",
+    "Off-grid tax accuracy gate fails",
+    "Official ESTV/SBB checks and production owner approvals pending",
+    "Source CI is verified separately; this browser report does not assert CI success",
+    "Transfer size here is for incomplete preview, not final usable commute results"
+  ]
+}
