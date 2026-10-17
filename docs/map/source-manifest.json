@@ -1,0 +1,22 @@
+{
+  "package": "swiss-maps",
+  "version": "4.7.0",
+  "archiveSha256": "5302805c536eef70e2001a8893ec66615a3e9e4ccf15eafe4a2215b50d39435e",
+  "files": {
+    "package.json": "e76a20614e28adc90577893062f4aecac0d50cd04f59e00636eadb2454bf30a4",
+    "README.md": "88654dee84df3d9f2afe1ea4e5bf904dce248642ee207a359735e67bc0b50e36",
+    "LICENSE": "761c786d3f155c4b3816cf01c3e91c8bbb40a9d273066d2b68323f5ade533b34",
+    "2026/municipalities.shp": "8814512c4c0df7b297d79a9bae7bb360b959bd053295bc3ae793e4e5d1cab310",
+    "2026/municipalities.shx": "91b4138fd8506abeadb8f8aee21b8bfbedd977b76f2a8cb9d61d9c3dcf3e514c",
+    "2026/municipalities.dbf": "3f9068eefcdfb0bd75c64eb0d30c11dc03cf1e9da59e63cfda5ae86655e00994",
+    "2026/municipalities.prj": "8bde43d6e9d3ab89c9ed41ef1eef360eaa8364d74f0f14f84dfe2eaa6281e084",
+    "2026/cantons.shp": "3f06b34aa85376a74dec62f59e3998053a5a2ec69d79d6cb51a9413628fcb635",
+    "2026/cantons.shx": "75c67152e0b3c41e1cf266ed61d4a3262b907c51bda6c9c7c6d34daf3c7eddbb",
+    "2026/cantons.dbf": "e3b4f1c90a9ff802cb1209419d647979ee68c2722d5b9a0a0f8068969adcec23",
+    "2026/cantons.prj": "8bde43d6e9d3ab89c9ed41ef1eef360eaa8364d74f0f14f84dfe2eaa6281e084",
+    "2026/lakes.shp": "f57285a30a9dfccea311e8bc467ed64328af2da50858b8a0fdb09ff209655f7e",
+    "2026/lakes.shx": "e6ccaa9420a6da01f0974b93f7d41a0252d6c720eb63ffc38eb4e4df9f3bf6a1",
+    "2026/lakes.dbf": "fde9d91cb4b3c83959e21557bd1acdc7c62307716255f09747ffad22df3bf7b4",
+    "2026/lakes.prj": "8bde43d6e9d3ab89c9ed41ef1eef360eaa8364d74f0f14f84dfe2eaa6281e084"
+  }
+}

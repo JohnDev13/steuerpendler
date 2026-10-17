@@ -1,0 +1,15 @@
+{
+  "mapSha256": "d118a3e8b47c8d76d4fa2587911aa088573d09a934ea484f2f1a60d573aafe14",
+  "pngSha256": "944ccc6e803a0377864ff7500cfecba71921d8cf5a4d3c1b68ab6130294fccdf",
+  "renderer": "@resvg/resvg-wasm 2.6.2 (offline SVG to PNG)",
+  "width": 1400,
+  "height": 1000,
+  "municipalityPaths": 2113,
+  "noDataIds": [
+    2391,
+    5391,
+    5394
+  ],
+  "networkRequestsAllowed": false,
+  "scope": "Geometry-only review; no tax values or official/legal approval"
+}

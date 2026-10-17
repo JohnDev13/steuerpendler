@@ -1,0 +1,60 @@
+TAP version 13
+# Subtest: pinned 4.7.0 input hashes and verbatim licence/README notices
+ok 1 - pinned 4.7.0 input hashes and verbatim licence/README notices
+  ---
+  duration_ms: 19.569122
+  type: 'test'
+  ...
+# Subtest: real map has exactly the source BFS IDs, 2110 municipalities + 3 no-data areas
+ok 2 - real map has exactly the source BFS IDs, 2110 municipalities + 3 no-data areas
+  ---
+  duration_ms: 171.527312
+  type: 'test'
+  ...
+Shared arcs: municipalities/cantons=1010, municipalities/lakes=179; neighbour borders=6763
+# Subtest: map municipality ID set equals the actual 2026 tax ID set exactly
+ok 3 - map municipality ID set equals the actual 2026 tax ID set exactly # SKIP BLOCKED: real gemeinden-2026.json not integrated; source checks are not tax acceptance
+  ---
+  duration_ms: 2.319419
+  type: 'test'
+  ...
+# Subtest: LV95 projection, quantization, metadata and compressed budgets are valid
+ok 4 - LV95 projection, quantization, metadata and compressed budgets are valid
+  ---
+  duration_ms: 71.982246
+  type: 'test'
+  ...
+# Subtest: all arcs decode to finite LV95 vertices; polygon rings are closed and non-degenerate
+ok 5 - all arcs decode to finite LV95 vertices; polygon rings are closed and non-degenerate
+  ---
+  duration_ms: 226.008223
+  type: 'test'
+  ...
+# Subtest: municipality neighbours and canton/lake shores share the same simplified arcs
+ok 6 - municipality neighbours and canton/lake shores share the same simplified arcs
+  ---
+  duration_ms: 96.204994
+  type: 'test'
+  ...
+# Subtest: render evidence is a real full-size PNG of this exact topology
+ok 7 - render evidence is a real full-size PNG of this exact topology
+  ---
+  duration_ms: 138.575688
+  type: 'test'
+  ...
+Reproducible SHA-256: d118a3e8b47c8d76d4fa2587911aa088573d09a934ea484f2f1a60d573aafe14
+# Subtest: two real rebuilds produce byte-identical committed output
+ok 8 - two real rebuilds produce byte-identical committed output
+  ---
+  duration_ms: 1444.342437
+  type: 'test'
+  ...
+1..8
+# tests 8
+# suites 0
+# pass 7
+# fail 0
+# cancelled 0
+# skipped 1
+# todo 0
+# duration_ms 2178.068096
