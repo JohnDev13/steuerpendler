@@ -3,7 +3,7 @@
 Snapshot: 17 October 2026. This file is a status/evidence index, not a launch approval.
 
 - Public repository: https://github.com/JohnDev13/steuerpendler
-- Intended Pages test URL: https://johndev13.github.io/steuerpendler/
+- Verified Pages HTTPS test URL: https://johndev13.github.io/steuerpendler/ — actual live browser and 27-file byte-integrity evidence in `docs/deployment/Deployment-Report-v0.1.md`.
 - Original source file: supplied SPEC v1; canonical amended reconstruction spec v1.1 and `docs/spec-amendments-v1.1.md` retain drift traceability.
 
 ## Established locally
@@ -25,4 +25,4 @@ Snapshot: 17 October 2026. This file is a status/evidence index, not a launch ap
 - **Owner/legal:** operator contact and text approval, real-data golden Zürich top 10, commercial-rights resolution if relevant, production approval and real-phone acceptance pending.
 - **Production hosting:** Cloudflare headers/cache/coherence checks, PR previews and production Lighthouse gates are not proved by a GitHub Pages preview. GitHub Pages uses its own host headers.
 
-A working preview is useful for UI review; it is not completion of T1–T9. Final delivery must verify the actual HTTPS URL and record its deployed revision separately.
+A working preview is useful for UI review; it is not completion of T1–T9. Actual HTTPS verification, deployed/source revisions, original-spec lineage, screenshots and 27-file byte-integrity evidence are recorded in `docs/deployment/Deployment-Report-v0.1.md`. No production gate is cleared by that hosting proof.

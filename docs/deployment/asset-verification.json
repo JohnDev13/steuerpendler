@@ -1,0 +1,284 @@
+{
+  "base": "https://johndev13.github.io/steuerpendler/",
+  "checked": "2026-10-17T09:07:42.160041+00:00",
+  "status": "all_fetched_bytes_match_built_artifact",
+  "count": 27,
+  "totalRawBytes": 2560780,
+  "files": [
+    {
+      "path": "404.html",
+      "url": "https://johndev13.github.io/steuerpendler/404.html",
+      "status": 200,
+      "bytes": 310,
+      "sha256": "e45caecdd90210aabe28339af3db4ff5590234bbefbcfd8390a0c470e5fde249",
+      "contentType": "text/html; charset=utf-8",
+      "cacheControl": "max-age=600",
+      "etag": "\"6ad33a08-136\""
+    },
+    {
+      "path": "assets/index-CgSw94kX.css",
+      "url": "https://johndev13.github.io/steuerpendler/assets/index-CgSw94kX.css",
+      "status": 200,
+      "bytes": 8429,
+      "sha256": "b8587f9efeb13b16d449dfe0c0a320bbb528159707061e9bac605c2ea09977ae",
+      "contentType": "text/css; charset=utf-8",
+      "cacheControl": "max-age=600",
+      "etag": "\"6ad33a08-20ed\""
+    },
+    {
+      "path": "assets/index.html-yvtufTVX.js",
+      "url": "https://johndev13.github.io/steuerpendler/assets/index.html-yvtufTVX.js",
+      "status": 200,
+      "bytes": 47873,
+      "sha256": "255cde6f544a15b859105a3be28616e79dee22809ba29b47c3917620cd49093b",
+      "contentType": "application/javascript; charset=utf-8",
+      "cacheControl": "max-age=600",
+      "etag": "\"6ad33a08-bb01\""
+    },
+    {
+      "path": "credits/NOTICE.txt",
+      "url": "https://johndev13.github.io/steuerpendler/credits/NOTICE.txt",
+      "status": 200,
+      "bytes": 1311,
+      "sha256": "c281a1f1e7f2833c1b3508fb4e603b8a84ab7e544289611a61d9741c137034c1",
+      "contentType": "text/plain; charset=utf-8",
+      "cacheControl": "max-age=600",
+      "etag": "\"6ad33a08-51f\""
+    },
+    {
+      "path": "credits/d3-array-LICENSE.txt",
+      "url": "https://johndev13.github.io/steuerpendler/credits/d3-array-LICENSE.txt",
+      "status": 200,
+      "bytes": 731,
+      "sha256": "3e6849627f74ff73c257a3ae1efb574015d94fc1035c05ec3c15805165efcbc4",
+      "contentType": "text/plain; charset=utf-8",
+      "cacheControl": "max-age=600",
+      "etag": "\"6ad33a08-2db\""
+    },
+    {
+      "path": "credits/d3-geo-LICENSE.txt",
+      "url": "https://johndev13.github.io/steuerpendler/credits/d3-geo-LICENSE.txt",
+      "status": 200,
+      "bytes": 1857,
+      "sha256": "3e3edc1224eec9c39cd26491a21304a62883c1e5b6a65c5283ccc7a6cc94baee",
+      "contentType": "text/plain; charset=utf-8",
+      "cacheControl": "max-age=600",
+      "etag": "\"6ad33a08-741\""
+    },
+    {
+      "path": "credits/internmap-LICENSE.txt",
+      "url": "https://johndev13.github.io/steuerpendler/credits/internmap-LICENSE.txt",
+      "status": 200,
+      "bytes": 726,
+      "sha256": "9ea8903938dab5f12c4572d60725069bec2d1b0dc3bcc210b09bae946a5ebb1f",
+      "contentType": "text/plain; charset=utf-8",
+      "cacheControl": "max-age=600",
+      "etag": "\"6ad33a08-2d6\""
+    },
+    {
+      "path": "credits/swiss-maps-LICENSE.txt",
+      "url": "https://johndev13.github.io/steuerpendler/credits/swiss-maps-LICENSE.txt",
+      "status": 200,
+      "bytes": 1521,
+      "sha256": "761c786d3f155c4b3816cf01c3e91c8bbb40a9d273066d2b68323f5ade533b34",
+      "contentType": "text/plain; charset=utf-8",
+      "cacheControl": "max-age=600",
+      "etag": "\"6ad33a08-5f1\""
+    },
+    {
+      "path": "credits/swiss-maps-README.md",
+      "url": "https://johndev13.github.io/steuerpendler/credits/swiss-maps-README.md",
+      "status": 200,
+      "bytes": 2827,
+      "sha256": "88654dee84df3d9f2afe1ea4e5bf904dce248642ee207a359735e67bc0b50e36",
+      "contentType": "text/markdown; charset=utf-8",
+      "cacheControl": "max-age=600",
+      "etag": "\"6ad33a08-b0b\""
+    },
+    {
+      "path": "credits/topojson-client-LICENSE.txt",
+      "url": "https://johndev13.github.io/steuerpendler/credits/topojson-client-LICENSE.txt",
+      "status": 200,
+      "bytes": 734,
+      "sha256": "4c4d15b635e04e691825a76db7d33f7f2033b55669a7430011694f31e6c65999",
+      "contentType": "text/plain; charset=utf-8",
+      "cacheControl": "max-age=600",
+      "etag": "\"6ad33a08-2de\""
+    },
+    {
+      "path": "data/gemeinden-2026.json",
+      "url": "https://johndev13.github.io/steuerpendler/data/gemeinden-2026.json",
+      "status": 200,
+      "bytes": 87915,
+      "sha256": "0cc01b0d5f9fab1a0069394a9b89441ca4264ea0ba7e114e89157c2f748a5928",
+      "contentType": "application/json; charset=utf-8",
+      "cacheControl": "max-age=600",
+      "etag": "\"6ad33a08-1576b\""
+    },
+    {
+      "path": "data/manifest.json",
+      "url": "https://johndev13.github.io/steuerpendler/data/manifest.json",
+      "status": 200,
+      "bytes": 2274,
+      "sha256": "0579d4217b60fc84d5e94e1fe2acc21acdafa0371f3af5f3d8c3a089636e27b0",
+      "contentType": "application/json; charset=utf-8",
+      "cacheControl": "max-age=600",
+      "etag": "\"6ad33a08-8e2\""
+    },
+    {
+      "path": "data/map/switzerland-2026.json",
+      "url": "https://johndev13.github.io/steuerpendler/data/map/switzerland-2026.json",
+      "status": 200,
+      "bytes": 698284,
+      "sha256": "d118a3e8b47c8d76d4fa2587911aa088573d09a934ea484f2f1a60d573aafe14",
+      "contentType": "application/json; charset=utf-8",
+      "cacheControl": "max-age=600",
+      "etag": "\"6ad33a08-aa7ac\""
+    },
+    {
+      "path": "data/release.json",
+      "url": "https://johndev13.github.io/steuerpendler/data/release.json",
+      "status": 200,
+      "bytes": 2274,
+      "sha256": "0579d4217b60fc84d5e94e1fe2acc21acdafa0371f3af5f3d8c3a089636e27b0",
+      "contentType": "application/json; charset=utf-8",
+      "cacheControl": "max-age=600",
+      "etag": "\"6ad33a08-8e2\""
+    },
+    {
+      "path": "data/tax-2026-m-0.json",
+      "url": "https://johndev13.github.io/steuerpendler/data/tax-2026-m-0.json",
+      "status": 200,
+      "bytes": 213025,
+      "sha256": "b6af858ccf2f0c8807df336d0e1cba0fd1d6332c2d33411558e078f605fe35cf",
+      "contentType": "application/json; charset=utf-8",
+      "cacheControl": "max-age=600",
+      "etag": "\"6ad33a08-34021\""
+    },
+    {
+      "path": "data/tax-2026-m-1.json",
+      "url": "https://johndev13.github.io/steuerpendler/data/tax-2026-m-1.json",
+      "status": 200,
+      "bytes": 210062,
+      "sha256": "efd15e291376f3158f05c2888cc5ecf9dbc12cc73a32d6800648e37d31569546",
+      "contentType": "application/json; charset=utf-8",
+      "cacheControl": "max-age=600",
+      "etag": "\"6ad33a08-3348e\""
+    },
+    {
+      "path": "data/tax-2026-m-2.json",
+      "url": "https://johndev13.github.io/steuerpendler/data/tax-2026-m-2.json",
+      "status": 200,
+      "bytes": 207684,
+      "sha256": "2189b3f5588a341bdf0ded03a5bb0feb4424f27d9660bb2426f650ef373617cf",
+      "contentType": "application/json; charset=utf-8",
+      "cacheControl": "max-age=600",
+      "etag": "\"6ad33a08-32b44\""
+    },
+    {
+      "path": "data/tax-2026-m-3.json",
+      "url": "https://johndev13.github.io/steuerpendler/data/tax-2026-m-3.json",
+      "status": 200,
+      "bytes": 205348,
+      "sha256": "8fbf74fb411743720ecaef7643bb9e0748c80eacdafa4616c093a106e529f02a",
+      "contentType": "application/json; charset=utf-8",
+      "cacheControl": "max-age=600",
+      "etag": "\"6ad33a08-32224\""
+    },
+    {
+      "path": "data/tax-2026-s-0.json",
+      "url": "https://johndev13.github.io/steuerpendler/data/tax-2026-s-0.json",
+      "status": 200,
+      "bytes": 209808,
+      "sha256": "91a17389c5f9d1412dcc4903ccb147e99187156d5915d77b737bd95b36bfe0d8",
+      "contentType": "application/json; charset=utf-8",
+      "cacheControl": "max-age=600",
+      "etag": "\"6ad33a08-33390\""
+    },
+    {
+      "path": "data/tax-2026-s-1.json",
+      "url": "https://johndev13.github.io/steuerpendler/data/tax-2026-s-1.json",
+      "status": 200,
+      "bytes": 210602,
+      "sha256": "a93afa2e0f5836884bd23d53eb9e2bdc9268f66dc9546276b552824c1a9e917f",
+      "contentType": "application/json; charset=utf-8",
+      "cacheControl": "max-age=600",
+      "etag": "\"6ad33a08-336aa\""
+    },
+    {
+      "path": "data/tax-2026-s-2.json",
+      "url": "https://johndev13.github.io/steuerpendler/data/tax-2026-s-2.json",
+      "status": 200,
+      "bytes": 208361,
+      "sha256": "478c1e6bd28251bb5f7265d30900c4b79a0a4595f6843f0fbddd4214a8f56ed9",
+      "contentType": "application/json; charset=utf-8",
+      "cacheControl": "max-age=600",
+      "etag": "\"6ad33a08-32de9\""
+    },
+    {
+      "path": "data/tax-2026-s-3.json",
+      "url": "https://johndev13.github.io/steuerpendler/data/tax-2026-s-3.json",
+      "status": 200,
+      "bytes": 206017,
+      "sha256": "f1201fac55e265183ff91d976bdd91fea2192c6672b0c95011ecd3a0af0195aa",
+      "contentType": "application/json; charset=utf-8",
+      "cacheControl": "max-age=600",
+      "etag": "\"6ad33a08-324c1\""
+    },
+    {
+      "path": "index.html",
+      "url": "https://johndev13.github.io/steuerpendler/index.html",
+      "status": 200,
+      "bytes": 560,
+      "sha256": "00494ba3501f961e9c4fe8fe8c20381bed0d6893f8c32edc561c26aaf1eaba91",
+      "contentType": "text/html; charset=utf-8",
+      "cacheControl": "max-age=600",
+      "etag": "\"6ad33a08-230\""
+    },
+    {
+      "path": "pages/datenschutz.html",
+      "url": "https://johndev13.github.io/steuerpendler/pages/datenschutz.html",
+      "status": 200,
+      "bytes": 8663,
+      "sha256": "62859d126be06234f536aec02bcf14f75479ffde182cd36e7836263c82f2a312",
+      "contentType": "text/html; charset=utf-8",
+      "cacheControl": "max-age=600",
+      "etag": "\"6ad33a08-21d7\""
+    },
+    {
+      "path": "pages/impressum.html",
+      "url": "https://johndev13.github.io/steuerpendler/pages/impressum.html",
+      "status": 200,
+      "bytes": 4627,
+      "sha256": "ad87db49c118e6cab0498da7e94faa4e9023280dc7fe1c45346f9f7a7fdbfb66",
+      "contentType": "text/html; charset=utf-8",
+      "cacheControl": "max-age=600",
+      "etag": "\"6ad33a08-1213\""
+    },
+    {
+      "path": "pages/methode.html",
+      "url": "https://johndev13.github.io/steuerpendler/pages/methode.html",
+      "status": 200,
+      "bytes": 18931,
+      "sha256": "9c71c159c93fc68db4be47ecf29e01dbc09575b9c768efc276f0e8225561f851",
+      "contentType": "text/html; charset=utf-8",
+      "cacheControl": "max-age=600",
+      "etag": "\"6ad33a08-49f3\""
+    },
+    {
+      "path": "robots.txt",
+      "url": "https://johndev13.github.io/steuerpendler/robots.txt",
+      "status": 200,
+      "bytes": 26,
+      "sha256": "331ea9090db0c9f6f597bd9840fd5b171830f6e0b3ba1cb24dfa91f0c95aedc1",
+      "contentType": "text/plain; charset=utf-8",
+      "cacheControl": "max-age=600",
+      "etag": "\"6ad33a08-1a\""
+    }
+  ],
+  "excludedDeploymentControlFiles": [
+    ".nojekyll",
+    "_headers"
+  ],
+  "scope": "Static preview deployment integrity, not numeric/production acceptance"
+}

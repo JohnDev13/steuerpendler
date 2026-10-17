@@ -2,7 +2,7 @@
 
 **Non-production, non-commercial test preview. Not a finished tax/commute service.**
 
-- Preview address: https://johndev13.github.io/steuerpendler/
+- Preview address: https://johndev13.github.io/steuerpendler/ — verified live, not just built locally. [Deployment evidence, source revisions and known blockers](docs/deployment/Deployment-Report-v0.1.md).
 - Source specification: [`SPEC.md`](SPEC.md), with preserved supplied-v1 lineage and amendment register.
 - Original repository/prototype were not recovered. This is a reconstruction from real pinned upstream sources.
 
