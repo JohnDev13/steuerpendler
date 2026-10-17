@@ -1,0 +1,21 @@
+{
+  "scope": "Observed Linux x86_64 diagnostic environment, not a national release manifest",
+  "python": "3.11.15",
+  "pip": "24.0",
+  "setuptools": "79.0.1",
+  "requirements": "scripts/travel/requirements.txt",
+  "java": {
+    "distribution": "Azul Zulu21.44.17 CA JDK",
+    "vendor": "Azul Systems, Inc.",
+    "runtimeVersion": "21.0.8+9-LTS",
+    "archive": "zulu21.44.17-ca-jdk21.0.8-linux_x64.tar.gz",
+    "localArchive": "/home/hermes/.cache/steuerpendler-travel/jdk.tar.gz",
+    "sha256": "63f56bbb46958cf57352fba08f2755e0953799195e5545acc0c8a92920beff1e"
+  },
+  "r5": {
+    "version": "7.5.1",
+    "localJar": "/home/hermes/.cache/steuerpendler-travel/r5.jar",
+    "bytes": 64437972,
+    "sha256": "d50be106cadd7b636cfc0e209052767d7df570629f79fdf98ecd5cf5d2d89be7"
+  }
+}

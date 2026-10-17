@@ -1,0 +1,54 @@
+{
+  "status": "blocked",
+  "observedUtc": "2026-10-17T08:40:46.605423+00:00",
+  "nationalDownloadsAttempted": false,
+  "siteDataWritten": false,
+  "environment": {
+    "totalMemoryBytes": 4294967296,
+    "availableMemoryBytes": 250728448,
+    "cgroup": {
+      "limitBytes": 4294967296,
+      "usageBytes": 4044238848
+    },
+    "cpuCount": 2,
+    "diskFreeBytes": 48551325696,
+    "pythonVersion": "3.11.15",
+    "platform": "Linux-6.8.0-x86_64-with-glibc2.39",
+    "javaExecutable": "/home/hermes/.cache/steuerpendler-travel/zulu21.44.17-ca-jdk21.0.8-linux_x64/bin/java",
+    "javaVersion": "21.0.8",
+    "javaRuntimeVersion": "21.0.8+9-LTS",
+    "javaVendor": "Azul Systems, Inc."
+  },
+  "blockers": [
+    {
+      "code": "RAM_TOO_SMALL",
+      "message": "Use measured approximately 16 GB public runner/local host (>=15 billion usable bytes), not this 4 GB host. Owner approves paid/external alternatives."
+    },
+    {
+      "code": "RAM_AVAILABLE_LOW",
+      "message": "Free at least 8 GiB before the 50-workplace pilot; JVM defaults to floor(60% available), capped at 9 GiB."
+    },
+    {
+      "code": "CPU_TOO_SMALL",
+      "message": "Use >=4 available CPUs for the public-runner pilot."
+    },
+    {
+      "code": "EXACT_METRIC_UNPROVEN",
+      "message": "r5py 1.1.7/R5 7.5.1: minute percentile matrix and random-sampled DetailedItineraries do not prove \u00a78 exact first-boarding minimum. Develop/review a pinned R5-backed adapter; pass every tiny edge/second/transfer/parent/no-service fixture before downloads."
+    },
+    {
+      "code": "NATIONAL_PIPELINE_INCOMPLETE",
+      "message": "No national generator/checkpoint/pilot/release writer exists yet. Implement real spatial/calendar/OSM/STATPOP joins, extended route transformations, RFC8785 release validation and measured pilot/full run after metric proof; no empty outputs are emitted."
+    },
+    {
+      "code": "REAL_INPUTS_REQUIRED",
+      "message": "Supply --inputs local frozen-input manifest only after metric gate is fixed: GTFS original/transformed, OSM, STATPOP/fallback, real tax authority/map ID join, all-canton holiday evidence, overrides and hashes. No current date/feed is assumed."
+    }
+  ],
+  "suggestedHeapBytes": 150437068,
+  "capacityAccepted": false,
+  "pilotBatchSize": 50,
+  "requiredHeadroomFraction": 0.2,
+  "fullRunWallLimitSeconds": 18000,
+  "dependencyMismatches": []
+}
