@@ -1,6 +1,8 @@
 import './styles.css';
 import { strings as s } from './strings';
-import { initialState, searchGemeinden } from './state';
+import { initialState } from './state';
+import { installMunicipalitySearch } from './municipality-search';
+import { workplaceGemeinden } from './destinations';
 import { TaxRepository, calculateTax, type Gemeinde, type TaxBreakdown } from './tax';
 import { sitePath } from './paths';
 import { withheldCantons } from './policy';
@@ -22,7 +24,7 @@ app.innerHTML=`<header class="site-header"><a class="brand" href="${sitePath('')
 <div class="field"><label for="civil">${s.civil}</label><select id="civil"><option value="s">${s.single}</option><option value="m">${s.married}</option></select></div>
 <div class="paired"><div class="field"><label for="kids">${s.children}</label><select id="kids"><option>0</option><option>1</option><option>2</option><option value="3">3+</option></select></div><div class="field"><label for="church">${s.church}</label><select id="church"><option value="none">${s.none}</option><option value="reformed">${s.reformed}</option><option value="catholic">${s.catholic}</option></select></div></div></aside>
 <section class="results"><div class="summary"><p class="eyebrow">${s.results}</p><h2 id="summary">${s.loading}</h2><p id="cheapest"></p></div><p class="assumptions">${s.assumptions} <strong>${s.disclaimer}</strong></p><p class="notice">${s.unverified}</p><p id="profile-status" class="assumptions" aria-live="polite"></p><p id="data-status" class="data-status" role="status" aria-live="polite"></p>
-<section class="map-panel panel" aria-label="${s.map}"><div id="map"><p>${s.mapPending}</p></div><div class="legend"><span>${s.cheap}</span>${COLOURS.map(c=>`<i style="background:${c}"></i>`).join('')}<span>${s.expensive}</span><span class="legend-muted">◻ ${s.noData}</span></div><small>${s.mapHelp}</small></section>
+<section class="map-panel panel" aria-label="${s.map}"><div class="field search-field"><label for="residence">${s.residenceSearch}</label><input id="residence" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="residence-options" autocomplete="off"><div id="residence-options" role="listbox" hidden></div><small>${s.residenceHint}</small></div><div id="map"><p>${s.mapPending}</p></div><div class="legend"><span>${s.cheap}</span>${COLOURS.map(c=>`<i style="background:${c}"></i>`).join('')}<span>${s.expensive}</span><span class="legend-muted">◻ ${s.noData}</span></div><small>${s.mapHelp}</small></section>
 <section class="list-panel panel" aria-label="${s.results}"><table><thead><tr>${[s.rank,s.municipality,s.canton,s.travel,s.walk,s.tax,s.difference].map(label=>`<th scope="col">${label}</th>`).join('')}</tr></thead><tbody id="ranked-list"></tbody></table><p id="empty-state" hidden>${s.empty}</p></section>
 <section id="detail" class="detail-panel panel" aria-label="${s.detail}" tabindex="-1"><p>${s.selectDetail}</p></section></section></main>
 <footer><p>${s.credits}</p><p>${s.mapSource} — <a href="https://data.geo.admin.ch/api/stac/v0.9/collections/ch.bfs.historisierte-administrative_grenzen_g1">${s.mapSourceTitle}</a>; ${s.mapAdaptation} <a href="https://opendata.swiss/en/terms-of-use#terms_by_ask">${s.mapTerms}</a> · <a href="${sitePath('credits/NOTICE.txt')}">${s.notices}</a></p><p>${s.licencePending}</p><nav><a href="${sitePath('')}pages/impressum.html">${s.impressum}</a><a href="${sitePath('')}pages/datenschutz.html">${s.privacy}</a><a href="${sitePath('')}pages/methode.html">${s.method}</a></nav></footer>`;
@@ -30,12 +32,14 @@ const $=<T extends HTMLElement=HTMLElement>(id:string)=>document.getElementById(
 const state={...initialState},repository=new TaxRepository(fetch,sitePath('data'),DATA_RELEASE.release,DATA_RELEASE.files);
 let gemeinden:Record<string,Gemeinde>={},access:Access={},rows:TravelRows=[],results:RankedResult[]=[],breakdowns:Record<string,TaxBreakdown>={};
 let map:ReturnType<typeof createMap>|null=null,revision=0,travelReady=false;
+let workplaces:Record<string,Gemeinde>={};
 let reviewCantons:ReadonlySet<string>=QUARANTINED_CANTONS;
 const travelCache=new Map<number,Promise<TravelRows>>();
 function showError(error:unknown){$('data-status').textContent=s.loadError(error instanceof Error?error.message:String(error));$('data-status').classList.add('error');}
 function selectGemeinde(id:number){
  if(!gemeinden[id]){$('detail').textContent=s.noData;return;}
  state.selected=id;
+ $<HTMLInputElement>('residence').value=gemeinden[id][0];
  renderDetail($('detail'),gemeinden[id],id,breakdowns[id]??null,access[id],results.find(r=>r.id===id),rows.find(r=>r[0]===id)?.[1],travelReady,reviewCantons.has(gemeinden[id][1]));
  map?.update(results,state.workplace,state.selected,reviewCantons);
  for(const row of $('ranked-list').querySelectorAll('tr'))row.classList.toggle('selected',row.getAttribute('data-bfs')===String(id));
@@ -70,20 +74,9 @@ async function update(){
   if(state.selected!==null)selectGemeinde(state.selected);
  }catch(error){if(current===revision){results=[];renderList($<HTMLTableSectionElement>('ranked-list'),[],null,selectGemeinde);$('cheapest').textContent='';showError(error);}}
 }
-let searchIds:number[]=[],active=-1;
-function closeSearch(){$('workplace-options').hidden=true;$('workplace').setAttribute('aria-expanded','false');$('workplace').removeAttribute('aria-activedescendant');}
-function chooseWorkplace(id:number){state.workplace=id;state.selected=id;$<HTMLInputElement>('workplace').value=gemeinden[id][0];closeSearch();void update();}
-function showSearch(){
- const input=$<HTMLInputElement>('workplace'),list=$('workplace-options');searchIds=searchGemeinden(gemeinden,input.value);active=-1;list.replaceChildren();
- for(const id of searchIds){const option=document.createElement('div');option.id=`option-${id}`;option.setAttribute('role','option');option.textContent=`${gemeinden[id][0]} (${gemeinden[id][1]})`;option.onmousedown=e=>{e.preventDefault();chooseWorkplace(id);};list.append(option);}
- list.hidden=searchIds.length===0;input.setAttribute('aria-expanded',String(!list.hidden));
-}
-$('workplace').addEventListener('input',showSearch);$('workplace').addEventListener('focus',showSearch);$('workplace').addEventListener('blur',closeSearch);
-$('workplace').addEventListener('keydown',e=>{
- if(e.key==='Escape')closeSearch();
- if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();if(!searchIds.length)showSearch();if(!searchIds.length)return;active=(active+(e.key==='ArrowDown'?1:-1)+searchIds.length)%searchIds.length;for(const el of $('workplace-options').children)el.setAttribute('aria-selected',String(el.id===`option-${searchIds[active]}`));$('workplace').setAttribute('aria-activedescendant',`option-${searchIds[active]}`);}
- if(e.key==='Enter'&&searchIds.length){e.preventDefault();chooseWorkplace(searchIds[Math.max(active,0)]);}
-});
+function chooseWorkplace(id:number){if(!workplaces[id])return;state.workplace=id;state.selected=id;void update();}
+installMunicipalitySearch($<HTMLInputElement>('workplace'),$('workplace-options'),()=>workplaces,()=>workplaces[state.workplace]?.[0]??'',chooseWorkplace);
+installMunicipalitySearch($<HTMLInputElement>('residence'),$('residence-options'),()=>gemeinden,()=>gemeinden[state.selected??state.workplace]?.[0]??'',selectGemeinde);
 for(const [id,key] of [['max-time','maxTime'],['max-walk','maxWalk']] as const)$<HTMLInputElement>(id).addEventListener('input',e=>{state[key]=Number((e.target as HTMLInputElement).value);void update();});
 $('count-walk').addEventListener('change',e=>{state.countWalk=(e.target as HTMLInputElement).checked;void update();});
 function setIncome(raw:number){if(!Number.isFinite(raw)){showError(new Error(s.invalidIncome));return;}const income=Math.min(500000,Math.max(40000,raw));state.income=income;$<HTMLInputElement>('income').value=String(income);$<HTMLInputElement>('income-slider').value=String(income);$('clamp-note').hidden=income===raw;void update();}
@@ -94,6 +87,8 @@ async function init(){
  if(!DATA_RELEASE.availability.tax){void update();return;}
  try{
   gemeinden=await repository.loadGemeinden();
+  workplaces=workplaceGemeinden(gemeinden);
+  const coverage=document.createElement('p');coverage.dataset.testid='candidate-coverage';coverage.className='assumptions';coverage.textContent=s.coverage(Object.keys(gemeinden).length,Object.keys(workplaces).length);coverage.dataset.residences=String(Object.keys(gemeinden).length);coverage.dataset.workplaces=String(Object.keys(workplaces).length);$('profile-status').after(coverage);
   reviewCantons=withheldCantons(Object.values(gemeinden).map(g=>g[1]),!!DATA_RELEASE.approvals.estv,QUARANTINED_CANTONS);
   if(DATA_RELEASE.availability.map){const topology=await repository.json<any>('map/switzerland-2026.json');map=createMap($('map'),topology,gemeinden,selectGemeinde);}
   if(DATA_RELEASE.availability.travel){const [a,meta]=await Promise.all([repository.json<{gemeinden:Access}>('travel/access.json'),repository.json<{fixture?:boolean}>('travel/meta.json')]);

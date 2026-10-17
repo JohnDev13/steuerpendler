@@ -8,7 +8,7 @@
 
 ## What you can test
 
-German labelled controls, accent-insensitive search across 2,110 genuine 2026 Gemeinden, the actual Switzerland map, selecting municipalities, keyboard controls, responsive layout, light/dark themes and static content pages. Tax-profile JSON loads on demand and validates its pinned served-byte hash. All calculations are client-side; no backend, accounts, cookies or analytics.
+German labelled controls; a capital-only workplace selector (19 destinations); a separate accent-insensitive residential search across all 2,110 genuine 2026 Gemeinden in all 26 cantons; the actual Switzerland map with zoom, pan, touch pinch and reset; municipality selection, keyboard controls, responsive layout, light/dark themes and static content pages. Only destinations are narrowed: tax candidates and access origins remain all Gemeinden, including neighbouring cantons. See [scope clarification v1.2](docs/spec-amendments-v1.2.md). Tax-profile JSON loads on demand and validates its pinned served-byte hash. All calculations are client-side; no backend, accounts, cookies or analytics.
 
 **Tax totals, cheapest recommendations and commute rankings are intentionally withheld.** The on-grid tax gate passes, but 119/300 off-grid cases exceed CHF 10 (max error CHF 46.792). All 29 historical engine scenarios reproduce, which is not official ESTV verification. Exact r5py travel-metric conformance fails; no nationwide travel data or SBB verification is claimed. See `docs/tax/` and `docs/travel/` for actual reports. These gates were not relaxed.
 
@@ -49,7 +49,7 @@ PAGES_BASE=/steuerpendler/ npm run test:e2e
 
 `PAGES_BASE` defaults to `/` for the intended Cloudflare production host. JSON URLs and navigation respect the base. `dist/` is the static deliverable; `scripts/preview-server.mjs` is a local-only verification server, never a production backend. It returns actual 404s, not an HTML-200 SPA fallback for missing data.
 
-The existing GitHub OAuth credential lacks `workflow` scope. Workflow uploads were rejected; **GitHub CI is blocked, not green**. The test deployment uses built files on `gh-pages` and branch-based Pages publishing. Source changes use task PRs, never direct main pushes. Canonical workflow sources remain in the local source artifact; they are not active on GitHub. Cloudflare `_headers` files do not configure GitHub Pages; Cloudflare cache/production acceptance remains pending.
+The original preview credential lacked `workflow`; it was refreshed on 17 October 2026 and the effective login now has that scope. Historical rejection is recorded in the v0.1 report, not treated as a permanent restriction. A workflow upload or scope alone is not CI success: source-check run results and any still-failing numerical gates must be reported separately. The test deployment continues to use built files on `gh-pages` and branch-based Pages publishing. Source changes use task PRs, never direct main pushes. Cloudflare `_headers` files do not configure GitHub Pages; production cache/launch acceptance remains pending.
 
 ## Sources, rights and privacy
 
