@@ -1,0 +1,6 @@
+/data/*
+  Cache-Control: public, max-age=86400, must-revalidate
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
