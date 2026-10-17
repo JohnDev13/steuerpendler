@@ -14,6 +14,8 @@ A v2 profile has `meta.schemaVersion: 2`, the unchanged `meta.incomes` and `cant
 
 `meta.pensionDefault` is optional for backward compatibility. When absent, gross-to-net conversion retains the original behavior (no pension deduction). The only supported value is `"ESTV2026Age35"`; it selects the frozen ESTV 2026 employed age-35 BVG default. Unknown values reject the profile rather than silently changing its tax basis. The marker affects only schema-v2 off-grid precision evaluation; exact grid rows already contain the deduction used when they were generated. Newly generated profiles MUST emit this marker.
 
+`meta.budgetDefault` is likewise optional only for backward compatibility. Its sole value is `"ESTV2026Age35"`, and new profiles emit it together with the matching pension marker. Unknown values, a budget marker without that pension marker, or `rent30` without the budget marker reject the profile. Legacy profiles with neither marker nor operation remain unchanged.
+
 ```ts
 precision: Record<CantonCode, PreciseCanton>
 
@@ -31,7 +33,7 @@ interface PreciseCanton {
 }
 interface TaxPart {
   deductions: Array<{
-    source: 'net' | 'constant'
+    source: 'net' | 'constant' | 'rent30'
     value: number
     format: DeductionFormat
     amount: number
@@ -57,6 +59,8 @@ The `precision` key set MUST equal the 26-key `cantons` key set. Every numeric f
 
 `ZERO` explicitly records an authentic upstream deduction-format branch whose engine contribution is zero. The compiler emits `ZERO`; the browser does not silently map unknown formats to zero.
 
+`rent30` is emitted only for the verified ZG renter operation. At evaluation time it computes `round10(current post-BVG net income × 0.25) × 0.30`, then applies the serialized authentic format (currently `MAXIMUM`) and cap. Its serialized `value` is zero: seed-income rent is never frozen into a profile.
+
 ## Formula language and security
 
 No `eval`, `Function`, dynamic import, or browser dependency on the full vendored engine is used. Formula input is parsed as a complete expression. After whitespace removal, every byte MUST belong to this grammar; token extraction that leaves any character rejects the profile:
@@ -75,7 +79,7 @@ No identifiers other than `log` and `$wert$`, property access, commas, assignmen
 
 For schema v2 and an income strictly between grid points:
 
-1. Clamp gross income to CHF 40,000–500,000 and compute the frozen-profile net income. If `meta.pensionDefault` is `"ESTV2026Age35"`, subtract that BVG default during gross-to-net conversion before applying the deductions represented by the canton program.
+1. Clamp gross income to CHF 40,000–500,000 and compute the frozen-profile net income. If `meta.pensionDefault` is `"ESTV2026Age35"`, subtract that BVG default during gross-to-net conversion before applying the deductions represented by the canton program. For `rent30`, derive estimated rent from this current net amount and apply 30% before the existing maximum cap.
 2. Apply the serialized federal and cantonal tariff programs, including taxable-income floors/splits and formula tariffs.
 3. Apply federal CHF 263-per-child handling and personal tax as represented by the frozen profile.
 4. Round each final cantonal, municipal, and church money component independently with integer half-even rounding, matching the vendored engine. Church factor per-person normalization is retained.

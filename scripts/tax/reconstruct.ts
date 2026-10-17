@@ -3,15 +3,17 @@
 import { add,subtract } from 'dinero.js';
 import { dineroChf,dineroToNumber,dineroRound,dineroRoundMin0,dineroRound100Down,multiplyDineroPercent,multiplyDineroFactor,dineroMin,dineroMax } from '../../vendor/swisstaxcalculator/lib/utils/dinero';
 import { calculateTaxesAmount } from '../../vendor/swisstaxcalculator/lib/taxes/tarif';
-import type { PensionDefault, PreciseCanton } from '../../src/tax';
+import type { BudgetDefault, PensionDefault, PreciseCanton } from '../../src/tax';
 import { calculateBvg2026Age35 } from './bvg';
-export function reconstructPrecision(p:PreciseCanton,income:number,rates:number[],pensionDefault?:PensionDefault):number {
+export function reconstructPrecision(p:PreciseCanton,income:number,rates:number[],pensionDefault?:PensionDefault,budgetDefault?:BudgetDefault):number {
  const gross=dineroChf(income),capped=dineroMin(gross,dineroChf(148200));
  const social=subtract(subtract(subtract(gross,dineroRound(multiplyDineroPercent(gross,5.3,1))),dineroRound(multiplyDineroPercent(capped,1.1,1))),dineroRound(multiplyDineroPercent(capped,.4,1)));
  const net=pensionDefault==='ESTV2026Age35'?subtract(social,dineroChf(calculateBvg2026Age35(income))):social;
  const base=(part:PreciseCanton['bund'])=>{
   let deductions=dineroChf(0);
-  for(const op of part.deductions){const value=op.source==='net'?net:dineroChf(op.value);let d=dineroChf(0);
+  for(const op of part.deductions){
+   const estimatedRent=Math.round(dineroToNumber(net)*.25/10)*10;
+   const value=op.source==='net'?net:op.source==='rent30'&&budgetDefault==='ESTV2026Age35'?dineroChf(estimatedRent*.3):dineroChf(op.value);let d=dineroChf(0);
    switch(op.format){
     case 'ZERO':break;
     case 'STANDARDIZED':d=dineroChf(op.amount);break;

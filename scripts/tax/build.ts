@@ -7,6 +7,8 @@ import { dineroToNumber } from '../../vendor/swisstaxcalculator/lib/utils/dinero
 import type { TaxLocation, TaxInput, TaxConfession } from '../../vendor/swisstaxcalculator/lib/taxes/typesClient';
 import type { TaxFactors } from '../../vendor/swisstaxcalculator/lib/taxes/factor/types';
 import { calculateBvg2026Age35 } from './bvg';
+import { calculateGrossNetDetails } from '../../vendor/swisstaxcalculator/lib/taxes/deduction';
+import { estimateAnnualRent2026FixedProfile } from './estv-budget';
 
 export const ROOT = fileURLToPath(new URL('../../', import.meta.url));
 export const SOURCE = { repository: 'https://github.com/devbrains-com/swisstaxcalculator', commit: '43064402b1e52dbbc34dded6a305d7d536737c73', year: 2026 } as const;
@@ -22,9 +24,14 @@ export const INCOMES = { from: 40000, step: 1000, count: 461 } as const;
 export function makeInput(loc: TaxLocation, civil: Civil, kids: number, income: number, church: Church = 'none'): TaxInput {
   const confession: TaxConfession = { none: 'other', reformed: 'protestant', catholic: 'roman' }[church] as TaxConfession;
   const person = { age: 35, confession, incomeType: 'gross' as const, income, pkDeduction: calculateBvg2026Age35(income) };
-  return { calculationType: 'incomeAndWealth', year: 2026, locationId: loc.BfsID, cantonId: loc.CantonID,
+  const input: TaxInput = { calculationType: 'incomeAndWealth', year: 2026, locationId: loc.BfsID, cantonId: loc.CantonID,
     relationship: civil, children: kids, fortune: 0,
     persons: civil === 'm' ? [person, { ...person, income: 0, pkDeduction: 0 }] : [person] };
+  if (loc.Canton === 'ZG') {
+    const net = calculateGrossNetDetails(input).map(detail => detail.netIncome);
+    input.deductions = { rentExpenses: estimateAnnualRent2026FixedProfile(net[0] ?? 0, net[1] ?? 0) };
+  }
+  return input;
 }
 
 export async function buildRow(input: TaxInput): Promise<TaxRow> {
@@ -65,7 +72,7 @@ export async function buildProfile(sources: Sources, civil: Civil, kids: number)
     cantons[canton] = rows;
     precision[canton] = await compilePrecision(makeInput(loc,civil,kids,120000));
   }
-  return { meta: { ...metadata(), schemaVersion: 2, pensionDefault: 'ESTV2026Age35' as const, civil, kids, incomes: INCOMES }, cantons, precision };
+  return { meta: { ...metadata(), schemaVersion: 2, pensionDefault: 'ESTV2026Age35' as const, budgetDefault: 'ESTV2026Age35' as const, civil, kids, incomes: INCOMES }, cantons, precision };
 }
 
 export function buildGemeinden(sources: Sources) {

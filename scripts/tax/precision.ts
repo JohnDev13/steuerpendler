@@ -31,7 +31,9 @@ export async function compilePrecision(input:TaxInput):Promise<PreciseCanton> {
     const implemented = ['STANDARDIZED','MAXIMUM','PERCENT','PERCENT,MINIMUM,MAXIMUM'].includes(row.format);
     // Upstream's default branch contributes zero for other authentic formats.
     // Serialize that explicitly so unknown browser payload formats are rejected.
-    ops.push({source:net?'net':'constant',value:x.amount??0,format:implemented?row.format as DeductionOp['format']:'ZERO',amount:row.amount,percent:row.percent,minimum:row.minimum,maximum:row.maximum,multiplier:x.multiplier??1});
+    const source = def.id === 'MaxAbzMiete_EK' ? 'rent30' : net ? 'net' : 'constant';
+    // rent30 is reconstructed from current net income; never freeze the seed input's rent.
+    ops.push({source,value:source==='rent30'?0:x.amount??0,format:implemented?row.format as DeductionOp['format']:'ZERO',amount:row.amount,percent:row.percent,minimum:row.minimum,maximum:row.maximum,multiplier:x.multiplier??1});
    }
   }
   const [tariff,used]=await getTaxTarifTable(id,2026,'EINKOMMENSSTEUER',group);
