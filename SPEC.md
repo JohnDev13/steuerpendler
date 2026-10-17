@@ -1,6 +1,8 @@
-# Steuerpendler — Build Spec v1.1
+# Steuerpendler — Build Spec v1.2
 
-Amended: 16 Oct 2026 (UTC) · Owner: John · Tax year: 2026
+Active scope clarification: 17 Oct 2026 (§19). Workplace destinations are narrowed; all 2,110 residential/tax Gemeinden and all 26 cantons remain in scope. Source v1.1 is preserved at `docs/source/SPEC-v1.1-2026-10-17.md`.
+
+Amended: 17 Oct 2026 (UTC) · Owner: John · Tax year: 2026
 Supplied v1 stated status: 17 Oct 2026 (source metadata, not verified chronology).
 
 **Reconstruction status:** The original implementation/commit is unrecovered. Reconstruction from real upstream is now authorized; this is not recovery of the lost implementation. The original `docs/prototype.html` is unavailable. This amendment certifies no implementation, official reference, licence clearance, owner approval or launch. Source lineage and F01–F15 mapping: `docs/spec-amendments-v1.1.md`.
@@ -29,7 +31,7 @@ Example: "I work in Zürich and accept at most 25 minutes by train or bus, plus 
 ## 2. Scope
 
 **In v1**
-- Workplace: any of the 2,110 Swiss Gemeinden.
+- Workplace: German-speaking cantonal capitals/government seats only (§19). Residential/tax candidates remain all 2,110 Swiss Gemeinden in all 26 cantons.
 - Commute filter: max travel time, max walk to the station, and a toggle that counts the walk inside the travel time.
 - Tax profile: gross income, single or married, 0–3+ children, church (none, reformed, catholic).
 - Results: ranked list, Switzerland map coloured by tax, and a breakdown per Gemeinde.
@@ -226,7 +228,7 @@ The original prototype is unavailable. Reconstruct layout/interactions from this
 
 | Control | Range | Default |
 | --- | --- | --- |
-| Workplace | search box over all Gemeinden, matching by name, accent-insensitive | Zürich |
+| Workplace | search box over the 19 supported German-speaking cantonal capitals (§19), accent-insensitive | Zürich |
 | Max travel time | 5–60 min, step 1 | 25 |
 | Max walk to station | 0–15 min, step 1 | 10 |
 | Count the walk in the travel time | toggle | off |
@@ -515,7 +517,7 @@ For every update freeze/hash real inputs, reread version-sensitive docs/rights, 
 The owner explicitly requested proceeding with a public GitHub repository and GitHub Pages testing after discussing static interactivity and repository-hosted data. This authorizes a **non-commercial, non-production test preview**, not completion of T1–T9, real-data approval, personal-contact publication or a production launch. Cloudflare remains the intended production host; O1–O6 and launch gates remain unchanged.
 
 - Public source repository: `JohnDev13/steuerpendler`. Source tasks use branches/PRs, never agent pushes directly to `main`.
-- The current OAuth credential lacks `workflow` scope; GitHub rejected workflow upload. Do not claim CI green. Keep canonical workflow sources in the local source artifact; publish the test using locally built `dist/` on `gh-pages` and branch-based Pages. This is a documented least-privilege fallback, not permission to broaden credentials.
+- Historical v0.1 authorization status: the then-current OAuth credential lacked `workflow` scope and GitHub rejected upload. The 17 Oct 2026 refresh is recorded in §19 and `docs/ci-stages.md`; do not treat the original restriction as permanent. Actual source-CI upload/run evidence is required before any CI-success claim. Branch-based `gh-pages` remains the authorized non-production deployment path, not production approval.
 - `PAGES_BASE=/steuerpendler/` selects a project-prefix build. Root `/` remains the default for Cloudflare. JSON fetches, navigation and content URLs respect the selected base; e2e runs against an actual static production build under that prefix, with genuine missing-asset 404s.
 - Keep the preview unmistakeably labelled. No fictional transit data is shipped. All unverified tax cantons are withheld from recommendations, totals/breakdowns, ranks, deltas and tax colours. Showing the loaded **input profile** is not showing a tax estimate or granting launch-policy approval.
 - Actual reconstructed tax regression is 500/500 on-grid cases passing their individual limits, but **119/300 off-grid cases failing CHF 10** (max CHF 46.792). This must remain a failing gate; no threshold, interpolation rule or fixture is weakened. All 29 historical engine scenarios reproduce, not official ESTV checks. Full reports are committed in `docs/tax/`.
@@ -523,3 +525,17 @@ The owner explicitly requested proceeding with a public GitHub repository and Gi
 - Public non-commercial map testing is supported by the current official BFS/STAC linked attributed-use terms. Preserve author, dataset title/link, adaptation notice, exact package notices and the conservative terms link. `docs/map/publication-assessment.md` records live sources and the STAC/geocat commercial-permission discrepancy; commercial/production rights are not cleared by this preview.
 - Draft legal pages remain drafts and O5 still blocks production. Datenschutz names GitHub Pages as the preview host and its documented IP logging. Host-generated metadata/logging is distinguished from client-side tax calculation.
 - GitHub Pages does not apply Cloudflare `_headers`. Cloudflare cache/header/CDN coherence, production Lighthouse, real-phone checks and all owner approvals remain pending. Live HTTPS/asset/header and browser probes must verify the preview before a successful-deployment claim.
+
+## 19. Owner clarification: destinations only; all residential Gemeinden; map navigation — 17 Oct 2026
+
+This section supersedes only the earlier workplace-selection/destination-count and map-navigation requirements. It does not reduce tax, residential, canton, origin-access, official-reference or map coverage. Full change/lineage register: `docs/spec-amendments-v1.2.md`; previous source: `docs/source/SPEC-v1.1-2026-10-17.md`.
+
+- Workplace destinations are the 19 German-speaking cantonal capitals/government seats in `src/destinations.ts`, validated against the complete 2026 municipality authority. Bern and Chur are included; Herisau represents AR's government seat. Do not equate this selection with officially monolingual cantons.
+- Residential/tax candidates remain ALL 2,110 Gemeinden across ALL 26 cantons, including non-capitals, neighbouring cantons and non-German-speaking municipalities. The workplace subset must never replace the municipality authority passed to taxes, ranking, map, residential lookup or access processing.
+- The travel matrix is all candidate origins → supported capital destinations. Generate at most those 19 destination files (one for each with usable access), retaining every qualifying origin under §8. A capital-to-capital matrix is insufficient. For this scope the destination pilot has at most 19 workplaces, not 50; resource/metric and input-validation gates remain unchanged.
+- Aarau example: destination BFS 4001; transit limit 20 minutes and origin-station walking limit 15 minutes, independently applied with countWalk off. With countWalk on, walking additionally counts within the transit budget. Use real timetable and pedestrian-route reachability, not a circle or capital-to-capital radius. Existing main-stop, origin-centre, transfer and transport-mode rules are unchanged.
+- Workplace search is capital-only. A separate residential search covers all Gemeinden and changes the selected detail, never the workplace. Map selection also remains municipality-wide.
+- The SVG map supports explicit zoom in/out/reset controls, wheel zoom, drag pan, two-finger pinch and keyboard zoom/reset. User navigation survives municipality selection and control/data updates. Reset restores the national overview. The former automatic-fit behavior must not overwrite a manually chosen viewport.
+- The narrower destination list is a versioned release input. Preserve all tax files and map IDs. Tests must assert 19 workplaces, 2,110 residences, non-capital/cross-canton selection and separate time/walk controls.
+- A report of newly granted GitHub permissions is not proof of a refreshed credential or successful source CI. Recheck the effective credential and actual workflow upload/run; never mark a pending/failing accuracy stage passed. Non-commercial preview publication remains authorized under §18, not production launch.
+- All numerical, direct official, travel, content and owner launch gates remain in force. Until they pass, the preview continues to withhold unverified tax recommendations. Scope/navigation acceptance is not a working all-origin timetable/tax acceptance claim.
