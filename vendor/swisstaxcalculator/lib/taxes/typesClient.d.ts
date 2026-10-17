@@ -126,7 +126,7 @@ export interface TaxDeductionPerPersonInput {
 export interface TaxDeductionGeneralInput {
   insurancePremiumsKids?: number;
   childcareCosts?: number;
-  // rentExpenses?: number;
+  rentExpenses?: number;
   debtInterest?: number;
   maintenanceCostsRealEstate?: number;
   otherDeductions?: number;

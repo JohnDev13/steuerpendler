@@ -138,6 +138,12 @@ export const taxDeductionDefinitions: TaxDeductionDefinition[] = [
     input: (taxInput) => [{ multiplier: taxInput.children }]
   },
   {
+    id: 'MaxAbzMiete_EK',
+    rule: (taxInput) =>
+      taxInput.cantonId === 25 && (taxInput.deductions?.rentExpenses ?? 0) > 0,
+    input: (taxInput) => [{ amount: (taxInput.deductions?.rentExpenses ?? 0) * 0.3 }]
+  },
+  {
     id: 'EigenBetr_EK',
     rule: (taxInput) => taxInput.children > 0,
     input: () => [{}]
