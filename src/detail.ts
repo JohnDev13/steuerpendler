@@ -1,0 +1,17 @@
+import type { Gemeinde, TaxBreakdown } from './tax';
+import type { Access, RankedResult } from './filter';
+import { formatCHF } from './format';
+import { strings as s } from './strings';
+export function renderDetail(container:HTMLElement,g:Gemeinde,id:number,tax:TaxBreakdown|null,stop:Access[string]|undefined,result:RankedResult|undefined,minutes:number|undefined,travelAvailable:boolean,underReview:boolean):void {
+ const title=document.createElement('h2');title.textContent=`${g[0]} · ${g[1]}`;
+ const status=document.createElement('p');status.className='detail-status';status.textContent=underReview?s.review:result?`${s.rank} ${result.rank}`:travelAvailable?s.outOfReach:s.travelUnknown;
+ container.replaceChildren(title,status);
+ if(!underReview&&tax){
+  const dl=document.createElement('dl');
+  for(const [label,value] of [[s.bund,tax.bund],[s.kanton,tax.kanton],[s.gemeinde,tax.gemeinde],[s.kirche,tax.kirche],[s.personal,tax.personal],[s.total,tax.total]] as const){const dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=label;dd.textContent=formatCHF(value);dl.append(dt,dd);}
+  container.append(dl);
+ }
+ const info=document.createElement('p');info.className='detail-meta';info.textContent=`${s.rate}: ${g[3]}% · BFS ${id}`;container.append(info);
+ if(stop){const p=document.createElement('p');p.textContent=`${s.stop}: ${stop[1]} · ${s.walk}: ${stop[2]} ${s.minutes}${minutes===undefined?'':` · ${s.travel}: ${minutes} ${s.minutes}`}`;container.append(p);}
+ const note=document.createElement('p');note.className='muted';note.textContent=s.disclaimer;container.append(note);
+}
