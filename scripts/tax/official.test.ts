@@ -3,7 +3,7 @@ import { mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { expect, test } from 'vitest';
-import { officialTolerance, verifyResponseEvidence } from './official';
+import { compareComponents, officialTolerance, verifyResponseEvidence } from './official';
 
 test('official threshold is inclusive and uses the larger CHF 5 or 0.1% bound', () => {
   expect(officialTolerance(1_000)).toBe(5);
@@ -20,4 +20,22 @@ test('response evidence rejects a malformed digest and a digest mismatch', async
   await expect(verifyResponseEvidence(evidence, '0'.repeat(64))).rejects.toThrow(/mismatch/);
   const digest = createHash('sha256').update('{"TotalNetTax":123}').digest('hex');
   await expect(verifyResponseEvidence(evidence, digest)).resolves.toBe(digest);
+});
+
+test('component comparison records amounts, absolute errors, and neutral mismatch group', () => {
+  const frontend = { bund: 110, kanton: 205, gemeinde: 300, kirche: 40, personal: 10 };
+  const official = { IncomeTaxFed: 100, IncomeTaxCanton: 200, IncomeTaxCity: 300, IncomeTaxChurch: 40, PersonalTax: 10 };
+  expect(compareComponents(frontend, official)).toEqual({
+    components: {
+      federal: { frontend: 110, official: 100, error: 10 },
+      canton: { frontend: 205, official: 200, error: 5 },
+      city: { frontend: 300, official: 300, error: 0 },
+      church: { frontend: 40, official: 40, error: 0 },
+      personal: { frontend: 10, official: 10, error: 0 },
+    },
+    mismatchGroup: 'mixed',
+  });
+  expect(compareComponents({ ...frontend, bund: 100 }, official).mismatchGroup).toBe('non-federal-only');
+  expect(compareComponents({ ...frontend, kanton: 200 }, official).mismatchGroup).toBe('federal-only');
+  expect(compareComponents({ ...frontend, bund: 100, kanton: 200 }, official).mismatchGroup).toBe(null);
 });

@@ -9,6 +9,8 @@ const CASE_IDS = Array.from({ length: 29 }, (_, index) => `estv-2026-${String(in
 const DIGEST = /^[0-9a-f]{64}$/;
 
 type CsvRow = Record<string, string>;
+type FrontendComponents = Pick<ReturnType<typeof calculateTax>, 'bund' | 'kanton' | 'gemeinde' | 'kirche' | 'personal'>;
+type OfficialResponse = { IncomeTaxFed: number; IncomeTaxCanton: number; IncomeTaxCity: number; IncomeTaxChurch: number; PersonalTax: number };
 
 function sha256(bytes: Buffer | string): string {
   return createHash('sha256').update(bytes).digest('hex');
@@ -26,6 +28,22 @@ export async function verifyResponseEvidence(path: string, expectedSha256: strin
   const actual = sha256(bytes);
   if (actual !== expectedSha256) throw new Error(`Response evidence hash mismatch: ${path}`);
   return actual;
+}
+
+export function compareComponents(frontend: FrontendComponents, official: OfficialResponse) {
+  const pairs = {
+    federal: [frontend.bund, official.IncomeTaxFed], canton: [frontend.kanton, official.IncomeTaxCanton],
+    city: [frontend.gemeinde, official.IncomeTaxCity], church: [frontend.kirche, official.IncomeTaxChurch],
+    personal: [frontend.personal, official.PersonalTax],
+  } as const;
+  const components = Object.fromEntries(Object.entries(pairs).map(([name, [frontendAmount, officialAmount]]) => {
+    if (!Number.isFinite(officialAmount)) throw new Error(`Non-finite official ${name} component`);
+    return [name, { frontend: frontendAmount, official: officialAmount, error: Math.abs(frontendAmount - officialAmount) }];
+  })) as Record<keyof typeof pairs, { frontend: number; official: number; error: number }>;
+  const federalMismatch = components.federal.error !== 0;
+  const nonFederalMismatch = (['canton', 'city', 'church', 'personal'] as const).some(name => components[name].error !== 0);
+  const mismatchGroup: 'federal-only' | 'non-federal-only' | 'mixed' | null = federalMismatch && nonFederalMismatch ? 'mixed' : federalMismatch ? 'federal-only' : nonFederalMismatch ? 'non-federal-only' : null;
+  return { components, mismatchGroup };
 }
 
 function parseCsv(text: string): CsvRow[] {
@@ -76,7 +94,7 @@ export async function runOfficialComparison(root = ROOT) {
     artifacts[file] = JSON.parse(bytes.toString('utf8'));
   }
   const gemeinden = (artifacts['gemeinden-2026.json'] as { gemeinden: Record<string, Gemeinde> }).gemeinden;
-  const results = [];
+  const results: (ReturnType<typeof compareComponents> & { caseId: string; numericPassed: boolean; error: number; [key: string]: unknown })[] = [];
   for (const row of rows) {
     if (row.capture_status !== 'captured' || row.comparability !== 'owner_pending' || row.official_gate !== 'pending') throw new Error(`${row.case_id}: invalid evidence state`);
     if (row.tax_year !== '2026' || row.age !== '35' || row.partner_income !== '0' || row.wealth !== '0' || row.income_basis !== 'gross_employment') throw new Error(`${row.case_id}: frozen official inputs changed`);
@@ -92,13 +110,22 @@ export async function runOfficialComparison(root = ROOT) {
     const official = finite(row, 'official_chf');
     const evidencePath = resolve(root, row.evidence);
     const evidenceSha256 = await verifyResponseEvidence(evidencePath, row.response_sha256);
-    const actual = calculateTax(profile, municipality, finite(row, 'income'), row.church as Church).total;
+    const evidence = JSON.parse(await readFile(evidencePath, 'utf8')) as { response: OfficialResponse };
+    if (!evidence.response || typeof evidence.response !== 'object') throw new Error(`${row.case_id}: missing official response`);
+    const frontend = calculateTax(profile, municipality, finite(row, 'income'), row.church as Church);
+    const actual = frontend.total;
     if (!Number.isFinite(actual)) throw new Error(`${row.case_id}: non-finite shipped total`);
     const error = Math.abs(actual - official);
     const tolerance = officialTolerance(official);
-    results.push({ caseId: row.case_id, city: row.city, canton: row.canton, bfs, civil: row.civil, kids, income: finite(row, 'income'), church: row.church, official, actual, error, tolerance, numericPassed: error <= tolerance, evidence: row.evidence, evidenceSha256 });
+    results.push({ caseId: row.case_id, city: row.city, canton: row.canton, bfs, civil: row.civil, kids, income: finite(row, 'income'), church: row.church, official, actual, error, tolerance, numericPassed: error <= tolerance, ...compareComponents(frontend, evidence.response), evidence: row.evidence, evidenceSha256 });
   }
   const numericFailureCount = results.filter(result => !result.numericPassed).length;
+  const observedMismatchGroups = { 'federal-only': 0, 'non-federal-only': 0, mixed: 0 };
+  for (const result of results) if (result.mismatchGroup) observedMismatchGroups[result.mismatchGroup]++;
+  const largestComponentDiscrepancies = (Object.keys(results[0].components) as (keyof typeof results[0]['components'])[]).map(component => {
+    const largest = results.reduce((best, result) => result.components[component].error > best.components[component].error ? result : best);
+    return { component, caseId: largest.caseId, error: largest.components[component].error, frontend: largest.components[component].frontend, official: largest.components[component].official };
+  }).sort((a, b) => b.error - a.error);
   return {
     sourceCsv: 'tests/reference/estv-2026.csv',
     sourceCsvSha256: sha256(csvBytes),
@@ -108,6 +135,8 @@ export async function runOfficialComparison(root = ROOT) {
     comparability: 'owner_pending',
     officialApproval: 'pending',
     numericFailureCount,
+    observedMismatchGroups,
+    largestComponentDiscrepancies,
     maxAbsoluteError: Math.max(...results.map(result => result.error)),
     numericPassed: numericFailureCount === 0,
     passed: false,
@@ -124,6 +153,8 @@ if (process.argv[1] && pathToFileURL(resolve(process.argv[1])).href === import.m
     const reportPath = resolve(ROOT, args[1] ?? 'docs/tax/official-comparison-report.json');
     await writeFile(reportPath, `${JSON.stringify(report, null, 2)}\n`);
     console.error(`Official comparison: ${report.numericFailureCount}/${report.coverage.compared} numeric failures; comparability ${report.comparability}`);
+    console.error(`Observed mismatch groups: federal-only ${report.observedMismatchGroups['federal-only']}, non-federal-only ${report.observedMismatchGroups['non-federal-only']}, mixed ${report.observedMismatchGroups.mixed}`);
+    console.error(`Largest component discrepancies: ${report.largestComponentDiscrepancies.map(item => `${item.component} CHF ${item.error} (${item.caseId})`).join('; ')}`);
     process.exitCode = report.exitCode;
   })().catch(error => { console.error(error); process.exitCode = 1; });
 }

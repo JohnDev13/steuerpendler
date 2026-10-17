@@ -21,6 +21,48 @@
   "comparability": "owner_pending",
   "officialApproval": "pending",
   "numericFailureCount": 21,
+  "observedMismatchGroups": {
+    "federal-only": 0,
+    "non-federal-only": 23,
+    "mixed": 1
+  },
+  "largestComponentDiscrepancies": [
+    {
+      "component": "city",
+      "caseId": "estv-2026-17",
+      "error": 10075,
+      "frontend": 11695,
+      "official": 1620
+    },
+    {
+      "component": "canton",
+      "caseId": "estv-2026-17",
+      "error": 9970,
+      "frontend": 10632,
+      "official": 662
+    },
+    {
+      "component": "church",
+      "caseId": "estv-2026-29",
+      "error": 2416,
+      "frontend": 2812,
+      "official": 396
+    },
+    {
+      "component": "personal",
+      "caseId": "estv-2026-28",
+      "error": 60,
+      "frontend": 60,
+      "official": 120
+    },
+    {
+      "component": "federal",
+      "caseId": "estv-2026-20",
+      "error": 4,
+      "frontend": 4,
+      "official": 0
+    }
+  ],
   "maxAbsoluteError": 20315,
   "numericPassed": false,
   "passed": false,
@@ -40,6 +82,34 @@
       "error": 0,
       "tolerance": 16.346,
       "numericPassed": true,
+      "components": {
+        "federal": {
+          "frontend": 2849,
+          "official": 2849,
+          "error": 0
+        },
+        "canton": {
+          "frontend": 5981,
+          "official": 5981,
+          "error": 0
+        },
+        "city": {
+          "frontend": 7492,
+          "official": 7492,
+          "error": 0
+        },
+        "church": {
+          "frontend": 0,
+          "official": 0,
+          "error": 0
+        },
+        "personal": {
+          "frontend": 24,
+          "official": 24,
+          "error": 0
+        }
+      },
+      "mismatchGroup": null,
       "evidence": "tests/reference/estv-2026/estv-2026-01-tax.response.json",
       "evidenceSha256": "0d49b4e47aa9ed8fe63a79d10750db0c570ef48b8f66f50b14b43bd1a0f55131"
     },
@@ -57,6 +127,34 @@
       "error": 0,
       "tolerance": 13.458,
       "numericPassed": true,
+      "components": {
+        "federal": {
+          "frontend": 1743,
+          "official": 1743,
+          "error": 0
+        },
+        "canton": {
+          "frontend": 4757,
+          "official": 4757,
+          "error": 0
+        },
+        "city": {
+          "frontend": 6259,
+          "official": 6259,
+          "error": 0
+        },
+        "church": {
+          "frontend": 651,
+          "official": 651,
+          "error": 0
+        },
+        "personal": {
+          "frontend": 48,
+          "official": 48,
+          "error": 0
+        }
+      },
+      "mismatchGroup": null,
       "evidence": "tests/reference/estv-2026/estv-2026-02-tax.response.json",
       "evidenceSha256": "4f2a7929b5292290761d909c77734599f7ec4fb43dfa6895459b852612529479"
     },
@@ -74,6 +172,34 @@
       "error": 843,
       "tolerance": 7.9270000000000005,
       "numericPassed": false,
+      "components": {
+        "federal": {
+          "frontend": 2849,
+          "official": 2849,
+          "error": 0
+        },
+        "canton": {
+          "frontend": 3553,
+          "official": 3047,
+          "error": 506
+        },
+        "city": {
+          "frontend": 2368,
+          "official": 2031,
+          "error": 337
+        },
+        "church": {
+          "frontend": 0,
+          "official": 0,
+          "error": 0
+        },
+        "personal": {
+          "frontend": 0,
+          "official": 0,
+          "error": 0
+        }
+      },
+      "mismatchGroup": "non-federal-only",
       "evidence": "tests/reference/estv-2026/estv-2026-03-tax.response.json",
       "evidenceSha256": "16d87423b1097af8cd62a20fb1d614653fc7c381d923bfc050d4960cc5aa932f"
     },
@@ -91,6 +217,34 @@
       "error": 727,
       "tolerance": 7.987,
       "numericPassed": false,
+      "components": {
+        "federal": {
+          "frontend": 2849,
+          "official": 2849,
+          "error": 0
+        },
+        "canton": {
+          "frontend": 3708,
+          "official": 3248,
+          "error": 460
+        },
+        "city": {
+          "frontend": 2157,
+          "official": 1890,
+          "error": 267
+        },
+        "church": {
+          "frontend": 0,
+          "official": 0,
+          "error": 0
+        },
+        "personal": {
+          "frontend": 0,
+          "official": 0,
+          "error": 0
+        }
+      },
+      "mismatchGroup": "non-federal-only",
       "evidence": "tests/reference/estv-2026/estv-2026-04-tax.response.json",
       "evidenceSha256": "70e216ba464b49eaf9c1cbcfad1124663440cb9d40bb3b7d5e638606cd50f074"
     },
@@ -108,6 +262,34 @@
       "error": 79,
       "tolerance": 7.634,
       "numericPassed": false,
+      "components": {
+        "federal": {
+          "frontend": 981,
+          "official": 981,
+          "error": 0
+        },
+        "canton": {
+          "frontend": 3240,
+          "official": 3248,
+          "error": 8
+        },
+        "city": {
+          "frontend": 2894,
+          "official": 2806,
+          "error": 88
+        },
+        "church": {
+          "frontend": 598,
+          "official": 599,
+          "error": 1
+        },
+        "personal": {
+          "frontend": 0,
+          "official": 0,
+          "error": 0
+        }
+      },
+      "mismatchGroup": "non-federal-only",
       "evidence": "tests/reference/estv-2026/estv-2026-05-tax.response.json",
       "evidenceSha256": "3b197246c002e441819c115c5111a5b930045ea60cb36548b9c4a5a3e962e0b8"
     },
@@ -125,6 +307,34 @@
       "error": 1098,
       "tolerance": 5,
       "numericPassed": false,
+      "components": {
+        "federal": {
+          "frontend": 114,
+          "official": 114,
+          "error": 0
+        },
+        "canton": {
+          "frontend": 2278,
+          "official": 1710,
+          "error": 568
+        },
+        "city": {
+          "frontend": 2124,
+          "official": 1594,
+          "error": 530
+        },
+        "church": {
+          "frontend": 0,
+          "official": 0,
+          "error": 0
+        },
+        "personal": {
+          "frontend": 0,
+          "official": 0,
+          "error": 0
+        }
+      },
+      "mismatchGroup": "non-federal-only",
       "evidence": "tests/reference/estv-2026/estv-2026-06-tax.response.json",
       "evidenceSha256": "51f22eb8b1c9bdccaf7248ff11f4660f208904e922fa94a69601b4b43907d9d3"
     },
@@ -142,6 +352,34 @@
       "error": 564,
       "tolerance": 14.383000000000001,
       "numericPassed": false,
+      "components": {
+        "federal": {
+          "frontend": 1164,
+          "official": 1164,
+          "error": 0
+        },
+        "canton": {
+          "frontend": 8726,
+          "official": 8369,
+          "error": 357
+        },
+        "city": {
+          "frontend": 4517,
+          "official": 4332,
+          "error": 185
+        },
+        "church": {
+          "frontend": 540,
+          "official": 518,
+          "error": 22
+        },
+        "personal": {
+          "frontend": 0,
+          "official": 0,
+          "error": 0
+        }
+      },
+      "mismatchGroup": "non-federal-only",
       "evidence": "tests/reference/estv-2026/estv-2026-07-tax.response.json",
       "evidenceSha256": "b0ad9be1933190b625cdd13785dc54879463d93135a575d9ff1433e72b92c1fa"
     },
@@ -159,6 +397,34 @@
       "error": 0,
       "tolerance": 23.168,
       "numericPassed": true,
+      "components": {
+        "federal": {
+          "frontend": 3596,
+          "official": 3596,
+          "error": 0
+        },
+        "canton": {
+          "frontend": 19572,
+          "official": 9786,
+          "error": 9786
+        },
+        "city": {
+          "frontend": 0,
+          "official": 9786,
+          "error": 9786
+        },
+        "church": {
+          "frontend": 0,
+          "official": 0,
+          "error": 0
+        },
+        "personal": {
+          "frontend": 0,
+          "official": 0,
+          "error": 0
+        }
+      },
+      "mismatchGroup": "non-federal-only",
       "evidence": "tests/reference/estv-2026/estv-2026-08-tax.response.json",
       "evidenceSha256": "ae1768ac90eed777ee439dbe4143d54dbefa6a53a63e60f6c6e300de26fa5e55"
     },
@@ -176,6 +442,34 @@
       "error": 0,
       "tolerance": 52.914,
       "numericPassed": true,
+      "components": {
+        "federal": {
+          "frontend": 15530,
+          "official": 15530,
+          "error": 0
+        },
+        "canton": {
+          "frontend": 20769,
+          "official": 20769,
+          "error": 0
+        },
+        "city": {
+          "frontend": 16615,
+          "official": 16615,
+          "error": 0
+        },
+        "church": {
+          "frontend": 0,
+          "official": 0,
+          "error": 0
+        },
+        "personal": {
+          "frontend": 0,
+          "official": 0,
+          "error": 0
+        }
+      },
+      "mismatchGroup": null,
       "evidence": "tests/reference/estv-2026/estv-2026-09-tax.response.json",
       "evidenceSha256": "5ef1381a3b840f55f99d74ad4af7bbce36805d9ce905e9fcd7c35997c56960b1"
     },
@@ -193,6 +487,34 @@
       "error": 50,
       "tolerance": 9.885,
       "numericPassed": false,
+      "components": {
+        "federal": {
+          "frontend": 1114,
+          "official": 1114,
+          "error": 0
+        },
+        "canton": {
+          "frontend": 4040,
+          "official": 4040,
+          "error": 0
+        },
+        "city": {
+          "frontend": 4040,
+          "official": 4040,
+          "error": 0
+        },
+        "church": {
+          "frontend": 641,
+          "official": 641,
+          "error": 0
+        },
+        "personal": {
+          "frontend": 100,
+          "official": 50,
+          "error": 50
+        }
+      },
+      "mismatchGroup": "non-federal-only",
       "evidence": "tests/reference/estv-2026/estv-2026-10-tax.response.json",
       "evidenceSha256": "4cf422800a890c2ed7fb7812fe118604da7afb4885670bae976f7757ef07f271"
     },
@@ -210,6 +532,34 @@
       "error": 517,
       "tolerance": 9.041,
       "numericPassed": false,
+      "components": {
+        "federal": {
+          "frontend": 648,
+          "official": 648,
+          "error": 0
+        },
+        "canton": {
+          "frontend": 3478,
+          "official": 3276,
+          "error": 202
+        },
+        "city": {
+          "frontend": 4571,
+          "official": 4306,
+          "error": 265
+        },
+        "church": {
+          "frontend": 861,
+          "official": 811,
+          "error": 50
+        },
+        "personal": {
+          "frontend": 0,
+          "official": 0,
+          "error": 0
+        }
+      },
+      "mismatchGroup": "non-federal-only",
       "evidence": "tests/reference/estv-2026/estv-2026-11-tax.response.json",
       "evidenceSha256": "76149e8ba0555ae662c5d0219f19301e2bd7bcefb116b6bc88c0013d15c82432"
     },
@@ -227,6 +577,34 @@
       "error": 6469,
       "tolerance": 16.236,
       "numericPassed": false,
+      "components": {
+        "federal": {
+          "frontend": 1300,
+          "official": 1300,
+          "error": 0
+        },
+        "canton": {
+          "frontend": 14209,
+          "official": 9742,
+          "error": 4467
+        },
+        "city": {
+          "frontend": 7196,
+          "official": 5194,
+          "error": 2002
+        },
+        "church": {
+          "frontend": 0,
+          "official": 0,
+          "error": 0
+        },
+        "personal": {
+          "frontend": 0,
+          "official": 0,
+          "error": 0
+        }
+      },
+      "mismatchGroup": "non-federal-only",
       "evidence": "tests/reference/estv-2026/estv-2026-12-tax.response.json",
       "evidenceSha256": "5e8dc25de675e8cc7ba840aaaaaeab7361097eb14fbc1e32bfd14d352857b58b"
     },
@@ -244,6 +622,34 @@
       "error": 3682,
       "tolerance": 30.043,
       "numericPassed": false,
+      "components": {
+        "federal": {
+          "frontend": 5014,
+          "official": 5014,
+          "error": 0
+        },
+        "canton": {
+          "frontend": 21924,
+          "official": 18552,
+          "error": 3372
+        },
+        "city": {
+          "frontend": 6762,
+          "official": 6452,
+          "error": 310
+        },
+        "church": {
+          "frontend": 0,
+          "official": 0,
+          "error": 0
+        },
+        "personal": {
+          "frontend": 25,
+          "official": 25,
+          "error": 0
+        }
+      },
+      "mismatchGroup": "non-federal-only",
       "evidence": "tests/reference/estv-2026/estv-2026-13-tax.response.json",
       "evidenceSha256": "6f9660020cd478f42c2c6fb666a15096e76d392eec164e1119d58c129071c354"
     },
@@ -261,6 +667,34 @@
       "error": 177,
       "tolerance": 34.541000000000004,
       "numericPassed": false,
+      "components": {
+        "federal": {
+          "frontend": 7928,
+          "official": 7928,
+          "error": 0
+        },
+        "canton": {
+          "frontend": 15090,
+          "official": 15013,
+          "error": 77
+        },
+        "city": {
+          "frontend": 11620,
+          "official": 11560,
+          "error": 60
+        },
+        "church": {
+          "frontend": 0,
+          "official": 0,
+          "error": 0
+        },
+        "personal": {
+          "frontend": 80,
+          "official": 40,
+          "error": 40
+        }
+      },
+      "mismatchGroup": "non-federal-only",
       "evidence": "tests/reference/estv-2026/estv-2026-14-tax.response.json",
       "evidenceSha256": "3b0d661c81052e8ed0a52ba5a970d679cf62d8bfb9187b727dc6d763349819bb"
     },
@@ -278,6 +712,34 @@
       "error": 2520,
       "tolerance": 73.08500000000001,
       "numericPassed": false,
+      "components": {
+        "federal": {
+          "frontend": 19784,
+          "official": 19784,
+          "error": 0
+        },
+        "canton": {
+          "frontend": 30448,
+          "official": 29073,
+          "error": 1375
+        },
+        "city": {
+          "frontend": 25373,
+          "official": 24228,
+          "error": 1145
+        },
+        "church": {
+          "frontend": 0,
+          "official": 0,
+          "error": 0
+        },
+        "personal": {
+          "frontend": 0,
+          "official": 0,
+          "error": 0
+        }
+      },
+      "mismatchGroup": "non-federal-only",
       "evidence": "tests/reference/estv-2026/estv-2026-15-tax.response.json",
       "evidenceSha256": "f948f9b0badbbc191a27e0049b581091a9ec2122a51afc409007723cf5bc6b9a"
     },
@@ -295,6 +757,34 @@
       "error": 1085,
       "tolerance": 5,
       "numericPassed": false,
+      "components": {
+        "federal": {
+          "frontend": 0,
+          "official": 0,
+          "error": 0
+        },
+        "canton": {
+          "frontend": 513,
+          "official": 0,
+          "error": 513
+        },
+        "city": {
+          "frontend": 491,
+          "official": 0,
+          "error": 491
+        },
+        "church": {
+          "frontend": 81,
+          "official": 0,
+          "error": 81
+        },
+        "personal": {
+          "frontend": 0,
+          "official": 0,
+          "error": 0
+        }
+      },
+      "mismatchGroup": "non-federal-only",
       "evidence": "tests/reference/estv-2026/estv-2026-16-tax.response.json",
       "evidenceSha256": "85e1ea993772505f769195b1d88fb82044da4eb3600a9f3d60954092ec819abc"
     },
@@ -312,6 +802,34 @@
       "error": 20315,
       "tolerance": 5,
       "numericPassed": false,
+      "components": {
+        "federal": {
+          "frontend": 0,
+          "official": 0,
+          "error": 0
+        },
+        "canton": {
+          "frontend": 10632,
+          "official": 662,
+          "error": 9970
+        },
+        "city": {
+          "frontend": 11695,
+          "official": 1620,
+          "error": 10075
+        },
+        "church": {
+          "frontend": 319,
+          "official": 49,
+          "error": 270
+        },
+        "personal": {
+          "frontend": 24,
+          "official": 24,
+          "error": 0
+        }
+      },
+      "mismatchGroup": "non-federal-only",
       "evidence": "tests/reference/estv-2026/estv-2026-17-tax.response.json",
       "evidenceSha256": "47331b64857642aab026c04187f18de84d915573804a5f19a129c08a87387984"
     },
@@ -329,6 +847,34 @@
       "error": 0,
       "tolerance": 18.071,
       "numericPassed": true,
+      "components": {
+        "federal": {
+          "frontend": 1701,
+          "official": 1701,
+          "error": 0
+        },
+        "canton": {
+          "frontend": 10740,
+          "official": 10740,
+          "error": 0
+        },
+        "city": {
+          "frontend": 5630,
+          "official": 5630,
+          "error": 0
+        },
+        "church": {
+          "frontend": 0,
+          "official": 0,
+          "error": 0
+        },
+        "personal": {
+          "frontend": 0,
+          "official": 0,
+          "error": 0
+        }
+      },
+      "mismatchGroup": null,
       "evidence": "tests/reference/estv-2026/estv-2026-18-tax.response.json",
       "evidenceSha256": "81f585cd4eb9d93bf7fdccfa6221c2da064f1d3a130acc3259e20cf7f55b9cf9"
     },
@@ -346,6 +892,34 @@
       "error": 12,
       "tolerance": 89.71600000000001,
       "numericPassed": true,
+      "components": {
+        "federal": {
+          "frontend": 31640,
+          "official": 31640,
+          "error": 0
+        },
+        "canton": {
+          "frontend": 25630,
+          "official": 25635,
+          "error": 5
+        },
+        "city": {
+          "frontend": 27990,
+          "official": 27996,
+          "error": 6
+        },
+        "church": {
+          "frontend": 4384,
+          "official": 4385,
+          "error": 1
+        },
+        "personal": {
+          "frontend": 60,
+          "official": 60,
+          "error": 0
+        }
+      },
+      "mismatchGroup": "non-federal-only",
       "evidence": "tests/reference/estv-2026/estv-2026-19-tax.response.json",
       "evidenceSha256": "983427403ed605350aa4a6f2b642499e443503ce24e89c7f36a3df71df5f4c6c"
     },
@@ -363,6 +937,34 @@
       "error": 2566,
       "tolerance": 5,
       "numericPassed": false,
+      "components": {
+        "federal": {
+          "frontend": 4,
+          "official": 0,
+          "error": 4
+        },
+        "canton": {
+          "frontend": 2987,
+          "official": 1985,
+          "error": 1002
+        },
+        "city": {
+          "frontend": 3946,
+          "official": 2586,
+          "error": 1360
+        },
+        "church": {
+          "frontend": 0,
+          "official": 0,
+          "error": 0
+        },
+        "personal": {
+          "frontend": 0,
+          "official": 0,
+          "error": 0
+        }
+      },
+      "mismatchGroup": "mixed",
       "evidence": "tests/reference/estv-2026/estv-2026-20-tax.response.json",
       "evidenceSha256": "af0adbd3d8edd72f83b28a1d35c84b4368ccb1842f13c2e6d4ee0acdcad6a98c"
     },
@@ -380,6 +982,34 @@
       "error": 729,
       "tolerance": 10.859,
       "numericPassed": false,
+      "components": {
+        "federal": {
+          "frontend": 1701,
+          "official": 1701,
+          "error": 0
+        },
+        "canton": {
+          "frontend": 5859,
+          "official": 5427,
+          "error": 432
+        },
+        "city": {
+          "frontend": 3418,
+          "official": 3166,
+          "error": 252
+        },
+        "church": {
+          "frontend": 610,
+          "official": 565,
+          "error": 45
+        },
+        "personal": {
+          "frontend": 0,
+          "official": 0,
+          "error": 0
+        }
+      },
+      "mismatchGroup": "non-federal-only",
       "evidence": "tests/reference/estv-2026/estv-2026-21-tax.response.json",
       "evidenceSha256": "fd0595626285d4a6a0be200603e23285dbc8c5a6380cc5cc71f8da02ef31b6b6"
     },
@@ -397,6 +1027,34 @@
       "error": 3354,
       "tolerance": 10.120000000000001,
       "numericPassed": false,
+      "components": {
+        "federal": {
+          "frontend": 551,
+          "official": 551,
+          "error": 0
+        },
+        "canton": {
+          "frontend": 5763,
+          "official": 4267,
+          "error": 1496
+        },
+        "city": {
+          "frontend": 7160,
+          "official": 5302,
+          "error": 1858
+        },
+        "church": {
+          "frontend": 0,
+          "official": 0,
+          "error": 0
+        },
+        "personal": {
+          "frontend": 0,
+          "official": 0,
+          "error": 0
+        }
+      },
+      "mismatchGroup": "non-federal-only",
       "evidence": "tests/reference/estv-2026/estv-2026-22-tax.response.json",
       "evidenceSha256": "307ad84ad178fa24151c097b30f486ce03c289740a210cb3448731eea9e9832a"
     },
@@ -414,6 +1072,34 @@
       "error": 0,
       "tolerance": 16.719,
       "numericPassed": true,
+      "components": {
+        "federal": {
+          "frontend": 1701,
+          "official": 1701,
+          "error": 0
+        },
+        "canton": {
+          "frontend": 9102,
+          "official": 9102,
+          "error": 0
+        },
+        "city": {
+          "frontend": 5916,
+          "official": 5916,
+          "error": 0
+        },
+        "church": {
+          "frontend": 0,
+          "official": 0,
+          "error": 0
+        },
+        "personal": {
+          "frontend": 0,
+          "official": 0,
+          "error": 0
+        }
+      },
+      "mismatchGroup": null,
       "evidence": "tests/reference/estv-2026/estv-2026-23-tax.response.json",
       "evidenceSha256": "622ad743b984d817c1faeadbef28051ddf30699512c107700bd1d9c49704f002"
     },
@@ -431,6 +1117,34 @@
       "error": 4,
       "tolerance": 6.3580000000000005,
       "numericPassed": true,
+      "components": {
+        "federal": {
+          "frontend": 219,
+          "official": 219,
+          "error": 0
+        },
+        "canton": {
+          "frontend": 2857,
+          "official": 2859,
+          "error": 2
+        },
+        "city": {
+          "frontend": 2919,
+          "official": 2921,
+          "error": 2
+        },
+        "church": {
+          "frontend": 359,
+          "official": 359,
+          "error": 0
+        },
+        "personal": {
+          "frontend": 0,
+          "official": 0,
+          "error": 0
+        }
+      },
+      "mismatchGroup": "non-federal-only",
       "evidence": "tests/reference/estv-2026/estv-2026-24-tax.response.json",
       "evidenceSha256": "4379844a8782f1b463abf1ec09ff43ed1e3d0d2c21d0d9cf57dc195af74d1e57"
     },
@@ -448,6 +1162,34 @@
       "error": 727,
       "tolerance": 10.96,
       "numericPassed": false,
+      "components": {
+        "federal": {
+          "frontend": 906,
+          "official": 906,
+          "error": 0
+        },
+        "canton": {
+          "frontend": 6383,
+          "official": 5809,
+          "error": 574
+        },
+        "city": {
+          "frontend": 4255,
+          "official": 3873,
+          "error": 382
+        },
+        "church": {
+          "frontend": 143,
+          "official": 372,
+          "error": 229
+        },
+        "personal": {
+          "frontend": 0,
+          "official": 0,
+          "error": 0
+        }
+      },
+      "mismatchGroup": "non-federal-only",
       "evidence": "tests/reference/estv-2026/estv-2026-25-tax.response.json",
       "evidenceSha256": "096694bb027525d9f568430e56508bd030929a9546dad52b6688160b885f5c6e"
     },
@@ -465,6 +1207,34 @@
       "error": 1279,
       "tolerance": 18.45,
       "numericPassed": false,
+      "components": {
+        "federal": {
+          "frontend": 3866,
+          "official": 3866,
+          "error": 0
+        },
+        "canton": {
+          "frontend": 8321,
+          "official": 7648,
+          "error": 673
+        },
+        "city": {
+          "frontend": 7492,
+          "official": 6886,
+          "error": 606
+        },
+        "church": {
+          "frontend": 0,
+          "official": 0,
+          "error": 0
+        },
+        "personal": {
+          "frontend": 50,
+          "official": 50,
+          "error": 0
+        }
+      },
+      "mismatchGroup": "non-federal-only",
       "evidence": "tests/reference/estv-2026/estv-2026-26-tax.response.json",
       "evidenceSha256": "0e31c32cc457e5f60251fc56429b2c4ed60cd8a8639287df10720d4c02eda5c4"
     },
@@ -482,6 +1252,34 @@
       "error": 1280,
       "tolerance": 11.325000000000001,
       "numericPassed": false,
+      "components": {
+        "federal": {
+          "frontend": 1701,
+          "official": 1701,
+          "error": 0
+        },
+        "canton": {
+          "frontend": 4984,
+          "official": 4399,
+          "error": 585
+        },
+        "city": {
+          "frontend": 5920,
+          "official": 5225,
+          "error": 695
+        },
+        "church": {
+          "frontend": 0,
+          "official": 0,
+          "error": 0
+        },
+        "personal": {
+          "frontend": 0,
+          "official": 0,
+          "error": 0
+        }
+      },
+      "mismatchGroup": "non-federal-only",
       "evidence": "tests/reference/estv-2026/estv-2026-27-tax.response.json",
       "evidenceSha256": "7a268925c3059031a52eb8ad741765a2a24cc647a31892eb45181019a1bb47d6"
     },
@@ -499,6 +1297,34 @@
       "error": 38,
       "tolerance": 12.994,
       "numericPassed": false,
+      "components": {
+        "federal": {
+          "frontend": 899,
+          "official": 899,
+          "error": 0
+        },
+        "canton": {
+          "frontend": 5496,
+          "official": 5368,
+          "error": 128
+        },
+        "city": {
+          "frontend": 5655,
+          "official": 5781,
+          "error": 126
+        },
+        "church": {
+          "frontend": 846,
+          "official": 826,
+          "error": 20
+        },
+        "personal": {
+          "frontend": 60,
+          "official": 120,
+          "error": 60
+        }
+      },
+      "mismatchGroup": "non-federal-only",
       "evidence": "tests/reference/estv-2026/estv-2026-28-tax.response.json",
       "evidenceSha256": "ce951e364e3fb4e758b4db6919c1cc7598cad8780d50c2940fe4692a2600b992"
     },
@@ -516,6 +1342,34 @@
       "error": 2379,
       "tolerance": 7.968,
       "numericPassed": false,
+      "components": {
+        "federal": {
+          "frontend": 778,
+          "official": 778,
+          "error": 0
+        },
+        "canton": {
+          "frontend": 3429,
+          "official": 3433,
+          "error": 4
+        },
+        "city": {
+          "frontend": 3258,
+          "official": 3261,
+          "error": 3
+        },
+        "church": {
+          "frontend": 2812,
+          "official": 396,
+          "error": 2416
+        },
+        "personal": {
+          "frontend": 70,
+          "official": 100,
+          "error": 30
+        }
+      },
+      "mismatchGroup": "non-federal-only",
       "evidence": "tests/reference/estv-2026/estv-2026-29-tax.response.json",
       "evidenceSha256": "c595be516a982efdbd67eb9a63229f641baf2979d5983f26615726f9953cc5b5"
     }
