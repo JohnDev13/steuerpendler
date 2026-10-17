@@ -5,6 +5,44 @@ import { reconstructPrecision } from './reconstruct';
 import { calculateTax, preciseBase, TaxRepository } from '../../src/tax';
 import { writeFile } from 'node:fs/promises';
 import { calculateTaxesIncomeAndFortune } from '../../vendor/swisstaxcalculator/lib/taxes/income';
+import { compilePrecision } from './precision';
+
+async function marriedSionInput() {
+ const sources = await loadSources();
+ const loc = sources.locations.find(x=>x.BfsID===6266)!;
+ return makeInput(loc,'m',3,110000,'catholic');
+}
+
+test('zero-income spouse contributes no second-earner deduction in the real engine', async () => {
+ const result = await calculateTaxesIncomeAndFortune(await marriedSionInput());
+ expect(result.details.deductionsIncome.find(x=>x.id==='ZweitVerdiener_EK')).toBeUndefined();
+});
+
+test('positive-income spouse retains the real engine second-earner deduction', async () => {
+ const input = await marriedSionInput();
+ input.persons[1].income = 20000;
+ const result = await calculateTaxesIncomeAndFortune(input);
+ const deduction = result.details.deductionsIncome.find(x=>x.id==='ZweitVerdiener_EK');
+ expect(deduction?.amountBund).toBeGreaterThan(0);
+ expect(deduction?.amountCanton).toBeGreaterThan(0);
+});
+
+test('precision compiler explicitly serializes the zero-spouse second-earner branch', async () => {
+ const zeroInput = await marriedSionInput();
+ const positiveInput = structuredClone(zeroInput);
+ positiveInput.persons[1].income = 20000;
+ const zero = await compilePrecision(zeroInput);
+ const positive = await compilePrecision(positiveInput);
+ for (const key of ['bund','canton'] as const) {
+  const positiveOp = positive[key].deductions.find(op=>op.format!=='ZERO' && op.source==='constant' && op.value===20000);
+  expect(positiveOp).toBeDefined();
+  const zeroOp = zero[key].deductions.find(op=>
+   op.format==='ZERO' && op.amount===positiveOp?.amount && op.percent===positiveOp?.percent &&
+   op.minimum===positiveOp?.minimum && op.maximum===positiveOp?.maximum);
+  expect(zeroOp).toBeDefined();
+  expect(zeroOp?.value).toBe(0);
+ }
+});
 
 test('TG tracer: preserves taxable CHF100 steps rather than interpolating across them', async () => {
  const sources = await loadSources();

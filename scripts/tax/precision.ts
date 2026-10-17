@@ -12,14 +12,17 @@ export async function compilePrecision(input:TaxInput):Promise<PreciseCanton> {
  const group=getTaxTarifGroup(input.relationship,input.children);
  const compile=async(id:number)=>{
   const deductions=await getTaxDecutionTable(id,2026,'EINKOMMENSSTEUER');
-  const a={...input,persons:input.persons.map((p,i)=>({...p,income:i===0?100000:0}))};
-  const b={...input,persons:input.persons.map((p,i)=>({...p,income:i===0?200000:0}))};
+  const a={...input,persons:input.persons.map((p,i)=>({...p,income:i===0?100000:p.income}))};
+  const b={...input,persons:input.persons.map((p,i)=>({...p,income:i===0?200000:p.income}))};
   const ga=calculateGrossNetDetails(a),gb=calculateGrossNetDetails(b);
   const ops:DeductionOp[]=[];
   for(const def of taxDeductionDefinitions){
-   if(!def.rule(a,'EINKOMMENSSTEUER'))continue;
    const row=deductions.itemsById.get(def.id);
    if(!row)continue;
+   if(!def.rule(a,'EINKOMMENSSTEUER')){
+    if(def.id==='ZweitVerdiener_EK')ops.push({source:'constant',value:0,format:'ZERO',amount:row.amount,percent:row.percent,minimum:row.minimum,maximum:row.maximum,multiplier:1});
+    continue;
+   }
    const ia=def.input(a,ga),ib=def.input(b,gb);
    for(let i=0;i<ia.length;i++){
     const x=ia[i],y=ib[i];

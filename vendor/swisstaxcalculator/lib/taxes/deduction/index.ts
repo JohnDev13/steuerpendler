@@ -109,7 +109,9 @@ export const taxDeductionDefinitions: TaxDeductionDefinition[] = [
   },
   {
     id: 'ZweitVerdiener_EK',
-    rule: (taxInput) => ['m', 'rp'].includes(taxInput.relationship),
+    rule: (taxInput) =>
+      ['m', 'rp'].includes(taxInput.relationship) &&
+      taxInput.persons.filter((person) => person.income > 0).length >= 2,
     input: (taxInput) =>
       sortArray(taxInput.persons, (p) => p.income)
         .filter((_, index) => index === 0)
