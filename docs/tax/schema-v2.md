@@ -12,6 +12,8 @@ All eight profiles remain present (`s|m` × children `0..3`), with all 26 canton
 
 A v2 profile has `meta.schemaVersion: 2`, the unchanged `meta.incomes` and `cantons` members from schema v1, plus:
 
+`meta.pensionDefault` is optional for backward compatibility. When absent, gross-to-net conversion retains the original behavior (no pension deduction). The only supported value is `"ESTV2026Age35"`; it selects the frozen ESTV 2026 employed age-35 BVG default. Unknown values reject the profile rather than silently changing its tax basis. The marker affects only schema-v2 off-grid precision evaluation; exact grid rows already contain the deduction used when they were generated. Newly generated profiles MUST emit this marker.
+
 ```ts
 precision: Record<CantonCode, PreciseCanton>
 
@@ -73,7 +75,7 @@ No identifiers other than `log` and `$wert$`, property access, commas, assignmen
 
 For schema v2 and an income strictly between grid points:
 
-1. Clamp gross income to CHF 40,000–500,000 and compute the frozen-profile net income and deductions represented by the canton program.
+1. Clamp gross income to CHF 40,000–500,000 and compute the frozen-profile net income. If `meta.pensionDefault` is `"ESTV2026Age35"`, subtract that BVG default during gross-to-net conversion before applying the deductions represented by the canton program.
 2. Apply the serialized federal and cantonal tariff programs, including taxable-income floors/splits and formula tariffs.
 3. Apply federal CHF 263-per-child handling and personal tax as represented by the frozen profile.
 4. Round each final cantonal, municipal, and church money component independently with integer half-even rounding, matching the vendored engine. Church factor per-person normalization is retained.

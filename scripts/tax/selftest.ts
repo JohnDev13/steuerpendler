@@ -5,10 +5,10 @@ import { createHash } from 'node:crypto';
 import type { TaxLocation } from '../../vendor/swisstaxcalculator/lib/taxes/typesClient';
 import { calculateTaxesIncomeAndFortune } from '../../vendor/swisstaxcalculator/lib/taxes/income';
 import { reconstructPrecision } from './reconstruct';
-import type { PreciseCanton } from '../../src/tax';
+import type { PensionDefault, PreciseCanton } from '../../src/tax';
 import { ROOT, SOURCE, INCOMES, loadSources, makeInput, type Gemeinde, type TaxRow, type Sources, type Civil, type Church } from './build';
 
-export interface Profile { meta: { year: number; incomes: typeof INCOMES }; cantons: Record<string, TaxRow[]>; precision?:Record<string,PreciseCanton> }
+export interface Profile { meta: { year: number; incomes: typeof INCOMES; pensionDefault?: PensionDefault }; cantons: Record<string, TaxRow[]>; precision?:Record<string,PreciseCanton> }
 export interface Artifacts { profiles: Record<string, Profile>; gemeinden: Record<string, Gemeinde>; sha256: Record<string, string> }
 
 export async function loadArtifacts(directory = `${ROOT}site/data`): Promise<Artifacts> {
@@ -26,6 +26,7 @@ export async function loadArtifacts(directory = `${ROOT}site/data`): Promise<Art
   const profiles: Record<string, Profile> = {};
   for (const civil of ['s', 'm']) for (let kids = 0; kids <= 3; kids++) {
     const profile: Profile = await read(`tax-2026-${civil}-${kids}.json`);
+    if (profile.meta?.pensionDefault !== undefined && profile.meta.pensionDefault !== 'ESTV2026Age35') throw new Error('Invalid pensionDefault marker');
     if (profile.meta?.year !== 2026 || profile.meta.incomes?.from !== 40000 || profile.meta.incomes.step !== 1000 || profile.meta.incomes.count !== 461 || Object.keys(profile.cantons ?? {}).length !== 26) throw new Error('Invalid profile metadata/cantons');
     for (const rows of Object.values(profile.cantons)) if (!Array.isArray(rows) || rows.length !== 461 || rows.some(row => !Array.isArray(row) || row.length !== 3 || !row.every(Number.isFinite))) throw new Error('Invalid profile rows');
     profiles[`${civil}-${kids}`] = profile;
@@ -44,7 +45,7 @@ export function reconstruct(artifacts: Artifacts, sample: Sample): number {
   const row = rows[i].map((v, k) => v + (rows[i + 1][k] - v) * t);
   const rateChurch = sample.church === 'reformed' ? g[4] : sample.church === 'catholic' ? g[5] : 0;
   const precise=artifacts.profiles[`${sample.civil}-${sample.kids}`].precision?.[g[1]];
-  if(precise&&t!==0&&t!==1)return reconstructPrecision(precise,sample.income,[g[2],g[3],rateChurch]);
+  if(precise&&t!==0&&t!==1)return reconstructPrecision(precise,sample.income,[g[2],g[3],rateChurch],artifacts.profiles[`${sample.civil}-${sample.kids}`].meta.pensionDefault);
   // Separate monetary rounding at each final component, ties to even.
   const round=(v:number)=>{const f=Math.floor(v);return Math.abs(v-f-.5)<1e-8?(f%2===0?f:f+1):Math.round(v);};
   const r=precise?round:(v:number)=>v;

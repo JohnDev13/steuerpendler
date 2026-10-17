@@ -1,6 +1,7 @@
 import { expect, test } from 'vitest';
 import { buildProfile, loadSources, makeInput, buildGemeinden } from './build';
 import { loadArtifacts, sampleCases } from './selftest';
+import { reconstructPrecision } from './reconstruct';
 import { calculateTax, preciseBase, TaxRepository } from '../../src/tax';
 import { writeFile } from 'node:fs/promises';
 import { calculateTaxesIncomeAndFortune } from '../../vendor/swisstaxcalculator/lib/taxes/income';
@@ -13,6 +14,17 @@ test('TG tracer: preserves taxable CHF100 steps rather than interpolating across
  const expected = await calculateTaxesIncomeAndFortune(makeInput(loc,'s',1,321976,'reformed'));
  const actual = calculateTax(profile,g,321976,'reformed');
  expect(Math.abs(actual.total-expected.taxesTotal)).toBeLessThanOrEqual(10);
+});
+
+test('marked off-grid Zurich profile includes the age-35 BVG default like the full engine', async () => {
+ const sources = await loadSources();
+ const loc = sources.locations.find(x=>x.BfsID===261)!;
+ const profile = await buildProfile(sources,'s',0);
+ const g = buildGemeinden(sources).gemeinden[loc.BfsID];
+ const income = 120345;
+ const expected = await calculateTaxesIncomeAndFortune(makeInput(loc,'s',0,income,'none'));
+ expect(calculateTax(profile,g,income,'none').total).toBe(expected.taxesTotal);
+ expect(reconstructPrecision(profile.precision.ZH,income,[g[2],g[3],0],profile.meta.pensionDefault)).toBe(expected.taxesTotal);
 });
 
 test('shipped browser independently meets original 500/300 gates against full engine',async()=>{
@@ -35,6 +47,17 @@ test('schema v2 rejects missing precise programs instead of silently using inacc
  delete p.precision;
  const repository=new TaxRepository(async()=>new Response(JSON.stringify(p),{headers:{'content-type':'application/json'}}));
  await expect(repository.loadProfile('s',0)).rejects.toThrow();
+});
+
+test('pension marker is optional for legacy profiles but unknown values are rejected',async()=>{
+ const artifacts=await loadArtifacts();
+ const legacy=structuredClone(artifacts.profiles['s-0']);
+ delete (legacy.meta as any).pensionDefault;
+ const accepted=new TaxRepository(async()=>new Response(JSON.stringify(legacy),{headers:{'content-type':'application/json'}}));
+ await expect(accepted.loadProfile('s',0)).resolves.toBeTruthy();
+ (legacy.meta as any).pensionDefault='SURPRISE';
+ const rejected=new TaxRepository(async()=>new Response(JSON.stringify(legacy),{headers:{'content-type':'application/json'}}));
+ await expect(rejected.loadProfile('s',0)).rejects.toThrow(/pension/i);
 });
 
 test('browser preserves every serialized exact-grid component within 1e-9 CHF',async()=>{

@@ -1,4 +1,7 @@
+import { calculateBvg2026Age35 } from '../scripts/tax/bvg';
+
 export type CivilStatus = 's' | 'm';
+export type PensionDefault = 'ESTV2026Age35';
 export type Church = 'none' | 'reformed' | 'catholic';
 export type Gemeinde = readonly [name:string,canton:string,rateCanton:number,rateGemeinde:number,rateReformed:number,rateCatholic:number];
 export type DeductionFormat = 'ZERO'|'STANDARDIZED'|'MAXIMUM'|'PERCENT'|'PERCENT,MINIMUM,MAXIMUM';
@@ -6,7 +9,7 @@ export interface DeductionOp {source:'net'|'constant';value:number;format:Deduct
 export type TariffType = 'BUND'|'ZUERICH'|'FORMEL'|'FREIBURG'|'FLATTAX';
 export interface PreciseTariff {type:TariffType;split:number;table:{amount:number;percent:number;taxes:number;formula:string}[]}
 export interface PreciseCanton {bund:{deductions:DeductionOp[];tariff:PreciseTariff};canton:{deductions:DeductionOp[];tariff:PreciseTariff};personal:number;kids:number;persons:number}
-export interface TaxProfile {meta:{year:number;incomes:{from:number;step:number;count:number};[key:string]:unknown};cantons:Record<string,number[][]>;precision?:Record<string,PreciseCanton>}
+export interface TaxProfile {meta:{year:number;incomes:{from:number;step:number;count:number};pensionDefault?:PensionDefault;[key:string]:unknown};cantons:Record<string,number[][]>;precision?:Record<string,PreciseCanton>}
 // Integer ties-to-even, matching the engine's monetary rounding, not display rounding.
 export function halfEven(x:number):number {const f=Math.floor(x),d=x-f;return Math.abs(d-.5)<1e-8?(f%2===0?f:f+1):Math.round(x);}
 function formulaValue(formula:string,wert:number):number {
@@ -36,9 +39,10 @@ function validatePrecision(value:unknown):value is PreciseCanton {
  }
  return true;
 }
-export function preciseBase(p:PreciseCanton,income:number):[number,number,number] {
+export function preciseBase(p:PreciseCanton,income:number,pensionDefault?:PensionDefault):[number,number,number] {
  const gross=Math.round(income*100)/100;
- const net=gross-halfEven(gross*.053)-halfEven(Math.min(gross,148200)*.011)-halfEven(Math.min(gross,148200)*.004);
+ const pension=pensionDefault==='ESTV2026Age35'?calculateBvg2026Age35(gross):0;
+ const net=gross-halfEven(gross*.053)-halfEven(Math.min(gross,148200)*.011)-halfEven(Math.min(gross,148200)*.004)-pension;
  const tax=(part:PreciseCanton['bund'])=>{
   let deductions=0;
   for(const op of part.deductions){const v=op.source==='net'?net:op.value;let d=0;
@@ -76,7 +80,7 @@ export function calculateTax(profile:TaxProfile,g:Gemeinde,income:number,church:
  const table=profile.cantons[g[1]];
  if (!table || !table[i] || !table[i+1]) throw new Error('Steuertabelle für diesen Kanton fehlt.');
  const precise=profile.precision?.[g[1]];
- const row=precise&&t!==0&&t!==1?preciseBase(precise,clampedIncome):table[i].map((v,k)=>v+(table[i+1][k]-v)*t);
+ const row=precise&&t!==0&&t!==1?preciseBase(precise,clampedIncome,profile.meta.pensionDefault):table[i].map((v,k)=>v+(table[i+1][k]-v)*t);
  const rate=church==='reformed'?g[4]:church==='catholic'?g[5]:0;
  const round=precise?halfEven:(x:number)=>x;
  const churchRate=precise?Math.round(rate/precise.persons*100)/100*precise.persons:rate;
@@ -125,6 +129,7 @@ export class TaxRepository {
   if(!['s','m'].includes(civ)||!Number.isInteger(kids)||kids<0||kids>3) return Promise.reject(new Error('Ungültiges Steuerprofil.'));
   return this.once(`tax-2026-${civ}-${kids}.json`,data=>{
    const p=data as TaxProfile;
+   if(p?.meta?.pensionDefault!==undefined&&p.meta.pensionDefault!=='ESTV2026Age35') throw new Error('Ungültiger pensionDefault-Marker.');
    if(p?.meta?.year!==2026||p.meta.incomes?.from!==40000||p.meta.incomes.step!==1000||p.meta.incomes.count!==461||!p.cantons||!Object.keys(p.cantons).length) throw new Error('Ungültige Steuertabelle.');
    for(const rows of Object.values(p.cantons)) if(!Array.isArray(rows)||rows.length!==461||rows.some(row=>!Array.isArray(row)||row.length!==3||!row.every(Number.isFinite))) throw new Error('Steuerdaten sind unvollständig.');
    if(p.precision!==undefined||p.meta.schemaVersion!==undefined){

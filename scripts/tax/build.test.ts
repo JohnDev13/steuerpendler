@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { calculateTaxesIncomeAndFortune, calculateTaxesBase, calculateTaxableAmount } from '../../vendor/swisstaxcalculator/lib/taxes/income';
 import { dineroToNumber } from '../../vendor/swisstaxcalculator/lib/utils/dinero';
+import { calculateBvg2026Age35 } from './bvg';
 
 test('profile rows use unrounded internal simple tax, actual federal credit and personnel tax', async () => {
   const { loadSources, makeInput, buildRow } = await import('./build');
@@ -12,6 +13,7 @@ test('profile rows use unrounded internal simple tax, actual federal credit and 
   const input = makeInput(loc, 'm', 2, 150000, 'reformed');
   expect(input.persons).toHaveLength(2);
   expect(input.persons.map(x => x.income)).toEqual([150000, 0]);
+  expect(input.persons.map(x => x.pkDeduction)).toEqual([calculateBvg2026Age35(150000), 0]);
   expect(input.persons.every(x => x.age === 35 && x.confession === 'protestant')).toBe(true);
   const taxable = await calculateTaxableAmount(input);
   const base = await calculateTaxesBase(input, taxable.taxableIncomeCanton, taxable.taxableFortuneCanton);
@@ -24,13 +26,16 @@ test('one profile contains all 26 cantons and 461 finite rows at the specified g
   const sources = await loadSources();
   const profile = await buildProfile(sources, 's', 0);
   expect(profile.meta.incomes).toEqual({ from: 40000, step: 1000, count: 461 });
+  expect(profile.meta.pensionDefault).toBe('ESTV2026Age35');
   expect(Object.keys(profile.cantons)).toHaveLength(26);
   for (const rows of Object.values(profile.cantons)) {
     expect(rows).toHaveLength(461);
     expect(rows.every(row => row.length === 3 && row.every(Number.isFinite))).toBe(true);
   }
   const zurich = sources.locations.find(x => x.BfsID === 261)!;
-  expect(profile.cantons.ZH[80]).toEqual(await buildRow(makeInput(zurich, 's', 0, 120000)));
+  const input = makeInput(zurich, 's', 0, 120000);
+  expect(input.persons[0].pkDeduction).toBe(calculateBvg2026Age35(120000));
+  expect(profile.cantons.ZH[80]).toEqual(await buildRow(input));
 });
 
 test('writer emits exactly eight minified profiles and a 2110-ID municipality file', async () => {
