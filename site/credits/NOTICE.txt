@@ -1,0 +1,19 @@
+Steuerpendler — non-commercial test preview
+
+Geography: Bundesamt für Statistik (BFS), GEOSTAT — Generalisierte administrative Grenzen G1, Stand 01.01.2026. Derived/simplified via swiss-maps 4.7.0.
+Official dataset: https://data.geo.admin.ch/api/stac/v0.9/collections/ch.bfs.historisierte-administrative_grenzen_g1
+Conservative applicable terms: https://opendata.swiss/en/terms-of-use#terms_by_ask
+Non-commercial use with source attribution; do not infer commercial clearance. See the repository's docs/map/publication-assessment.md for the STAC/geocat metadata discrepancy.
+The data rights are NOT the package code's BSD licence.
+
+Verbatim source notices retained alongside this file:
+- swiss-maps-LICENSE.txt — package code BSD-3-Clause
+- swiss-maps-README.md — unmodified upstream readme and BFS/GEOSTAT data notice
+- d3-geo-LICENSE.txt
+- d3-array-LICENSE.txt
+- internmap-LICENSE.txt
+- topojson-client-LICENSE.txt
+
+Tax engine: devbrains-com/swisstaxcalculator (MIT), pinned source and full licence/patch audit in vendor/swisstaxcalculator in the source repository. Numeric estimates remain unverified; no tax advice or production approval.
+
+Timetable, OSM walking and STATPOP data are planned sources, not completed live travel datasets in this preview. No fabricated SBB travel values are shipped.

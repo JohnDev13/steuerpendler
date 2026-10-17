@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 test('offers German labelled controls and remains usable at 400px',async({page})=>{
  await page.setViewportSize({width:400,height:850});
- await page.goto('/');
+ await page.goto('./');
  await expect(page.getByLabel('Arbeitsort',{exact:true})).toHaveValue('Zürich');
  await expect(page.getByLabel('Maximale Fahrzeit',{exact:true})).toHaveValue('25');
  await expect(page.getByLabel('Maximaler Fussweg',{exact:true})).toHaveValue('10');
