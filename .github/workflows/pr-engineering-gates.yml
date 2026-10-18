@@ -1,6 +1,7 @@
 name: PR engineering gates
 
 on:
+  push:
   pull_request:
 
 permissions:
@@ -40,3 +41,7 @@ jobs:
         run: npm run release:test
       - name: Production build gate
         run: npm run build
+      - name: Install Chromium for e2e gate
+        run: npx playwright install --with-deps chromium
+      - name: Playwright e2e gate
+        run: npm run test:e2e
