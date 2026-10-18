@@ -3,14 +3,14 @@
   "sourceCsvSha256": "ab4ed7731d7165ec5f2afe71f5310713b5797b031f4436edc7e941c63ac0e3b3",
   "artifactSha256": {
     "gemeinden-2026.json": "0cc01b0d5f9fab1a0069394a9b89441ca4264ea0ba7e114e89157c2f748a5928",
-    "tax-2026-s-0.json": "8fe65992f55fbc8832cd29b740628247eacad4c82ea7d2fa9aeeaa5ab3770f96",
-    "tax-2026-s-1.json": "897be346175581bbd3c64e5ddcf7aab4d3e321064ac69be06f99edefdaf54d78",
-    "tax-2026-s-2.json": "f775707ba81af801e70ccbf6472ee513aa995235dfd8fa81dad5a0d43f4cd01a",
-    "tax-2026-s-3.json": "baf1fad312c8233bae43ff38f563675ae0e13e26c9e70146db554004f60a12fe",
-    "tax-2026-m-0.json": "b954074e45a4fc65007fe8b79ac9396b79c0cef09c2ba8012ee5dc9615f153db",
-    "tax-2026-m-1.json": "f1f6f38e6be9359f26b8c58d00eea9a81fd8c865e7ea44642f46665efa0e1f9f",
-    "tax-2026-m-2.json": "b3a4beddbed2080bdf0354a6ad8c87df0d921cfe2ee251002c14b343caa9b514",
-    "tax-2026-m-3.json": "6ba14dfea5ff6b9175813937b243a7016389210036464490703a69195220d1d4"
+    "tax-2026-s-0.json": "08af8d4a607c231196bec2f58d2a690d5f9bf15ecc2053ab2084bd59422df942",
+    "tax-2026-s-1.json": "a6ac68f11aeabde34fe77e0aaa8823eac2200d9aa7e255d9c3f0436ac5fd0fe8",
+    "tax-2026-s-2.json": "bb78cc020df862a499aff3fad67f98852be61b35a26b13139cef476a88189be0",
+    "tax-2026-s-3.json": "c6a6909de62a857e231406a8c572883f13d419ea0c9d6f7dec71894fee14fded",
+    "tax-2026-m-0.json": "01c20eb75ecfce256fdd097e6ca908fa5b9758921c2f7eb10a6c5448cc8e7ed9",
+    "tax-2026-m-1.json": "62425bcfef57d00e6f33ac3ccfee2f878f7d88d28a758fc4bcb1452114a6d846",
+    "tax-2026-m-2.json": "0de5ed74dc1f867ae7f91f8ce9d1f79a51d39525e253d1359a06c27d61cd115f",
+    "tax-2026-m-3.json": "7c527218b142a25e3a60dc457147dfa8447f35fa41f76c30ed6c87be50407ba8"
   },
   "coverage": {
     "expected": 29,
@@ -20,10 +20,10 @@
   "threshold": "max(5, abs(official) * 0.001)",
   "comparability": "owner_pending",
   "officialApproval": "pending",
-  "numericFailureCount": 21,
+  "numericFailureCount": 20,
   "observedMismatchGroups": {
     "federal-only": 0,
-    "non-federal-only": 23,
+    "non-federal-only": 22,
     "mixed": 1
   },
   "largestComponentDiscrepancies": [
@@ -168,10 +168,10 @@
       "income": 120000,
       "church": "none",
       "official": 7927,
-      "actual": 8770,
-      "error": 843,
+      "actual": 7927,
+      "error": 0,
       "tolerance": 7.9270000000000005,
-      "numericPassed": false,
+      "numericPassed": true,
       "components": {
         "federal": {
           "frontend": 2849,
@@ -179,14 +179,14 @@
           "error": 0
         },
         "canton": {
-          "frontend": 3553,
+          "frontend": 3047,
           "official": 3047,
-          "error": 506
+          "error": 0
         },
         "city": {
-          "frontend": 2368,
+          "frontend": 2031,
           "official": 2031,
-          "error": 337
+          "error": 0
         },
         "church": {
           "frontend": 0,
@@ -199,7 +199,7 @@
           "error": 0
         }
       },
-      "mismatchGroup": "non-federal-only",
+      "mismatchGroup": null,
       "evidence": "tests/reference/estv-2026/estv-2026-03-tax.response.json",
       "evidenceSha256": "16d87423b1097af8cd62a20fb1d614653fc7c381d923bfc050d4960cc5aa932f"
     },
