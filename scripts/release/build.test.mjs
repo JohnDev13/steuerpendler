@@ -33,6 +33,19 @@ test('release entry point invokes travel validation before publishing manifests'
   assert.equal(existsSync(join(data,'release.json')),false);
  }finally{rmSync(root,{recursive:true,force:true});}
 });
+test('release provenance includes the travel validator source',async()=>{
+ const {buildRelease}=await import('./build.mjs');
+ const root=mkdtempSync(join(tmpdir(),'steuer-release-provenance-fixture-'));
+ try{
+  mkdirSync(join(root,'site/data'),{recursive:true});
+  mkdirSync(join(root,'scripts/release'),{recursive:true});
+  writeFileSync(join(root,'scripts/release/travel.mjs'),'export const validatorVersion = 1;\n');
+  const first=buildRelease(root);
+  assert.ok(first.inputs['scripts/release/travel.mjs']?.sha256);
+  writeFileSync(join(root,'scripts/release/travel.mjs'),'export const validatorVersion = 2;\n');
+  assert.notEqual(buildRelease(root).release,first.release);
+ }finally{rmSync(root,{recursive:true,force:true});}
+});
 test('release inventory is deterministic, excludes itself and changes with actual bytes',async()=>{
  const module=await import('./build.mjs').catch(()=>({}));
  assert.equal(typeof module.buildRelease,'function');

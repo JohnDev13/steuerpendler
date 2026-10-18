@@ -16,7 +16,7 @@ export function buildRelease(root=process.cwd()){
   files[name]={sha256:hash(bytes),bytes:bytes.length};
  }
  const inputs={};
- for(const name of ['SPEC.md','src/destinations.ts','package-lock.json','scripts/release/build.mjs','scripts/tax/build.ts','scripts/map/build.mjs','docs/map/source-manifest.json','vendor/swisstaxcalculator/STEUERPENDLER-PATCHES.md']){
+ for(const name of ['SPEC.md','src/destinations.ts','package-lock.json','scripts/release/build.mjs','scripts/release/travel.mjs','scripts/tax/build.ts','scripts/map/build.mjs','docs/map/source-manifest.json','vendor/swisstaxcalculator/STEUERPENDLER-PATCHES.md']){
   const path=join(root,name);if(existsSync(path))inputs[name]={sha256:hash(readFileSync(path)),bytes:statSync(path).size};
  }
  const release=hash(JSON.stringify(sorted({schemaVersion:1,files,inputs})));
