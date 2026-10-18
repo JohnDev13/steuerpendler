@@ -17,12 +17,26 @@ test('runner evaluates files against the full engine and fails closed on a corru
     const report = await module.runSelftest(dir);
     expect(report.onGrid.count).toBe(500);
     expect(report.offGrid.count).toBe(300);
+    expect(report.onGrid.results).toHaveLength(500);
+    expect(report.offGrid.results).toHaveLength(300);
     expect(report.passed).toBe(false);
     expect(report.exitCode).toBe(1);
     expect(report.onGrid.maxAbsoluteError).toBeGreaterThan(900000);
     expect(report.onGrid.failures.some(x => x.civil === 's' && x.kids === 0 && x.error > x.tolerance)).toBe(true);
-    for (const x of report.onGrid.failures) expect(x.tolerance).toBe(Math.max(2, Math.abs(x.expected) * 0.0001));
-    for (const x of report.offGrid.failures) expect(x.tolerance).toBe(10);
+    expect(report.onGrid.results.some(x => x.error <= x.tolerance)).toBe(true);
+    for (const [kind, rows] of [['onGrid', report.onGrid.results], ['offGrid', report.offGrid.results]] as const) {
+      for (const x of rows) {
+        expect(x).toEqual(expect.objectContaining({
+          bfs: expect.any(Number), canton: expect.any(String), civil: expect.stringMatching(/^(s|m)$/),
+          kids: expect.any(Number), church: expect.stringMatching(/^(none|reformed|catholic)$/), income: expect.any(Number),
+          expected: expect.any(Number), actual: expect.any(Number), error: expect.any(Number), tolerance: expect.any(Number),
+        }));
+        expect(x.error).toBe(Math.abs(x.actual - x.expected));
+        expect(x.tolerance).toBe(kind === 'offGrid' ? 10 : Math.max(2, Math.abs(x.expected) * 0.0001));
+      }
+    }
+    expect(report.onGrid.failures).toEqual(report.onGrid.results.filter(x => x.error > x.tolerance));
+    expect(report.offGrid.failures).toEqual(report.offGrid.results.filter(x => x.error > x.tolerance));
   } finally { await rm(dir, { recursive: true, force: true }); }
 });
 

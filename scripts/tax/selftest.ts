@@ -65,6 +65,7 @@ export async function runSelftest(directory = `${ROOT}site/data`) {
   const artifacts = await loadArtifacts(directory);
   const samples = sampleCases(sources);
   const evaluate = async (cases: Sample[], offGrid: boolean) => {
+    const results: Comparison[] = [];
     const failures: Comparison[] = [];
     let worst: Comparison | null = null;
     for (const sample of cases) {
@@ -74,10 +75,11 @@ export async function runSelftest(directory = `${ROOT}site/data`) {
       const error = Math.abs(actual - expected);
       const tolerance = offGrid ? 10 : Math.max(2, Math.abs(expected) * 0.0001);
       const result: Comparison = { bfs: sample.loc.BfsID, canton: sample.loc.Canton, civil: sample.civil, kids: sample.kids, income: sample.income, church: sample.church, expected, actual, error, tolerance };
+      results.push(result);
       if (!worst || error > worst.error) worst = result;
       if (error > tolerance) failures.push(result);
     }
-    return { count: cases.length, failureCount: failures.length, maxAbsoluteError: worst?.error ?? 0, worst, failures };
+    return { count: cases.length, failureCount: failures.length, maxAbsoluteError: worst?.error ?? 0, worst, failures, results };
   };
   const onGrid = await evaluate(samples.onGrid, false), offGrid = await evaluate(samples.offGrid, true);
   const passed = onGrid.failureCount === 0 && offGrid.failureCount === 0;
