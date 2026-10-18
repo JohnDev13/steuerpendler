@@ -1,5 +1,15 @@
 import { expect, it } from 'vitest';
 // Synthetic fixtures only: not Swiss commute or tax references.
+it('distinguishes reachable homes with withheld tax from an empty commute result',async()=>{
+ const module=await import('./filter') as any;
+ expect(typeof module.summarizeReachability).toBe('function');
+ const options={maxTime:20,maxWalk:15,countWalk:false,workplace:1};
+ const gs={'1':['Work','AG',100,100,0,0],'2':['Neighbour','SO',100,100,0,0],'3':['Far','ZH',100,100,0,0]} as const;
+ const acc={'1':['one','One',15],'2':['two','Two',10],'3':['three','Three',16]} as const;
+ expect(module.summarizeReachability(gs,acc,[[1,0],[2,20],[3,10]],options,new Set(['AG','SO']))).toEqual({reachable:2,underReview:2});
+ expect(module.summarizeReachability(gs,acc,[[1,0],[2,20],[3,10]],{...options,countWalk:true},new Set(['AG','SO']))).toEqual({reachable:1,underReview:1});
+ expect(module.summarizeReachability(gs,acc,[],options,new Set(['AG','SO']))).toEqual({reachable:0,underReview:0});
+});
 const gemeinden={'1':['Alpha','ZH',100,100,0,0],'2':['Beta','ZH',100,100,0,0],'3':['Gamma','VS',100,100,0,0]} as const;
 const access={'1':['one','One',10],'2':['two','Two',2],'3':null} as const;
 it('applies the exact walk-toggle rule including the zero-time workplace',async()=>{

@@ -7,6 +7,11 @@ const names=new Intl.Collator('de-CH',{sensitivity:'base'});
 export function isReachable(stop:Access[string]|undefined,minutes:number|undefined,options:FilterOptions):boolean {
  return stop!=null&&minutes!==undefined&&Number.isFinite(minutes)&&minutes>=0&&stop[2]<=options.maxWalk&&(minutes+(options.countWalk?stop[2]:0))<=options.maxTime;
 }
+export function summarizeReachability(gemeinden:Record<string,Gemeinde>,access:Access,rows:TravelRows,options:FilterOptions,withheld:ReadonlySet<string>):{reachable:number;underReview:number} {
+ const seen=new Set<number>();let underReview=0;
+ for(const [id,minutes] of rows){const g=gemeinden[id];if(!g||seen.has(id)||!isReachable(access[id],minutes,options))continue;seen.add(id);if(withheld.has(g[1]))underReview++;}
+ return {reachable:seen.size,underReview};
+}
 export function filterAndRank(gemeinden:Record<string,Gemeinde>,access:Access,rows:TravelRows,options:FilterOptions,totals:Record<string,number>,quarantined:ReadonlySet<string>=new Set()):RankedResult[] {
  const workplace=gemeinden[options.workplace];
  const baseline=workplace&&!quarantined.has(workplace[1])?totals[options.workplace]:undefined;
