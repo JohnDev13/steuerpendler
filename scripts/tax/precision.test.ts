@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { buildProfile, loadSources, makeInput, buildGemeinden, SOURCE } from './build';
+import { buildProfile, loadSources, makeInput, buildGemeinden, buildRow, SOURCE } from './build';
 import { loadArtifacts, sampleCases, SEED } from './selftest';
 import { reconstructPrecision } from './reconstruct';
 import { calculateTax, preciseBase, TaxRepository } from '../../src/tax';
@@ -42,6 +42,16 @@ test('precision compiler explicitly serializes the zero-spouse second-earner bra
   expect(zeroOp).toBeDefined();
   expect(zeroOp?.value).toBe(0);
  }
+});
+
+test('Freienbach precision preserves the authentic capped percentage professional expense', async () => {
+ const sources=await loadSources();
+ const loc=sources.locations.find(x=>x.BfsID===1322)!;
+ const input=makeInput(loc,'s',0,120000,'none');
+ const precision=await compilePrecision(input);
+ const op=precision.canton.deductions.find(x=>x.format==='PERCENT,MAXIMUM');
+ expect(op).toMatchObject({source:'net',percent:20,maximum:6900});
+ expect(preciseBase(precision,120000,'ESTV2026Age35','ESTV2026Age35')).toEqual(await buildRow(input));
 });
 
 test('TG tracer: preserves taxable CHF100 steps rather than interpolating across them', async () => {

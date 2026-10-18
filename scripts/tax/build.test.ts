@@ -6,6 +6,14 @@ import { calculateTaxesIncomeAndFortune, calculateTaxesBase, calculateTaxableAmo
 import { dineroToNumber } from '../../vendor/swisstaxcalculator/lib/utils/dinero';
 import { calculateBvg2026Age35 } from './bvg';
 
+interface OfficialTaxResponse {
+  IncomeTaxFed: number;
+  IncomeSimpleTaxCanton: number;
+  TaxableIncomeCanton: number;
+  TotalTax: number;
+  InfoCanton: { Entry: { ID: string }; Value: number }[];
+}
+
 test('profile rows use unrounded internal simple tax, actual federal credit and personnel tax', async () => {
   const { loadSources, makeInput, buildRow } = await import('./build');
   const { locations } = await loadSources();
@@ -19,6 +27,35 @@ test('profile rows use unrounded internal simple tax, actual federal credit and 
   const base = await calculateTaxesBase(input, taxable.taxableIncomeCanton, taxable.taxableFortuneCanton);
   const engine = await calculateTaxesIncomeAndFortune(input);
   expect(await buildRow(input)).toEqual([engine.taxesIncomeBund, dineroToNumber(base.taxesIncomeBase), engine.taxesPersonnel]);
+});
+
+test('SZ generation applies the official Freienbach expense cap and exposes the two remaining table differences', async () => {
+  const { loadSources, makeInput, buildRow } = await import('./build');
+  const sources = await loadSources();
+  const loc = sources.locations.find(x => x.BfsID === 1322)!;
+  const official = (JSON.parse(await readFile(
+    join(process.cwd(), 'tests/reference/estv-2026/estv-2026-04-tax.response.json'),
+    'utf8',
+  )) as { response: OfficialTaxResponse }).response;
+  const input = makeInput(loc, 's', 0, 120000);
+  const taxable = await calculateTaxableAmount(input);
+  const row = await buildRow(input);
+  const engine = await calculateTaxesIncomeAndFortune(input);
+  const officialInfo = new Map(official.InfoCanton.map(item => [item.Entry.ID, Math.abs(item.Value)]));
+  const calculatedDeductions = new Map(engine.details.deductionsIncome.map(item => [item.id, item.amountCanton]));
+
+  expect(calculatedDeductions.get('HauptErw_EK')).toBe(6900);
+  expect(calculatedDeductions.get('HauptErw_EK')).toBe(officialInfo.get('TXT_30'));
+  const remaining = [
+    ['KKSparLedigMitBVGS3a_EK', 'TXT_49'],
+    ['SozLedig_EK', 'TXT_60'],
+  ] as const;
+  const gaps = remaining.map(([id, officialId]) => officialInfo.get(officialId)! - calculatedDeductions.get(id)!);
+  expect(gaps).toEqual([1000, 1000]);
+  expect(dineroToNumber(taxable.taxableIncomeCanton) - official.TaxableIncomeCanton).toBe(gaps.reduce((a, b) => a + b, 0));
+  expect(row[0]).toBe(official.IncomeTaxFed);
+  expect(row[1] - official.IncomeSimpleTaxCanton).toBeCloseTo(148.6, 10);
+  expect(engine.taxesTotal - official.TotalTax).toBe(259);
 });
 
 test('one profile contains all 26 cantons and 461 finite rows at the specified grid', async () => {

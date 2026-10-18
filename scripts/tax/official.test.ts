@@ -58,14 +58,14 @@ test('frozen 29-case catalogue preserves exact hashes and the failed pending off
   });
   expect(report.artifactSha256).toEqual({
     'gemeinden-2026.json': '0cc01b0d5f9fab1a0069394a9b89441ca4264ea0ba7e114e89157c2f748a5928',
-    'tax-2026-s-0.json': '08af8d4a607c231196bec2f58d2a690d5f9bf15ecc2053ab2084bd59422df942',
-    'tax-2026-s-1.json': 'a6ac68f11aeabde34fe77e0aaa8823eac2200d9aa7e255d9c3f0436ac5fd0fe8',
-    'tax-2026-s-2.json': 'bb78cc020df862a499aff3fad67f98852be61b35a26b13139cef476a88189be0',
-    'tax-2026-s-3.json': 'c6a6909de62a857e231406a8c572883f13d419ea0c9d6f7dec71894fee14fded',
-    'tax-2026-m-0.json': '01c20eb75ecfce256fdd097e6ca908fa5b9758921c2f7eb10a6c5448cc8e7ed9',
-    'tax-2026-m-1.json': '62425bcfef57d00e6f33ac3ccfee2f878f7d88d28a758fc4bcb1452114a6d846',
-    'tax-2026-m-2.json': '0de5ed74dc1f867ae7f91f8ce9d1f79a51d39525e253d1359a06c27d61cd115f',
-    'tax-2026-m-3.json': '7c527218b142a25e3a60dc457147dfa8447f35fa41f76c30ed6c87be50407ba8',
+    'tax-2026-s-0.json': '8829984d1737450f535eb805ef9d4ef8b7a561cc2a808ce557fd7901e36bf18d',
+    'tax-2026-s-1.json': 'f3f311bc8f92c5e470169ebcb1934a0a01696efaf565bc7e8aef0034d6556724',
+    'tax-2026-s-2.json': '6be3789933844cbe7c1ed843fc1dc3563457230d67675c540631964badfda72c',
+    'tax-2026-s-3.json': '2dbd3addae10a82be1416a16ef05902178bb537883d2ff7b8f445d480e306336',
+    'tax-2026-m-0.json': '5b76fde85c93076e9ce60adc85cc21507b7a405c198b1ebf620869361ca627aa',
+    'tax-2026-m-1.json': '2d79f57480d2e8f676cbab67849bc8cf67a6ac744d498a2c3b648553ba2daddc',
+    'tax-2026-m-2.json': 'ea6427851b10ba1b9e071daaf7a1282917d90d10fb8398a005ad81988d329cbb',
+    'tax-2026-m-3.json': 'bab8d9c6d47659198971b0bbb6531b9ecd449c3c215df01c39d8a72ce82dbe33',
   });
 
   const csv = await readFile(resolve(ROOT, 'tests/reference/estv-2026.csv'), 'utf8');

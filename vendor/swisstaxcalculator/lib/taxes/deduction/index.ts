@@ -360,6 +360,11 @@ export const calculateDeductionByFormat = (deduction: TaxDeductionTableItem, amo
       return dineroMin(amountDinero, dineroChf(deduction.maximum));
     case 'PERCENT':
       return dineroRound(multiplyDineroPercent(amountDinero, deduction.percent, 5));
+    case 'PERCENT,MAXIMUM':
+      return dineroMin(
+        dineroRound(multiplyDineroPercent(amountDinero, deduction.percent, 5)),
+        dineroChf(deduction.maximum)
+      );
     case 'PERCENT,MINIMUM,MAXIMUM':
       return dineroMin(
         dineroMax(

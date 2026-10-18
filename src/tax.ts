@@ -5,7 +5,7 @@ export type PensionDefault = 'ESTV2026Age35';
 export type BudgetDefault = 'ESTV2026Age35';
 export type Church = 'none' | 'reformed' | 'catholic';
 export type Gemeinde = readonly [name:string,canton:string,rateCanton:number,rateGemeinde:number,rateReformed:number,rateCatholic:number];
-export type DeductionFormat = 'ZERO'|'STANDARDIZED'|'MAXIMUM'|'PERCENT'|'PERCENT,MINIMUM,MAXIMUM';
+export type DeductionFormat = 'ZERO'|'STANDARDIZED'|'MAXIMUM'|'PERCENT'|'PERCENT,MAXIMUM'|'PERCENT,MINIMUM,MAXIMUM';
 export interface DeductionOp {source:'net'|'constant'|'rent30';value:number;format:DeductionFormat;amount:number;percent:number;minimum:number;maximum:number;multiplier:number}
 export type TariffType = 'BUND'|'ZUERICH'|'FORMEL'|'FREIBURG'|'FLATTAX';
 export interface PreciseTariff {type:TariffType;split:number;table:{amount:number;percent:number;taxes:number;formula:string}[]}
@@ -22,7 +22,7 @@ function formulaValue(formula:string,wert:number):number {
  function expr():number {let v=term();while(tokens[i]==='+'||tokens[i]==='-'){const op=tokens[i++],r=term();v=op==='+'?v+r:v-r;}return v;}
  if(!formula.trim())return 0;const v=expr();if(i!==tokens.length||!Number.isFinite(v))throw Error('Ungültige Steuerformel.');return Math.max(0,Math.round(v*100)/100);
 }
-const deductionFormats = new Set<DeductionFormat>(['ZERO','STANDARDIZED','MAXIMUM','PERCENT','PERCENT,MINIMUM,MAXIMUM']);
+const deductionFormats = new Set<DeductionFormat>(['ZERO','STANDARDIZED','MAXIMUM','PERCENT','PERCENT,MAXIMUM','PERCENT,MINIMUM,MAXIMUM']);
 const tariffTypes = new Set<TariffType>(['BUND','ZUERICH','FORMEL','FREIBURG','FLATTAX']);
 function validatePrecision(value:unknown):value is PreciseCanton {
  if(!value||typeof value!=='object')return false;
@@ -51,6 +51,7 @@ export function preciseBase(p:PreciseCanton,income:number,pensionDefault?:Pensio
    else if(op.format==='STANDARDIZED')d=op.amount;
    else if(op.format==='MAXIMUM')d=Math.min(v,op.maximum);
    else if(op.format==='PERCENT')d=halfEven(v*op.percent/100);
+   else if(op.format==='PERCENT,MAXIMUM')d=Math.min(op.maximum,halfEven(v*op.percent/100));
    else if(op.format==='PERCENT,MINIMUM,MAXIMUM')d=Math.min(op.maximum,Math.max(op.minimum,halfEven(v*op.percent/100)));
    deductions+=d*op.multiplier;
   }

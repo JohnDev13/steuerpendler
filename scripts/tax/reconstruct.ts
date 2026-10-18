@@ -19,6 +19,7 @@ export function reconstructPrecision(p:PreciseCanton,income:number,rates:number[
     case 'STANDARDIZED':d=dineroChf(op.amount);break;
     case 'MAXIMUM':d=dineroMin(value,dineroChf(op.maximum));break;
     case 'PERCENT':d=dineroRound(multiplyDineroPercent(value,op.percent,5));break;
+    case 'PERCENT,MAXIMUM':d=dineroMin(dineroRound(multiplyDineroPercent(value,op.percent,5)),dineroChf(op.maximum));break;
     case 'PERCENT,MINIMUM,MAXIMUM':d=dineroMin(dineroMax(dineroRound(multiplyDineroPercent(value,op.percent,5)),dineroChf(op.minimum)),dineroChf(op.maximum));break;
    }
    deductions=add(deductions,multiplyDineroFactor(d,op.multiplier,1));

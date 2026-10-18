@@ -20,7 +20,7 @@ A v2 profile has `meta.schemaVersion: 2`, the unchanged `meta.incomes` and `cant
 precision: Record<CantonCode, PreciseCanton>
 
 type DeductionFormat =
-  | 'ZERO' | 'STANDARDIZED' | 'MAXIMUM' | 'PERCENT'
+  | 'ZERO' | 'STANDARDIZED' | 'MAXIMUM' | 'PERCENT' | 'PERCENT,MAXIMUM'
   | 'PERCENT,MINIMUM,MAXIMUM'
 type TariffType = 'BUND' | 'ZUERICH' | 'FORMEL' | 'FREIBURG' | 'FLATTAX'
 
