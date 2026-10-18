@@ -92,14 +92,17 @@ total = bund + kanton + gemeinde + kirche + personal</code></pre>
       verwenden die ungerundeten Beträge. Eine gleich gerundete Anzeige beweist daher keinen Gleichstand.</p>
     <h3>Feste Annahmen</h3>
     <ul>
-      <li>Bruttoerwerbseinkommen aus Anstellung, Alter 35 Jahre, kein Vermögen und Standardabzüge.</li>
+      <li>Bruttoerwerbseinkommen aus Anstellung, Alter 35 Jahre, kein Vermögen sowie standardisierte Vorsorge- und weitere Abzüge.</li>
       <li>Ledig oder verheiratet; bei Verheirateten nur ein Einkommen, Partnereinkommen 0 (O1).</li>
       <li>Kinderkategorien 0, 1, 2 oder 3+; 3+ verwendet das Profil für 3 Kinder, keine individuelle Grossfamilienrechnung.</li>
       <li>Kirche: keine, reformiert oder katholisch. Andere Konstellationen sind nicht modelliert.</li>
+      <li>Wo ein standardisierter Abzug Wohnkosten voraussetzt, werden geschätzte Wohnkosten verwendet; tatsächliche Miete und andere persönliche Ausgaben werden nicht abgefragt.</li>
     </ul>
-    <p>Nicht berücksichtigt werden insbesondere Miete, Krankenkassenprämien, Vermögenssteuer,
-      individuelle Abzüge und zwei Erwerbseinkommen. Die persönliche Veranlagung kann erheblich abweichen.
-      Schätzung, keine Steuerberatung; die Tabellen sind keine verbindliche ESTV-Veranlagung.</p>
+    <p><strong>Unverbindliche Orientierungsschätzung mit festen, am ESTV-Rechner orientierten Standardannahmen
+      (u. a. Alter 35, Vorsorge und geschätzte Wohnkosten).</strong> Ihre tatsächliche Steuerbelastung kann abweichen.
+      Keine individuelle oder verbindliche Steuerberechnung; massgebend ist die Veranlagung der zuständigen Steuerbehörde.</p>
+    <p>Nicht individuell berücksichtigt werden insbesondere tatsächliche Miete, Krankenkassenprämien,
+      Vermögenssteuer, persönliche Abzüge und zwei Erwerbseinkommen.</p>
     <h2 id="reisen">Pendelzeiten: geplante Pipeline, Verfügbarkeit ausstehend</h2>
     <p>Vorgesehen sind Schweizer GTFS-Fahrplandaten und OpenStreetMap-Fusswege mit r5py/R5.
       Erst die Prüfung der exakten Routing-Semantik und echte, eingefrorene Eingangsdaten erlauben
