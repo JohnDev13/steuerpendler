@@ -86,7 +86,7 @@ class MappingTest(unittest.TestCase):
         self.assertTrue(report['historical_baseline_exact'])
         self.assertTrue(report['independent_replay_exact'])
         self.assertEqual(report['independent_replay_status'], 200)
-        self.assertEqual(report['checksum_files'], 280)
+        self.assertEqual(report['checksum_files'], 282)
         self.assertEqual(report['official_gate'], 'pending_not_executed')
         self.assertEqual(report['comparability'], 'owner_pending')
 
