@@ -87,14 +87,24 @@ export function buildGemeinden(sources: Sources) {
   return { meta: metadata(), gemeinden };
 }
 
-export async function writeTables(output = `${ROOT}site/data`, log = true) {
+export async function generateTables(): Promise<Record<string, string>> {
   const sources = await loadSources();
-  await mkdir(output, { recursive: true });
-  await writeFile(`${output}/gemeinden-2026.json`, JSON.stringify(buildGemeinden(sources)));
+  const tables: Record<string, string> = {
+    'gemeinden-2026.json': JSON.stringify(buildGemeinden(sources)),
+  };
   for (const civil of ['s', 'm'] as const) for (let kids = 0; kids <= 3; kids++) {
     const name = `tax-2026-${civil}-${kids}.json`;
-    await writeFile(`${output}/${name}`, JSON.stringify(await buildProfile(sources, civil, kids)));
-    if (log) console.log(`Wrote ${name}: 26 cantons × 461 rows`);
+    tables[name] = JSON.stringify(await buildProfile(sources, civil, kids));
+  }
+  return tables;
+}
+
+export async function writeTables(output = `${ROOT}site/data`, log = true) {
+  const tables = await generateTables();
+  await mkdir(output, { recursive: true });
+  for (const [name, bytes] of Object.entries(tables)) {
+    await writeFile(`${output}/${name}`, bytes);
+    if (log && name.startsWith('tax-')) console.log(`Wrote ${name}: 26 cantons × 461 rows`);
   }
   if (log) console.log('Wrote gemeinden-2026.json: 2110 authentic BFS IDs; official verification pending');
 }

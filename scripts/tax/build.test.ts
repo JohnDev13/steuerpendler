@@ -2,6 +2,7 @@ import { expect, test } from 'vitest';
 import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { createHash } from 'node:crypto';
 import { calculateTaxesIncomeAndFortune, calculateTaxesBase, calculateTaxableAmount } from '../../vendor/swisstaxcalculator/lib/taxes/income';
 import { dineroToNumber } from '../../vendor/swisstaxcalculator/lib/utils/dinero';
 import { calculateBvg2026Age35 } from './bvg';
@@ -93,6 +94,19 @@ test('writer emits exactly eight minified profiles and a 2110-ID municipality fi
     }
     for (const civ of ['s', 'm']) for (let kids = 0; kids < 4; kids++) expect(files).toContain(`tax-2026-${civ}-${kids}.json`);
   } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+test('two genuine generations produce matching SHA-256 hashes for all nine tax artifacts', async () => {
+  const { generateTables } = await import('./build');
+  const hash = (value: string) => createHash('sha256').update(value).digest('hex');
+  const first = await generateTables();
+  const second = await generateTables();
+  expect(Object.keys(first).sort()).toEqual([
+    'gemeinden-2026.json',
+    ...['m', 's'].flatMap(civil => [0, 1, 2, 3].map(kids => `tax-2026-${civil}-${kids}.json`)),
+  ].sort());
+  expect(Object.fromEntries(Object.entries(first).map(([name, bytes]) => [name, hash(bytes)])))
+    .toEqual(Object.fromEntries(Object.entries(second).map(([name, bytes]) => [name, hash(bytes)])));
 });
 
 test('generator joins all 2110 authentic BFS IDs with original income-rate columns', async () => {
