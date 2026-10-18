@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
-import { buildProfile, loadSources, makeInput, buildGemeinden } from './build';
-import { loadArtifacts, sampleCases } from './selftest';
+import { buildProfile, loadSources, makeInput, buildGemeinden, SOURCE } from './build';
+import { loadArtifacts, sampleCases, SEED } from './selftest';
 import { reconstructPrecision } from './reconstruct';
 import { calculateTax, preciseBase, TaxRepository } from '../../src/tax';
 import { writeFile } from 'node:fs/promises';
@@ -76,7 +76,19 @@ test('shipped browser independently meets original 500/300 gates against full en
   results.push({kind,bfs:s.loc.BfsID,canton:s.loc.Canton,civil:s.civil,kids:s.kids,church:s.church,income:s.income,expected:expected.taxesTotal,actual:actual.total,error:Math.abs(actual.total-expected.taxesTotal),tolerance:limit});
   expect(Math.abs(actual.total-expected.taxesTotal),JSON.stringify(s)).toBeLessThanOrEqual(limit);
  }
- await writeFile(new URL('../../docs/tax/browser-parity-report.json',import.meta.url),JSON.stringify({seed:8230,artifactSha256:artifacts.sha256,count:results.length,maxAbsoluteError:Math.max(...results.map(x=>x.error)),failureCount:results.filter(x=>x.error>x.tolerance).length,results},null,2)+'\n');
+ const summarize=(kind:string)=>{
+  const rows=results.filter(result=>result.kind===kind);
+  const worst=rows.reduce((candidate,result)=>result.error>candidate.error?result:candidate);
+  const failures=rows.filter(result=>result.error>result.tolerance);
+  const {kind:_kind,...worstCase}=worst;
+  return {count:rows.length,failureCount:failures.length,maxAbsoluteError:worst.error,worst:worstCase,failures:failures.map(({kind:_failureKind,...failure})=>failure)};
+ };
+ const onGrid=summarize('onGrid'),offGrid=summarize('offGrid');
+ expect(onGrid.count).toBe(500);
+ expect(offGrid.count).toBe(300);
+ const report={source:SOURCE,implementation:'src/tax.ts calculateTax',seed:SEED,prng:'LCG uint32: 1664525*x+101****4223',officialVerification:'pending',artifactSha256:artifacts.sha256,
+  gates:{onGrid:'max(2, abs(expected) * 0.0001)',offGrid:10},onGrid,offGrid,passed:onGrid.failureCount===0&&offGrid.failureCount===0};
+ await writeFile(new URL('../../docs/tax/current-budget-browser-parity-report.json',import.meta.url),JSON.stringify(report,null,2)+'\n');
 });
 
 test('schema v2 rejects missing precise programs instead of silently using inaccurate interpolation',async()=>{

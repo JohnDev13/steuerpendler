@@ -1,0 +1,63 @@
+{
+  "source": {
+    "repository": "https://github.com/devbrains-com/swisstaxcalculator",
+    "commit": "43064402b1e52dbbc34dded6a305d7d536737c73",
+    "year": 2026
+  },
+  "implementation": "src/tax.ts calculateTax",
+  "seed": 8230,
+  "prng": "LCG uint32: 1664525*x+101****4223",
+  "officialVerification": "pending",
+  "artifactSha256": {
+    "gemeinden-2026.json": "0cc01b0d5f9fab1a0069394a9b89441ca4264ea0ba7e114e89157c2f748a5928",
+    "tax-2026-s-0.json": "08af8d4a607c231196bec2f58d2a690d5f9bf15ecc2053ab2084bd59422df942",
+    "tax-2026-s-1.json": "a6ac68f11aeabde34fe77e0aaa8823eac2200d9aa7e255d9c3f0436ac5fd0fe8",
+    "tax-2026-s-2.json": "bb78cc020df862a499aff3fad67f98852be61b35a26b13139cef476a88189be0",
+    "tax-2026-s-3.json": "c6a6909de62a857e231406a8c572883f13d419ea0c9d6f7dec71894fee14fded",
+    "tax-2026-m-0.json": "01c20eb75ecfce256fdd097e6ca908fa5b9758921c2f7eb10a6c5448cc8e7ed9",
+    "tax-2026-m-1.json": "62425bcfef57d00e6f33ac3ccfee2f878f7d88d28a758fc4bcb1452114a6d846",
+    "tax-2026-m-2.json": "0de5ed74dc1f867ae7f91f8ce9d1f79a51d39525e253d1359a06c27d61cd115f",
+    "tax-2026-m-3.json": "7c527218b142a25e3a60dc457147dfa8447f35fa41f76c30ed6c87be50407ba8"
+  },
+  "gates": {
+    "onGrid": "max(2, abs(expected) * 0.0001)",
+    "offGrid": 10
+  },
+  "onGrid": {
+    "count": 500,
+    "failureCount": 0,
+    "maxAbsoluteError": 0,
+    "worst": {
+      "bfs": 4137,
+      "canton": "AG",
+      "civil": "s",
+      "kids": 0,
+      "church": "none",
+      "income": 395000,
+      "expected": 106705,
+      "actual": 106705,
+      "error": 0,
+      "tolerance": 10.6705
+    },
+    "failures": []
+  },
+  "offGrid": {
+    "count": 300,
+    "failureCount": 0,
+    "maxAbsoluteError": 1,
+    "worst": {
+      "bfs": 6487,
+      "canton": "NE",
+      "civil": "s",
+      "kids": 2,
+      "church": "reformed",
+      "income": 306643,
+      "expected": 83878,
+      "actual": 83877,
+      "error": 1,
+      "tolerance": 10
+    },
+    "failures": []
+  },
+  "passed": true
+}
