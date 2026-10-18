@@ -28,10 +28,14 @@ jobs:
       - run: npm ci
       - name: Unit gate
         run: npm test
+      - name: Tax reconstruction gate
+        run: npm run tax:test
       - name: ESTV reference catalogue gate
         env:
           PYTHONPATH: scripts/reference
         run: python3 -m unittest scripts.reference.test_estv_collector -v
+      - name: Map data gate
+        run: npm run map:test
       - name: Release gate
         run: npm run release:test
       - name: Production build gate
