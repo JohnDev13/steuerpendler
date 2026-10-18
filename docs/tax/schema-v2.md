@@ -1,6 +1,6 @@
 # Tax profile schema v2 — precision program
 
-Status: proposed SPEC §6.1/§7 amendment. This document does **not** amend `SPEC.md`; owner review and official ESTV verification remain pending.
+Status: integrated engineering contract under SPEC §20, amending §6.1/§7 only as stated there. Engineering approval does not grant independent official ESTV acceptance or production approval; both remain pending.
 
 ## Root cause and compatibility
 
@@ -75,7 +75,7 @@ number     = digit, { digit }, [".", { digit }] ;
 
 No identifiers other than `log` and `$wert$`, property access, commas, assignments, strings, exponent syntax, or unsupported characters are accepted. Parsing must consume the whole input and evaluation must be finite.
 
-## Proposed §7 arithmetic amendment
+## §7 arithmetic amendment
 
 For schema v2 and an income strictly between grid points:
 
@@ -90,3 +90,5 @@ At exact grid points the original serialized row is selected, with component err
 ## Verification contract
 
 `npm run tax:test` compares the shipped serialized evaluator independently with the full vendored engine for the fixed 500 on-grid and 300 off-grid samples before display rounding. `scripts/tax/precision.test.ts` separately invokes `src/tax.ts` against the full engine for the same fixed sampler and records every input/result/error in `docs/tax/browser-parity-report.json`. Official direct ESTV verification remains pending and is not replaced by engine parity.
+
+The standard-default result must be visibly qualified in German: **„Dies ist eine indikative Schätzung mit ESTV-Standardannahmen, keine individuelle oder verbindliche Steuerveranlagung und keine Steuerberatung.“**

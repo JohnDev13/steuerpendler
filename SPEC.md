@@ -1,6 +1,8 @@
-# Steuerpendler — Build Spec v1.2
+# Steuerpendler — Build Spec v1.3
 
-Active scope clarification: 17 Oct 2026 (§19). Workplace destinations are narrowed; all 2,110 residential/tax Gemeinden and all 26 cantons remain in scope. Source v1.1 is preserved at `docs/source/SPEC-v1.1-2026-10-17.md`.
+Active engineering amendment: 17 Oct 2026 (§20), declarative precision programs for tax profiles. This addresses the measured interpolation failure, not official tax or launch approval. The complete v1.2 source is preserved at `docs/source/SPEC-v1.2-2026-10-17.md`; amendment register: `docs/spec-amendments-v1.3.md`.
+
+The v1.2 scope clarification (§19) remains authoritative: workplace destinations are narrowed; all 2,110 residential/tax Gemeinden and all 26 cantons remain in scope. Source v1.1 is preserved at `docs/source/SPEC-v1.1-2026-10-17.md`.
 
 Amended: 17 Oct 2026 (UTC) · Owner: John · Tax year: 2026
 Supplied v1 stated status: 17 Oct 2026 (source metadata, not verified chronology).
@@ -9,7 +11,7 @@ Supplied v1 stated status: 17 Oct 2026 (source metadata, not verified chronology
 
 ## 0. How to use this file (agents read first)
 
-- This file is the single source of truth. Read it fully before starting any task.
+- This file is the single source of truth. Owner-approved lean workflow: the architect reads it fully once per version; routine coding workers read `AGENTS.md`, `docs/WORKER-CONTRACT.md`, their small task brief, and only the cited sections. Do not reload whole-project/chat context for each task. Scope, schema and approval changes require architect review.
 - Tasks are in section 10. A task is done only when all of its acceptance tests pass and its required CI stage is green. T1 scaffold acceptance is not feature acceptance; T8 preview readiness is not production launch (§10, §12–13).
 - Data formats in section 6 are contracts between tasks. Do not change them without updating this file in the same pull request.
 - Items in section 14 (open decisions) belong to the owner. Use the stated default, and do not decide them yourself.
@@ -181,6 +183,12 @@ total   = row.bund + kanton + gemeinde + kirche + row.personal
 ```
 
 Fixed assumptions, shown on the page: gross employment income, age 35, no wealth, standard deductions, and married couples have one income.
+
+**Subsequent owner-selected pension assumption:** use ESTV's 2026 age-35 standard employee BVG defaults, not an omitted/zero pension deduction. Evidence and domain are recorded in `docs/tax/bvg-rule-evidence.md`. New compiled profiles identify this assumption with `meta.pensionDefault: "ESTV2026Age35"`; both serialized reconstruction and frontend evaluation must apply the same evidenced rule. Reject unknown pension-default markers. Existing profiles without the marker retain their previous behavior; never silently reinterpret a previously pinned payload. Regenerate all eight full-coverage profiles under the selected assumption, preserving row counts and prior values in Git history, not forcing old zero-pension totals to remain unchanged. Subsequent owner clarification extends this input policy to ESTV standard defaults throughout, including standard household-budget and estimated-rent assumptions, without additional personal-expense inputs. Evidence-based approximations must be explicitly identified; the UI/methodology must state that this is an indicative estimate based on standard assumptions, not an individual or binding tax assessment. This clarification is not permission to invent official values, fit correction factors, loosen numerical thresholds, or mark failed comparisons passed. Withholding, quarantine and production approval remain separate.
+
+**Compiled household-budget migration contract:** new profiles use the closed optional marker `meta.budgetDefault: "ESTV2026Age35"`, alongside the existing pension marker. A new closed deduction source `rent30` means 30% of the evidenced estimated annual rent computed from current net employment income, before applying the authentic deduction format/cap; it is emitted only for the verified ZG renter rule. Both browser and independent reconstruction implement this exact off-grid meaning. Reject unknown budget markers, a budget marker without the matching pension default, and any `rent30` operation lacking the matching budget marker. Exact-grid rows remain authoritative, and old profiles lacking the budget marker and new operation retain their previous behavior. No numerical thresholds or approvals change.
+
+The visible qualification for these standard assumptions is: **„Dies ist eine indikative Schätzung mit ESTV-Standardannahmen, keine individuelle oder verbindliche Steuerveranlagung und keine Steuerberatung.“**
 
 Display totals rounded to CHF 10. Income input: CHF 40,000–500,000. Below or above that range, clamp the value and show a note.
 
@@ -539,3 +547,27 @@ This section supersedes only the earlier workplace-selection/destination-count a
 - The narrower destination list is a versioned release input. Preserve all tax files and map IDs. Tests must assert 19 workplaces, 2,110 residences, non-capital/cross-canton selection and separate time/walk controls.
 - A report of newly granted GitHub permissions is not proof of a refreshed credential or successful source CI. Recheck the effective credential and actual workflow upload/run; never mark a pending/failing accuracy stage passed. Non-commercial preview publication remains authorized under §18, not production launch.
 - All numerical, direct official, travel, content and owner launch gates remain in force. Until they pass, the preview continues to withhold unverified tax recommendations. Scope/navigation acceptance is not a working all-origin timetable/tax acceptance claim.
+
+## 20. Engineering amendment: precise tax profiles — 17 Oct 2026
+
+This construction amendment supersedes only the tax representation/arithmetic in §6.1/§7 where explicitly stated. It does not reduce §19 scope, change §7.1 thresholds or assumptions, approve official-input comparability, lift quarantine/withholding, or authorize production. Its purpose is to repair measured off-grid interpolation failures without changing the oracle, sample seed or acceptance limits. The earlier failing results in §18 and the v1.2 amendment register remain historical observations, not the status of a later tested revision.
+
+### 20.1 Schema and evaluation contract
+
+- Preserve the original eight profiles, all 26 cantons, all 461 grid rows per profile/canton, and the complete 2,110-Gemeinde authority. The added schema must not replace full coverage with reference fixtures or capital-only data.
+- New profiles use `meta.schemaVersion: 2` and an additional `precision` object. Its exact data types, deduction discriminants, tariff discriminants and bounded arithmetic grammar are specified in `docs/tax/schema-v2.md`, which forms part of this engineering contract. It is compiled from the pinned authentic engine inputs for the same frozen household assumptions, not from fitting official sample outputs.
+- New v2 profiles use the owner-selected ESTV standard defaults throughout: `meta.pensionDefault: "ESTV2026Age35"` for the employed age-35 BVG default and the matching `meta.budgetDefault: "ESTV2026Age35"` for standard household-budget/estimated-rent handling, without additional personal-expense inputs. The markers remain optional only for backwards compatibility with genuinely legacy pinned profiles and may not be removed to evade current acceptance.
+- The `precision` key set must equal the complete 26-canton grid key set. Validate finite numeric fields, known discriminants, complete input consumption for expressions, valid splits and non-empty tariff tables before caching. Reject malformed v2 profiles in full; do not silently fall back to inaccurate interpolation. No `eval`, dynamic executable data, or full vendored-engine browser dependency is permitted.
+- At an exact grid income, select the original serialized base row with absolute component-selection error at most `1e-9` CHF. At an income between grid rows, evaluate the declarative program, retaining authentic taxable-income floors, deductions, splits and tariff transitions instead of linear interpolation. Clamp the input to the unchanged CHF 40,000–500,000 range.
+- Apply the engine's independent integer half-even rounding to final canton, Gemeinde and church monetary components. Church rates retain the engine's per-person normalization for married households. This is calculation rounding, distinct from the unchanged CHF 10 display rounding. Final rounded components are not claimed to equal unrounded base rows; base-row selection and final-money regression are separate checks.
+- Schema-v1 profiles retain the original §7 interpolation behavior for backwards compatibility and explicitly labelled tests. Production v2 data must have complete valid programs; removing the version/program to evade acceptance is prohibited.
+
+### 20.2 Evidence and release boundaries
+
+- Execute both serialized reconstruction and the shipped frontend independently against the full vendored engine under the unchanged fixed 500 on-grid and 300 off-grid cases, before display rounding. Record actual per-case inputs/errors and payload hashes. Deterministic regeneration requires matching hashes of all nine tax/municipality files across two real generations, not just two static copies or builds.
+- The 29-case official ESTV catalogue is independently captured source evidence. It is not a substitute implementation, general approval, or proof that the app's deductions equal the official calculator's native budget. Compare the actual shipped frontend directly, preserve mismatches, and retain pending owner decisions on child ages/default-budget comparability. Never tune source values, gates or requested incomes to conceal discrepancies.
+- Publish official comparison diagnostics separately from vendored-engine parity. An unresolved input-comparability decision cannot be reported as a passed official gate even when a numeric sample happens to agree. Existing `DATA_RELEASE.approvals.estv`, withheld-canton and quarantine behavior stays fail-closed.
+- Vendor selftest or full-engine agreement is not independent official acceptance. Direct official ESTV verification, production approval and the visible German qualification in §7 remain required and pending unless separately evidenced.
+- Travel publication must structurally validate full residential access coverage, exactly the supported non-null-access capital files, valid/sorted/integer rows, real Tuesday/window metadata, and no false zero-duration pairs. This structural gate is not R5 metric conformance, real-data provenance, SBB comparison, geographic QA, capacity qualification or owner acceptance. No synthetic timetable data may be published.
+- UI/status wording must distinguish genuinely reachable homes whose taxes are withheld from a genuinely empty commute catchment. No real route, ranking or all-origin acceptance is implied by a passing synthetic UI test.
+- Preserve the full prior specification at `docs/source/SPEC-v1.2-2026-10-17.md` and record its SHA-256 and affected documentation in `docs/spec-amendments-v1.3.md`. Keep dated prior reports as evidence and label their historical status instead of silently rewriting their observed outcomes.
