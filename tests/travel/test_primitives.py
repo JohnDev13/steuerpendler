@@ -82,6 +82,37 @@ class CalendarGroupingTests(unittest.TestCase):
             p.rank_stations(stops,trips,rows+[conflict],active,set(stops))
 
 
+class TinyFeedBoardingWindowTests(unittest.TestCase):
+    def test_metric_probe_fixture_keeps_inclusive_board_window_and_seconds(self):
+        """Synthetic fixture contract only; this does not claim R5 conformance."""
+        import tempfile
+        from metric_probe import fixture
+
+        with tempfile.TemporaryDirectory() as directory:
+            _, tables = fixture(pathlib.Path(directory))
+        trips = {row[2] for row in tables['trips.txt'][1:]}
+        stop_times = tables['stop_times.txt'][1:]
+        legs = {}
+        for trip, arrival, departure, stop, sequence in stop_times:
+            if trip not in trips:
+                continue
+            legs.setdefault(trip, {})[stop] = (p.gtfs_seconds(arrival),
+                                                p.gtfs_seconds(departure), sequence)
+        candidates = {
+            trip: values['B1'][0] - values[origin][1]
+            for trip, values in legs.items()
+            for origin in ('A1', 'A2')
+            if origin in values and 'B1' in values
+            and 6 * 3600 + 30 * 60 <= values[origin][1] <= 8 * 3600 + 30 * 60
+        }
+        self.assertEqual(min(candidates.values()), 60)
+        self.assertIn('lower-inclusive', candidates)
+        self.assertIn('upper-inclusive', candidates)
+        self.assertEqual(candidates['rare-second'], 121)
+        self.assertNotIn('outside-before', candidates)
+        self.assertNotIn('outside-after', candidates)
+
+
 class EndpointFilterTests(unittest.TestCase):
     def test_speed_thresholds_shared_station_zero_and_rounding(self):
         self.assertEqual(p.pair_qa('A','A',0,0), 'passed')
