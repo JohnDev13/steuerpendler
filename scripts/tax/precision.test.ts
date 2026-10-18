@@ -87,15 +87,28 @@ test('schema v2 rejects missing precise programs instead of silently using inacc
  await expect(repository.loadProfile('s',0)).rejects.toThrow();
 });
 
-test('pension marker is optional for legacy profiles but unknown values are rejected',async()=>{
+test('pension marker is optional for genuine legacy profiles but invalid marker combinations are rejected',async()=>{
  const artifacts=await loadArtifacts();
- const legacy=structuredClone(artifacts.profiles['s-0']);
- delete (legacy.meta as any).pensionDefault;
+ const generated=artifacts.profiles['s-0'];
+ const legacy=structuredClone(generated);
+ delete legacy.meta.pensionDefault;
+ delete legacy.meta.budgetDefault;
+ for(const precision of Object.values(legacy.precision!))for(const part of [precision.bund,precision.canton]){
+  part.deductions=part.deductions.filter(op=>op.source!=='rent30');
+ }
+ expect(Object.values(legacy.precision!).flatMap(p=>[...p.bund.deductions,...p.canton.deductions])).not.toContainEqual(expect.objectContaining({source:'rent30'}));
  const accepted=new TaxRepository(async()=>new Response(JSON.stringify(legacy),{headers:{'content-type':'application/json'}}));
  await expect(accepted.loadProfile('s',0)).resolves.toBeTruthy();
- (legacy.meta as any).pensionDefault='SURPRISE';
- const rejected=new TaxRepository(async()=>new Response(JSON.stringify(legacy),{headers:{'content-type':'application/json'}}));
- await expect(rejected.loadProfile('s',0)).rejects.toThrow(/pension/i);
+
+ const unknownPension=structuredClone(generated);
+ (unknownPension.meta as any).pensionDefault='SURPRISE';
+ const rejectedUnknown=new TaxRepository(async()=>new Response(JSON.stringify(unknownPension),{headers:{'content-type':'application/json'}}));
+ await expect(rejectedUnknown.loadProfile('s',0)).rejects.toThrow(/pension/i);
+
+ const missingPension=structuredClone(generated);
+ delete missingPension.meta.pensionDefault;
+ const rejectedCombination=new TaxRepository(async()=>new Response(JSON.stringify(missingPension),{headers:{'content-type':'application/json'}}));
+ await expect(rejectedCombination.loadProfile('s',0)).rejects.toThrow(/budgetDefault benötigt pensionDefault/);
 });
 
 test('browser preserves every serialized exact-grid component within 1e-9 CHF',async()=>{
