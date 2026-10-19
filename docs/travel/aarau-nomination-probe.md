@@ -1,0 +1,25 @@
+# Provisional Aarau main-stop and population-centre probe — acceptance BLOCKED
+
+**Observed 2026-10-19 on provisional Tuesday 2026-11-17 Europe/Zurich.** This is bounded real-input evidence, **not** a verified §8 Aarau itinerary, a released dataset, or an approved reference day. National generation remains deferred by owner decision; current host has 4 GiB RAM/2 CPUs.
+
+## Inputs and method
+
+- GTFS 2026 feed `20261017`: SHA-256 `d5b312e1ff398b505f9a6efef60c365f3c864857f73c55e87b383960a6b3418e`; scheduled trip services expanded from `calendar.txt` and `calendar_dates.txt` on the provisional day. Streamed **42,243,848** stop-time rows. Departures ranked 06:00–09:00 inclusive at *stops inside each 2026 municipality polygon*, aggregated by parent station; unique `(trip_id,stop_sequence)` with explicit duplicate-conflict rejection.
+- Swiss municipality TopoJSON (BFS via swiss-maps) `site/data/map/switzerland-2026.json`, EPSG:2056, SHA-256 `d118a3e8b47c8d76d4fa2587911aa088573d09a934ea484f2f1a60d573aafe14`. Decoder bounding boxes for BFS 4001/4201 matched independent `topojson-client` output. Stop WGS84→LV95 conversion for selected parents differed from `pyproj` by <0.2m.
+- BFS STATPOP 2025 hectare CSV EPSG:2056, SHA-256 `f8da1e70d954ce174551ce0efc1a942cca634293d3ad9fb2077875580a91b95d`. `BBTOT` weights; hectare southwest corner (`E_KOORD`, `N_KOORD`) +50m in each dimension as documented in BFS STATPOP geodata description included with the prior 2024 release (2025 field semantics should be checked against its own metadata). Source URLs, local raw files and OSM hash: `/home/hermes/data/steuerpendler/2026-10-19/SOURCE-SNAPSHOT.json`.
+- Repro: `python3 scripts/travel/aarau_nomination_probe.py --gtfs /home/hermes/data/steuerpendler/2026-10-19/gtfs_fp2026_20261017.zip --statpop /home/hermes/data/steuerpendler/2026-10-19/statpop2025-ha-2056.csv --map site/data/map/switzerland-2026.json --date 2026-11-17 --output /home/hermes/data/steuerpendler/2026-10-19/AARAU-NOMINATION-PROBE.json`. Full report with source hashes is at the output path (outside Git). Initial implementation was killed with exit 137 when it materialised all calendar exceptions and trips; streaming only relevant rows allowed a 2m7s run on this host.
+
+## Provisional nominated stations
+
+- **Aarau (BFS 4001):** 139 spatially assigned stops; highest-count parent `Parentch:1:sloid:2996` = **Aarau, Bahnhof** (bus-stop DIDOK `8502996`), **215** active departures; STATPOP-weighted centre LV95 **(2646625.9433, 1249340.0506)** from **23,137** people in included cells.
+- **Lenzburg (BFS 4201):** 96 assigned stops; highest-count parent `Parentch:1:sloid:78736` = **Lenzburg, Bahnhof** (bus-stop DIDOK `8578736`), **92** active departures; centre LV95 **(2655656.3165, 1248828.3059)** from **11,003** people in included cells.
+
+**Correction to previous evidence:** The direct IR37 **07:29–07:35 / 360-second** Lenzburg *rail* `Parentch:1:sloid:2119` → Aarau *rail* `Parentch:1:sloid:2113` observation in `aarau-provisional-direct-check-20261019.md` is a genuine train trip but is **not a valid journey between the provisionally nominated bus-stop parents**. A separate bounded scan found **zero trips serving both nominated parents directly** on this provisional date; that does *not* establish no eligible transfer journey. A transport.opendata.ch request using bus DIDOK IDs `8578736` and `8502996` returned endpoints `8502119`/`8502113` (the rail stops), so its returned train itineraries are **not an endpoint-matched independent check**. Raw response and scan evidence are kept outside Git in `lenzburg-bahnhof-aarau-bahnhof-api.json` and `AARAU-NOMINATED-DIRECT-PROBE.json` next to the source manifest.
+
+## Still required before even the bounded pilot passes
+
+1. Source-backed confirmation of one all-canton public/school-holiday-free, GTFS-covered Tuesday; EDK's 2026 school-calendar PDF returned an AWS-WAF challenge during this check, and the available federal legal-holiday list dated 2011 is not accepted as 2026 evidence. Recompute nomination on any different date.
+2. Independently verify the station ranking/joins and 2025 hectare semantics; keep the `stop_id` parents distinct even when a planner treats nearby rail and bus stations as interchangeable.
+3. Route actual OSM pedestrian access from each centre to its nominated station and apply the separate ≤15-minute walk limit, including unusable-stop fallbacks. Compute explicit transfer footpaths and schedules for the nominated bus-stop parents. Do **not** substitute the nearby rail itinerary, zero walking, or an API response with changed endpoints.
+4. Prove the exact minimum over all first-board events incl. transfers, waits/walks and no-service cases. Current code supports only a synthetic one-transfer prototype. Resolve applicable `frequencies.exact_times=0` services without invented times; obtain a truly endpoint-matched independent check. Only then review §8 GTFS fallback architecture and rerun acceptance.
+5. `site/data/manifest.json` must remain `travel=false`; separate tax comparison still fails 20/29. No release approval follows from these probes.
