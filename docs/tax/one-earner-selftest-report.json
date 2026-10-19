@@ -1,0 +1,63 @@
+{
+  "source": {
+    "repository": "https://github.com/devbrains-com/swisstaxcalculator",
+    "commit": "43064402b1e52dbbc34dded6a305d7d536737c73",
+    "year": 2026
+  },
+  "seed": 8230,
+  "prng": "LCG uint32: 1664525*x+1013904223",
+  "officialVerification": "pending",
+  "artifactSha256": {
+    "gemeinden-2026.json": "0cc01b0d5f9fab1a0069394a9b89441ca4264ea0ba7e114e89157c2f748a5928",
+    "tax-2026-s-0.json": "8fe65992f55fbc8832cd29b740628247eacad4c82ea7d2fa9aeeaa5ab3770f96",
+    "tax-2026-s-1.json": "897be346175581bbd3c64e5ddcf7aab4d3e321064ac69be06f99edefdaf54d78",
+    "tax-2026-s-2.json": "f775707ba81af801e70ccbf6472ee513aa995235dfd8fa81dad5a0d43f4cd01a",
+    "tax-2026-s-3.json": "baf1fad312c8233bae43ff38f563675ae0e13e26c9e70146db554004f60a12fe",
+    "tax-2026-m-0.json": "b954074e45a4fc65007fe8b79ac9396b79c0cef09c2ba8012ee5dc9615f153db",
+    "tax-2026-m-1.json": "f1f6f38e6be9359f26b8c58d00eea9a81fd8c865e7ea44642f46665efa0e1f9f",
+    "tax-2026-m-2.json": "b3a4beddbed2080bdf0354a6ad8c87df0d921cfe2ee251002c14b343caa9b514",
+    "tax-2026-m-3.json": "6ba14dfea5ff6b9175813937b243a7016389210036464490703a69195220d1d4"
+  },
+  "gates": {
+    "onGrid": "max(2, abs(expected) * 0.0001)",
+    "offGrid": 10
+  },
+  "onGrid": {
+    "count": 500,
+    "failureCount": 0,
+    "maxAbsoluteError": 0,
+    "worst": {
+      "bfs": 4137,
+      "canton": "AG",
+      "civil": "s",
+      "kids": 0,
+      "income": 395000,
+      "church": "none",
+      "expected": 106705,
+      "actual": 106705,
+      "error": 0,
+      "tolerance": 10.6705
+    },
+    "failures": []
+  },
+  "offGrid": {
+    "count": 300,
+    "failureCount": 0,
+    "maxAbsoluteError": 0,
+    "worst": {
+      "bfs": 4303,
+      "canton": "AG",
+      "civil": "s",
+      "kids": 0,
+      "income": 168982,
+      "church": "none",
+      "expected": 30340,
+      "actual": 30340,
+      "error": 0,
+      "tolerance": 10
+    },
+    "failures": []
+  },
+  "passed": true,
+  "exitCode": 0
+}

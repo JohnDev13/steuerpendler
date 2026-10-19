@@ -1,7 +1,78 @@
+import { calculateBvg2026Age35 } from '../scripts/tax/bvg';
+
 export type CivilStatus = 's' | 'm';
+export type PensionDefault = 'ESTV2026Age35';
+export type BudgetDefault = 'ESTV2026Age35';
 export type Church = 'none' | 'reformed' | 'catholic';
 export type Gemeinde = readonly [name:string,canton:string,rateCanton:number,rateGemeinde:number,rateReformed:number,rateCatholic:number];
-export interface TaxProfile {meta:{year:number;incomes:{from:number;step:number;count:number};[key:string]:unknown};cantons:Record<string,number[][]>}
+export type DeductionFormat = 'ZERO'|'STANDARDIZED'|'MAXIMUM'|'PERCENT'|'PERCENT,MAXIMUM'|'PERCENT,MINIMUM,MAXIMUM';
+export interface DeductionOp {source:'net'|'constant'|'rent30';value:number;format:DeductionFormat;amount:number;percent:number;minimum:number;maximum:number;multiplier:number}
+export type TariffType = 'BUND'|'ZUERICH'|'FORMEL'|'FREIBURG'|'FLATTAX';
+export interface PreciseTariff {type:TariffType;split:number;table:{amount:number;percent:number;taxes:number;formula:string}[]}
+export interface PreciseCanton {bund:{deductions:DeductionOp[];tariff:PreciseTariff};canton:{deductions:DeductionOp[];tariff:PreciseTariff};personal:number;kids:number;persons:number}
+export interface TaxProfile {meta:{year:number;incomes:{from:number;step:number;count:number};pensionDefault?:PensionDefault;budgetDefault?:BudgetDefault;[key:string]:unknown};cantons:Record<string,number[][]>;precision?:Record<string,PreciseCanton>}
+// Integer ties-to-even, matching the engine's monetary rounding, not display rounding.
+export function halfEven(x:number):number {const f=Math.floor(x),d=x-f;return Math.abs(d-.5)<1e-8?(f%2===0?f:f+1):Math.round(x);}
+function formulaValue(formula:string,wert:number):number {
+ const compact=formula.replace(/\s/g,'');
+ const tokens=compact.match(/\$wert\$|log|\d+(?:\.\d*)?|[()+*/-]/g)??[];let i=0;
+ if(tokens.join('')!==compact)throw Error('Ungültige Steuerformel.');
+ function atom():number {const t=tokens[i++];if(t==='-')return -atom();if(t==='log')return Math.log(atom());if(t==='('){const v=expr();if(tokens[i++]!==')')throw Error('Ungültige Steuerformel.');return v;}if(t==='$wert$')return wert;const n=Number(t);if(!Number.isFinite(n))throw Error('Ungültige Steuerformel.');return n;}
+ function term():number {let v=atom();while(tokens[i]==='*'||tokens[i]==='/'){const op=tokens[i++],r=atom();v=op==='*'?v*r:v/r;}return v;}
+ function expr():number {let v=term();while(tokens[i]==='+'||tokens[i]==='-'){const op=tokens[i++],r=term();v=op==='+'?v+r:v-r;}return v;}
+ if(!formula.trim())return 0;const v=expr();if(i!==tokens.length||!Number.isFinite(v))throw Error('Ungültige Steuerformel.');return Math.max(0,Math.round(v*100)/100);
+}
+const deductionFormats = new Set<DeductionFormat>(['ZERO','STANDARDIZED','MAXIMUM','PERCENT','PERCENT,MAXIMUM','PERCENT,MINIMUM,MAXIMUM']);
+const tariffTypes = new Set<TariffType>(['BUND','ZUERICH','FORMEL','FREIBURG','FLATTAX']);
+function validatePrecision(value:unknown):value is PreciseCanton {
+ if(!value||typeof value!=='object')return false;
+ const p=value as PreciseCanton;
+ if(!Number.isFinite(p.personal)||!Number.isInteger(p.kids)||p.kids<0||p.kids>3||!Number.isInteger(p.persons)||p.persons<1||p.persons>2)return false;
+ for(const part of [p.bund,p.canton]){
+  if(!part||!Array.isArray(part.deductions)||!part.tariff)return false;
+  for(const op of part.deductions)if(!op||!['net','constant','rent30'].includes(op.source)||!deductionFormats.has(op.format)||![op.value,op.amount,op.percent,op.minimum,op.maximum,op.multiplier].every(Number.isFinite))return false;
+  const tariff=part.tariff;
+  if(!tariffTypes.has(tariff.type)||!Number.isFinite(tariff.split)||tariff.split<=0||!Array.isArray(tariff.table)||tariff.table.length===0)return false;
+  for(const row of tariff.table){
+   if(!row||![row.amount,row.percent,row.taxes].every(Number.isFinite)||typeof row.formula!=='string')return false;
+   try { formulaValue(row.formula,100000); } catch { return false; }
+  }
+ }
+ return true;
+}
+export function preciseBase(p:PreciseCanton,income:number,pensionDefault?:PensionDefault,budgetDefault?:BudgetDefault):[number,number,number] {
+ const gross=Math.round(income*100)/100;
+ const pension=pensionDefault==='ESTV2026Age35'?calculateBvg2026Age35(gross):0;
+ const net=gross-halfEven(gross*.053)-halfEven(Math.min(gross,148200)*.011)-halfEven(Math.min(gross,148200)*.004)-pension;
+ const tax=(part:PreciseCanton['bund'])=>{
+  let deductions=0;
+  for(const op of part.deductions){const estimatedRent=Math.round(net*.25/10)*10;const v=op.source==='net'?net:op.source==='rent30'&&budgetDefault==='ESTV2026Age35'?estimatedRent*.3:op.value;let d=0;
+   if(op.format==='ZERO')d=0;
+   else if(op.format==='STANDARDIZED')d=op.amount;
+   else if(op.format==='MAXIMUM')d=Math.min(v,op.maximum);
+   else if(op.format==='PERCENT')d=halfEven(v*op.percent/100);
+   else if(op.format==='PERCENT,MAXIMUM')d=Math.min(op.maximum,halfEven(v*op.percent/100));
+   else if(op.format==='PERCENT,MINIMUM,MAXIMUM')d=Math.min(op.maximum,Math.max(op.minimum,halfEven(v*op.percent/100)));
+   deductions+=d*op.multiplier;
+  }
+  const tariff=part.tariff,split=tariff.split;
+  let amount=Math.max(0,halfEven(net-deductions))* (Math.round(1/split*1e5)/1e5);
+  if(tariff.type!=='FORMEL')amount=Math.floor(amount/100)*100;
+  let type=tariff.type;
+  if(type==='ZUERICH'&&tariff.table.some(x=>x.taxes>0))type='BUND';
+  let result=0;
+  const rate=(v:number)=>Math.round(v*1e5)/1e5;
+  if(type==='FLATTAX')result=amount*rate(tariff.table[0].percent)/100;
+  else if(type==='ZUERICH'){let left=amount;for(const row of tariff.table){const used=Math.min(left,row.amount);result+=used*rate(row.percent)/100;left-=used;if(!left)break;}}
+  else if(type==='FREIBURG'){
+   let last:PreciseTariff['table'][number]|undefined;
+   for(const row of tariff.table){if(row.amount>=amount){if(last&&last.amount!==0){const rate=last.percent+(amount-last.amount)*(row.percent-last.percent)/(row.amount-last.amount);result=amount*Math.round(rate*1e5)/1e7;}break;}last=row;}
+   if(last&&amount>tariff.table[tariff.table.length-1].amount)result=amount*rate(last.percent)/100;
+  }else {let row=tariff.table[0];for(const next of tariff.table){if(next.amount>amount)break;row=next;}result=type==='FORMEL'?formulaValue(row.formula,amount):Math.round(row.taxes*100)/100+(amount-row.amount)*rate(row.percent)/100;}
+  return result*split;
+ };
+ return [Math.max(0,halfEven(tax(p.bund))-263*p.kids),tax(p.canton),p.personal];
+}
 export interface TaxBreakdown {bund:number;kanton:number;gemeinde:number;kirche:number;personal:number;total:number;income:number;clamped:boolean}
 export function calculateTax(profile:TaxProfile,g:Gemeinde,income:number,church:Church):TaxBreakdown {
  if (!Number.isFinite(income)) throw new Error('Ungültiges Einkommen.');
@@ -10,9 +81,12 @@ export function calculateTax(profile:TaxProfile,g:Gemeinde,income:number,church:
  const i=Math.min(Math.floor(x),459),t=x-i;
  const table=profile.cantons[g[1]];
  if (!table || !table[i] || !table[i+1]) throw new Error('Steuertabelle für diesen Kanton fehlt.');
- const row=table[i].map((v,k)=>v+(table[i+1][k]-v)*t);
+ const precise=profile.precision?.[g[1]];
+ const row=precise&&t!==0&&t!==1?preciseBase(precise,clampedIncome,profile.meta.pensionDefault,profile.meta.budgetDefault):table[i].map((v,k)=>v+(table[i+1][k]-v)*t);
  const rate=church==='reformed'?g[4]:church==='catholic'?g[5]:0;
- const bund=row[0],kanton=row[1]*g[2]/100,gemeinde=row[1]*g[3]/100,kirche=row[1]*rate/100,personal=row[2];
+ const round=precise?halfEven:(x:number)=>x;
+ const churchRate=precise?Math.round(rate/precise.persons*100)/100*precise.persons:rate;
+ const bund=row[0],kanton=round(row[1]*g[2]/100),gemeinde=round(row[1]*g[3]/100),kirche=round(row[1]*churchRate/100),personal=row[2];
  const total=bund+kanton+gemeinde+kirche+personal;
  if(!Number.isFinite(total)) throw new Error('Steuerdaten sind unvollständig.');
  return {bund,kanton,gemeinde,kirche,personal,total,income:clampedIncome,clamped:income!==clampedIncome};
@@ -57,8 +131,18 @@ export class TaxRepository {
   if(!['s','m'].includes(civ)||!Number.isInteger(kids)||kids<0||kids>3) return Promise.reject(new Error('Ungültiges Steuerprofil.'));
   return this.once(`tax-2026-${civ}-${kids}.json`,data=>{
    const p=data as TaxProfile;
+   if(p?.meta?.pensionDefault!==undefined&&p.meta.pensionDefault!=='ESTV2026Age35') throw new Error('Ungültiger pensionDefault-Marker.');
+   if(p?.meta?.budgetDefault!==undefined&&p.meta.budgetDefault!=='ESTV2026Age35') throw new Error('Ungültiger budgetDefault-Marker.');
+   if(p?.meta?.budgetDefault!==undefined&&p.meta.pensionDefault!=='ESTV2026Age35') throw new Error('budgetDefault benötigt pensionDefault.');
    if(p?.meta?.year!==2026||p.meta.incomes?.from!==40000||p.meta.incomes.step!==1000||p.meta.incomes.count!==461||!p.cantons||!Object.keys(p.cantons).length) throw new Error('Ungültige Steuertabelle.');
    for(const rows of Object.values(p.cantons)) if(!Array.isArray(rows)||rows.length!==461||rows.some(row=>!Array.isArray(row)||row.length!==3||!row.every(Number.isFinite))) throw new Error('Steuerdaten sind unvollständig.');
+   if(p.precision!==undefined||p.meta.schemaVersion!==undefined){
+    if(p.meta.schemaVersion!==2)throw new Error('Ungültige precision-Schemaversion.');
+    const cantonKeys=Object.keys(p.cantons).sort(),precisionKeys=Object.keys(p.precision??{}).sort();
+    if(cantonKeys.length!==26||precisionKeys.length!==26||cantonKeys.some((key,index)=>key!==precisionKeys[index])||!precisionKeys.every(key=>validatePrecision(p.precision![key])))throw new Error('Ungültiges precision-Steuerprogramm.');
+    const hasRent30=precisionKeys.some(key=>[p.precision![key].bund,p.precision![key].canton].some(part=>part.deductions.some(op=>op.source==='rent30')));
+    if(hasRent30&&p.meta.budgetDefault!=='ESTV2026Age35')throw new Error('rent30 benötigt budgetDefault.');
+   }
    return p;
   });
  }

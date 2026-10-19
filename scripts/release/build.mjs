@@ -2,6 +2,8 @@ import {createHash} from 'node:crypto';
 import {existsSync,readdirSync,readFileSync,writeFileSync,statSync} from 'node:fs';
 import {resolve,join,relative} from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {DESTINATIONS} from '../../src/destinations.ts';
+import {validateTravelDataset} from './travel.mjs';
 const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
 function sorted(value){if(Array.isArray(value))return value.map(sorted);if(value&&typeof value==='object')return Object.fromEntries(Object.keys(value).sort().map(key=>[key,sorted(value[key])]));return value;}
 function filesUnder(path){if(!existsSync(path))return [];return readdirSync(path).sort().flatMap(name=>{const p=join(path,name);return statSync(p).isDirectory()?filesUnder(p):[p];});}
@@ -14,12 +16,20 @@ export function buildRelease(root=process.cwd()){
   files[name]={sha256:hash(bytes),bytes:bytes.length};
  }
  const inputs={};
- for(const name of ['SPEC.md','src/destinations.ts','package-lock.json','scripts/release/build.mjs','scripts/tax/build.ts','scripts/map/build.mjs','docs/map/source-manifest.json','vendor/swisstaxcalculator/STEUERPENDLER-PATCHES.md']){
+ for(const name of ['SPEC.md','src/destinations.ts','package-lock.json','scripts/release/build.mjs','scripts/release/travel.mjs','scripts/tax/build.ts','scripts/map/build.mjs','docs/map/source-manifest.json','vendor/swisstaxcalculator/STEUERPENDLER-PATCHES.md']){
   const path=join(root,name);if(existsSync(path))inputs[name]={sha256:hash(readFileSync(path)),bytes:statSync(path).size};
  }
  const release=hash(JSON.stringify(sorted({schemaVersion:1,files,inputs})));
  const taxAvailable=!!files['gemeinden-2026.json']&&['s','m'].every(civ=>[0,1,2,3].every(kids=>files[`tax-2026-${civ}-${kids}.json`]));
- const result={schemaVersion:1,release,taxYear:2026,availability:{tax:taxAvailable,map:!!files['map/switzerland-2026.json'],travel:!!files['travel/meta.json']&&!!files['travel/access.json']&&Object.keys(files).some(name=>name.startsWith('travel/to/'))},approvals:{estv:false,sbb:false,content:false,golden:false,geodataLicense:false},status:'reconstruction',files,inputs};
+ let travelAvailable=false;
+ const travelFiles=Object.keys(files).filter(name=>name.startsWith('travel/'));
+ if(travelFiles.length){
+  if(!files['travel/meta.json']||!files['travel/access.json']||!files['gemeinden-2026.json'])throw new Error('Incomplete travel release: metadata, access and residential authority are required.');
+  const read=name=>JSON.parse(readFileSync(join(data,name),'utf8'));
+  const matrices={};for(const name of travelFiles.filter(name=>name.startsWith('travel/to/'))){const match=/^travel\/to\/([1-9]\d*)\.json$/.exec(name);if(!match)throw new Error('Invalid destination capital file.');matrices[match[1]]=read(name);}
+  travelAvailable=validateTravelDataset({gemeinden:read('gemeinden-2026.json').gemeinden,destinations:DESTINATIONS.map(d=>d.bfs),access:read('travel/access.json'),meta:read('travel/meta.json'),matrices});
+ }
+ const result={schemaVersion:1,release,taxYear:2026,availability:{tax:taxAvailable,map:!!files['map/switzerland-2026.json'],travel:travelAvailable},approvals:{estv:false,sbb:false,content:false,golden:false,geodataLicense:false},status:'reconstruction',files,inputs};
  const output=JSON.stringify(sorted(result));
  writeFileSync(join(data,'manifest.json'),output);writeFileSync(join(data,'release.json'),output);
  return result;

@@ -6,7 +6,7 @@ import { workplaceGemeinden } from './destinations';
 import { TaxRepository, calculateTax, type Gemeinde, type TaxBreakdown } from './tax';
 import { sitePath } from './paths';
 import { withheldCantons } from './policy';
-import { filterAndRank, type Access, type TravelRows, type RankedResult } from './filter';
+import { filterAndRank, summarizeReachability, type Access, type TravelRows, type RankedResult } from './filter';
 import { DATA_RELEASE, QUARANTINED_CANTONS, COLOURS } from './config';
 import { formatCHF } from './format';
 import { createMap } from './map';
@@ -23,7 +23,7 @@ app.innerHTML=`<header class="site-header"><a class="brand" href="${sitePath('')
 <div class="field"><label for="income">${s.income}</label><input id="income" type="number" inputmode="numeric" min="40000" max="500000" step="1000" value="120000"><input id="income-slider" type="range" aria-label="${s.incomeSlider}" min="40000" max="500000" step="1000" value="120000"><small id="clamp-note" hidden>${s.clamped}</small></div>
 <div class="field"><label for="civil">${s.civil}</label><select id="civil"><option value="s">${s.single}</option><option value="m">${s.married}</option></select></div>
 <div class="paired"><div class="field"><label for="kids">${s.children}</label><select id="kids"><option>0</option><option>1</option><option>2</option><option value="3">3+</option></select></div><div class="field"><label for="church">${s.church}</label><select id="church"><option value="none">${s.none}</option><option value="reformed">${s.reformed}</option><option value="catholic">${s.catholic}</option></select></div></div></aside>
-<section class="results"><div class="summary"><p class="eyebrow">${s.results}</p><h2 id="summary">${s.loading}</h2><p id="cheapest"></p></div><p class="assumptions">${s.assumptions} <strong>${s.disclaimer}</strong></p><p class="notice">${s.unverified}</p><p id="profile-status" class="assumptions" aria-live="polite"></p><p id="data-status" class="data-status" role="status" aria-live="polite"></p>
+<section class="results"><div class="summary"><p class="eyebrow">${s.results}</p><h2 id="summary">${s.loading}</h2><p id="review-summary"></p><p id="cheapest"></p></div><p class="assumptions">${s.assumptions} <strong>${s.disclaimer}</strong></p><p class="notice">${s.unverified}</p><p id="profile-status" class="assumptions" aria-live="polite"></p><p id="data-status" class="data-status" role="status" aria-live="polite"></p>
 <section class="map-panel panel" aria-label="${s.map}"><div class="field search-field"><label for="residence">${s.residenceSearch}</label><input id="residence" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="residence-options" autocomplete="off"><div id="residence-options" role="listbox" hidden></div><small>${s.residenceHint}</small></div><div id="map"><p>${s.mapPending}</p></div><div class="legend"><span>${s.cheap}</span>${COLOURS.map(c=>`<i style="background:${c}"></i>`).join('')}<span>${s.expensive}</span><span class="legend-muted">◻ ${s.noData}</span></div><small>${s.mapHelp}</small></section>
 <section class="list-panel panel" aria-label="${s.results}"><table><thead><tr>${[s.rank,s.municipality,s.canton,s.travel,s.walk,s.tax,s.difference].map(label=>`<th scope="col">${label}</th>`).join('')}</tr></thead><tbody id="ranked-list"></tbody></table><p id="empty-state" hidden>${s.empty}</p></section>
 <section id="detail" class="detail-panel panel" aria-label="${s.detail}" tabindex="-1"><p>${s.selectDetail}</p></section></section></main>
@@ -66,9 +66,12 @@ async function update(){
   rows=newRows;breakdowns={};const totals:Record<string,number>={};
   for(const [id,g] of Object.entries(gemeinden)){if(reviewCantons.has(g[1]))continue;const tax=calculateTax(profile,g,snapshot.income,snapshot.church);breakdowns[id]=tax;totals[id]=tax.total;}
   results=filterAndRank(gemeinden,access,rows,snapshot,totals,reviewCantons);
-  $('summary').textContent=s.reachable(results.length);$('cheapest').textContent=results[0]?s.cheapest(results[0].name,formatCHF(results[0].total)):'';
+  const reachability=summarizeReachability(gemeinden,access,rows,snapshot,reviewCantons);
+  $('summary').textContent=s.reachable(results.length);
+  $('review-summary').textContent=reachability.underReview===0?'':reachability.reachable===reachability.underReview?s.allReachableUnderReview(reachability.underReview):s.reviewReachable(reachability.underReview);
+  $('cheapest').textContent=results[0]?s.cheapest(results[0].name,formatCHF(results[0].total)):'';
   $('data-status').classList.remove('error');$('data-status').textContent=!travelReady?s.travelPending:access[snapshot.workplace]==null?s.noStop:'';
-  $('empty-state').hidden=!travelReady||access[snapshot.workplace]==null||results.length>0;
+  $('empty-state').hidden=!travelReady||access[snapshot.workplace]==null||reachability.reachable>0;
   renderList($<HTMLTableSectionElement>('ranked-list'),results,state.selected,selectGemeinde);
   map?.update(results,state.workplace,state.selected,reviewCantons);
   if(state.selected!==null)selectGemeinde(state.selected);
