@@ -31,14 +31,14 @@ Example: "I work in Zürich and accept at most 25 minutes by train or bus, plus 
 ## 2. Scope
 
 **In v1**
-- Workplace: German-speaking cantonal capitals/government seats only (§19). Residential/tax candidates remain all 2,110 Swiss Gemeinden in all 26 cantons.
-- Commute filter: max travel time, max walk to the station, and a toggle that counts the walk inside the travel time.
+- Workplace: the selected 19 German-speaking cantonal capitals/government seats only. Residential/tax candidates remain all 2,110 Swiss Gemeinden in all 26 cantons.
+- Commute filter: max first-board-to-arrival transit time, max external walk to a served stop/station entrance, and a toggle that counts the walk inside the time cap.
 - Tax profile: gross income, single or married, 0–3+ children, church (none, reformed, catholic).
 - Results: ranked list, Switzerland map coloured by tax, and a breakdown per Gemeinde.
 - Real 2026 tax data and the real Swiss timetable.
 - Hosted on Cloudflare Pages, rebuilt from GitHub.
 
-**Not in v1:** rent, health insurance premiums, wealth tax, two-earner couples (see O1), door-to-door routing, user accounts, saved searches, ads or payments.
+**Not in v1:** rent, health insurance premiums, wealth tax, two-earner couples (see O1), address-level door-to-door routing, user accounts, saved searches, ads or payments. §8's representative residential point is an indicative Gemeinde proxy, not an address lookup.
 
 ## 3. Decisions already made (do not revisit)
 
@@ -47,7 +47,7 @@ Example: "I work in Zürich and accept at most 25 minutes by train or bus, plus 
 | Hosting | Cloudflare Pages, deployed from the GitHub repo. Static files only. |
 | Data | Precomputed once a year and committed to the repo as JSON. All filtering and tax maths run in the browser. |
 | Tax source | ESTV 2026 tariffs and Steuerfüsse via the vendored open-source engine `swisstaxcalculator` (MIT), with three documented patches. |
-| Travel source | Swiss GTFS timetable (opentransportdata.swiss) + OpenStreetMap footpaths, routed with r5py. |
+| Travel source | Swiss GTFS timetable (opentransportdata.swiss) + OpenStreetMap footpaths. The conditional exact-event fallback of §8 replaces the r5py/R5 timetable path where that path cannot prove the required exact metric; pedestrian access still requires verified OSM routing. |
 | Map | Gemeinde boundaries 2026 from the `swiss-maps` npm package (4.7.0), drawn with d3-geo. No tile server, no map API key. |
 | Frontend | Vite + TypeScript, vanilla DOM (no UI framework), d3-geo and topojson-client. Unit tests: Vitest. E2E tests: Playwright. |
 | Lovable / Supabase | Not used. |
@@ -127,26 +127,17 @@ Columns: name, canton, rateCanton, rateGemeinde, rateReformed, rateCatholic. Rat
 
 ### 6.3 Travel metadata: `site/data/travel/meta.json` (task T3)
 
-```json
-{ "timetable": "2027", "referenceDate": "2027-01-12", "window": "06:30-08:30", "maxMinutes": 60,
-  "gtfsFile": "<name of zip used>", "built": "<ISO date>" }
-```
+Target travel schema **v2** records `schemaVersion:2`, the frozen GTFS and OSM filenames/hashes, STATPOP/map vintages, approved `referenceDate`, `timezone:"Europe/Zurich"`, inclusive first-board window `06:30:00–08:30:00`, seconds-to-minute rounding rules, build-code revision and source/override hashes. It also has `targetGroups`, keyed by every selected workplace BFS, each a verified set of qualifying GTFS terminal stop IDs or `null` for explicit no-target-access. An option's destination ID must belong to its workplace's target group. The old illustrative 2027 date is **not** an approved reference day. The committed v1 frontend/data interfaces remain deliberately unavailable until every v2 consumer and validation gate is migrated together; never mix v1 access arrays with v2 route options in a release.
 
-### 6.4 Access: `site/data/travel/access.json` (task T3)
+### 6.4 Access: `site/data/travel/access.json` (target schema v2)
 
-```json
-{ "gemeinden": { "261": ["8503000", "Zürich HB", 6], "9999": null, ... } }
-```
+Every one of the 2,110 tax BFS IDs has an object with `placeLabel` (municipal/civic label with source if not just the Gemeinde name), `referenceStop` (`[stopId,stopName]` or `null` for display), `centreLV95` (`[E,N,source]`, `source=statpop|polygon-fallback`), and `candidates` (zero or more `[parentStopId,stopName,externalWalkSeconds]`). Candidate IDs are actual GTFS parent/stop IDs, with their station entrances and routed OSM external walks independently evidenced. The local reference stop is **not** a mandatory first-boarding stop; a nearby hub in another Gemeinde can be a candidate. An empty `candidates` list is a legitimate selectable no-access state, not a missing/corrupt asset. Sort candidates deterministically by walk seconds then stable ID; never invent a walk or station membership. The source provenance records candidate rejection reasons. The reference place (e.g. civic Rathaus), population centre and GTFS stop are distinct concepts and coordinates.
 
-Value: main stop id (parent station), main stop name, walk minutes from the population centre. `null` means no usable stop under §8. Every tax BFS ID must occur, including null entries. Check access before fetching a workplace file; null is a legitimate selectable no-main-stop state, not an asset failure (§9).
+### 6.5 Travel alternatives per workplace: `site/data/travel/to/<bfs>.json` (target schema v2)
 
-### 6.5 Travel times per workplace: `site/data/travel/to/<bfs>.json` (task T3)
+Each available destination file has `schemaVersion:2`, `to:<workplaceBfs>` and `rows`, one row per residential BFS with at least one valid option. A row is `[homeBfs, options]`; each option is `[externalWalkSeconds, transitSeconds, originParentId, destinationParentId, firstBoardSeconds, arrivalSeconds]` with integers for times on the frozen local service day. `originParentId` must occur among the home's verified access candidates and `destinationParentId` in the workplace's verified `targetGroups`. Keep the exact nondominated walk/transit frontier for that home/destination within maximum supported external walk (15 minutes after ceiling) and transit (60 minutes after ceiling), sorted by stable numeric/time/ID keys. Record full dated trip/transfer/OSM path evidence in source-backed audit artifacts keyed to the option; no option may be supplied by an unverified default. No row means no *proved* permitted transit itinerary only when the workplace file's full search/coverage gate has passed; otherwise withhold the entire file/availability. A workplace with no verified target stop group has no `to/` file and an explicit no-target-access state.
 
-```json
-{ "to": 261, "rows": [[261, 0], [3, 7], [191, 9], ...] }
-```
-
-Each row is `[homeBfs, minutes]`, sorted by minutes then numeric BFS ID. Keep only rows ≤ 60 minutes. Every non-null-access workplace has exactly one file and a self-row with travel component 0; distinct Gemeinden sharing its nominated parent station also have travel component 0. No file is expected for null-access workplaces. A self-row never bypasses frontend walk/effective-time constraints. Missing/corrupt files for non-null workplaces are errors, not legitimate empty/no-stop results.
+The self-home/workplace option alone has transit seconds 0 by definition, but still requires an evidenced residential→target-hub access walk and obeys the walk/combined-time filters; a different-Gemeinde pure walk is not a transit option. Distinct GTFS bus and rail parents in one hub are **not** automatically zero-time endpoints; use actual terminal membership and directed transfer rules. The old single `[homeBfs,minutes]` rows and one access walk per BFS cannot represent the user's walk-versus-bus choice. Publishing v2 requires migration/tests of `src/filter.ts`, loaders/detail UI, travel primitives and manifest/release hashing together. Until then `site/data/manifest.json` truthfully keeps travel unavailable.
 
 ### 6.6 Map: `site/data/map/switzerland-2026.json` (task T2)
 
@@ -198,27 +189,33 @@ Store seed, exact inputs and individual errors. §11.1 historical rounded engine
 
 Official CSV/evidence must record tax year, BFS/canton, gross income, age 35, civil/household status, partner income 0, child ages/treatment, church, no wealth, employment/deduction settings and actual ESTV input mapping/calculation steps from gross income. Proposed child-age default where unspecified: 10 years for each child; owner confirmation of comparability and deduction selections is pending before official acceptance. Record source URL/retrieval time, official result at available precision, evidence/hash, engine/frontend values, release ID and pass/fail. Never fill official gaps from the engine. Prioritize suspect VS and FR top-step checks without declaring either officially wrong/passed here.
 
-## 8. Travel-time rules (task T3 must implement exactly this)
+## 8. Travel-time rules (target hub/access contract; pilot before release)
 
-- **Reference day:** freeze a GTFS-covered Tuesday. Proposed calendar rule: earliest covered Tuesday outside national/cantonal public holidays and compulsory-school holidays in all 26 cantons (all published regional calendars where applicable). Record calendar URLs, retrieval dates and coverage evidence. If no such date exists, require owner-approved documented exception before T3 acceptance; never silently weaken the rule. Illustrative §6.3 2027 metadata is not an approved feed/date selection.
-- **Main stop:** rank active stops inside the Gemeinde, aggregated by parent station, by departures 06:00–09:00 inclusive on the reference day (Europe/Zurich). Count each active `(trip_id, stop_sequence)` once; stops without parent use their own ID. Ties: lexicographic station ID. If none inside has departures, choose the nearest active station within 2,000 m geodesic distance of the population centre, same tie rule; otherwise access is null. Parent coordinates are the nominated endpoint; if missing, use the arithmetic mean of child-platform coordinates and record it. Manual fixes: `scripts/travel/main-stop-overrides.csv` (`bfs,stop_id,reason`), validated and hashed.
-- **Population centre:** population-weighted centre from BFS STATPOP hectares; if unavailable, use polygon representative point and explicitly record fallback in manifest/meta.
-- **Walk minutes:** OSM pedestrian route from population centre to nominated station, speed 1.2 m/s, obey pedestrian access, ceil to integer minutes and cap at 60. If no walk route exists, reject candidate and try the next ranked eligible station; if none is usable access is null. Record rejection reasons, never invent a route.
-- **Travel metric:** exact minimum elapsed time from **first boarding at an eligible platform of the nominated origin parent station** to arrival at an eligible platform of the nominated destination parent, among actual first-board departures in inclusive `[06:30:00, 08:30:00]` Europe/Zurich on the reference day. Include second-level departures, transfer waiting and transfer walks; exclude only pre-first-boarding waiting and external access/egress. Own-parent origin/destination platforms are endpoint equivalents with no added access/egress time; intra-journey transfers retain routed duration. Allow scheduled rail, tram, bus, ferry and cableway transit; explicitly map extended GTFS types and retain transformation provenance. No pure-walking journeys, car/bicycle access or arbitrary alternate-station access/egress. Same-parent and self cases are zero by definition. Find exact minimum in seconds, then ceil minutes and drop values > 60.
-- **Conformance before nationwide routing:** keep r5py/R5, but do not assume `percentiles=[1]` or any sampled percentile is an exact minimum. Inspect itineraries on deterministic tiny feeds: rare fast vs frequent slower service, non-zero-second departures, transfer wait/walk, shared parent/platforms, no service/pure-walk exclusion, both inclusive edges and immediately-outside departures. Record pinned API/options/results. If the chosen API cannot deliver this metric, stop and document the blocker, never relabel a percentile.
+This amendment replaces a single compulsory origin stop with route alternatives while keeping **all 2,110 residential Gemeinden** and only the 19 selected workplace capitals. Decision/rationale and drift record: `docs/travel/hub-access-contract-20261020.md`. Product travel remains withheld until the new schema, frontend and source-backed search pass together.
 
-Frontend filter (authoritative, including workplace):
+- **Reference day:** freeze a GTFS-covered Tuesday. Proposed calendar rule: earliest covered Tuesday outside national/cantonal public holidays and compulsory-school holidays in all 26 cantons (all published regional calendars where applicable). Record calendar URLs, retrieval dates and coverage evidence. If no such date exists, require owner-approved documented exception before T3 acceptance; never silently weaken the rule. The provisional 2026-11-17 pilot and old illustrative 2027 metadata are **not** approved feed/date selections.
+- **Reference place and main stop (display, not mandatory boarding):** use a sourced civic label if one is intentionally nominated (e.g. Niederlenz Rathaus) and keep its coordinates distinct from any timetable stop. Prefer a service-active **rail** parent inside the Gemeinde as the local main stop, ranking multiple rail parents by dated 06:00–09:00 boardable rail departures, then OSM/geodesic proximity to the representative point, then stable ID. Where none exists, choose the service-active **local bus/tram** stop nearest to the sourced civic point (or STATPOP centre if no civic point is sourced), then dated boardable departure count, then stable ID. A town without a usable local stop may have `referenceStop:null` yet still access a nearby hub by walking. Record sourced override `bfs,stop_id,reason` and input hashes; never derive a DIDOK/UIC from arbitrary SLOID arithmetic without an authoritative mapping. The one-stop 06:00–09:00 highest-departures nomination is no longer a compulsory origin endpoint.
+- **Representative origin:** population-weighted point from BFS STATPOP inhabited hectares spatially joined to the 2026 municipality polygon; if unavailable, polygon representative point with a recorded fallback. This is **indicative municipality-level access, not an address-level promise**. Test near/far inhabited cells separately in the pilot to reveal sensitivity without replacing national Gemeinde coverage or attributing their results to the entire municipality.
+- **Origin access and hub choice:** enumerate served local stops plus out-of-Gemeinde rail/interchange hubs accessible from the representative point on the frozen OSM **pedestrian network**. Walk externally to the stop or station **entrance** at 1.2 m/s, obeying access/barriers. Do **not** add entrance-to-platform distance/time or a generic platform-finding penalty. Compute seconds and ceil minutes for controls; retain candidates whose ceiled external walk ≤15 minutes, including equality. A straight line, fixed detour multiplier, network snap across an unverified barrier, or public API estimate is not an accepted route. Record unusable/no-path cases instead of inventing zero.
+- **Station complexes and interchanges:** a verified complex may label physically co-located bus and rail parents (Lenzburg/Aarau) while preserving their distinct GTFS stop IDs. A direct walk to the rail station can first-board rail; a local bus first-board must arrive at its actual bus stop and obey applicable **directed** `transfers.txt` minimum/forbidden/timed, route/trip/service-specific interchange rules before boarding rail. Transfer walking constraints and subsequent waiting count within first-board→destination transit elapsed time. The documented Lenzburg bus→rail generic minimum in the selected feed is 240 seconds; it is not an extra pre-board platform walk. Never infer a zero transfer from a shared name or nearby coordinate. Destination is the verified workplace capital's main station complex: terminal membership must be evidenced; there is no arbitrary uncounted alternate-stop egress.
+- **Transit metric and route selection:** enumerate exact scheduled first-board events in inclusive `[06:30:00,08:30:00]` Europe/Zurich on the approved service day. For each feasible route record separate external access-walk seconds and elapsed seconds from **first vehicle boarding** to arrival at an eligible destination terminal. Include seconds, all in-trip legs, transfer walks and waits; exclude pre-first-board waiting at home and external walk from the *transit* component. No different-Gemeinde pure-walk, car/bicycle access, unsupported approximate timepoint or invented fixed departure for `frequencies.exact_times=0`. Respect pickup/drop-off and service exceptions. Find the exact nondominated `(walkSeconds,transitSeconds)` frontier per home/destination; keep evidence for each option. Among **currently eligible** options prefer the minimum exact active time `(walkSeconds+transitSeconds)`, then transitSeconds, walkSeconds, earliest first-board and stable IDs. Only self-workplace rows have defined zero-transit without a vehicle; access still applies. Ceil each component to minutes for filtering and display; never relabel percentile/sampled or restricted-template results as an exact global optimum. Drop options above the supported 15-minute external walk or 60-minute transit bounds only after coverage has been proved.
+- **Conformance before nationwide routing:** the pinned r5py/R5 path did not prove exact seconds over all events. A deterministic GTFS event/connection fallback is conditionally approved for timetable search while R5/OSM may be used for **verified** pedestrian access, subject to architecture review and a source-complete implementation. Use explicit synthetic boundary fixtures for first-board edges and seconds, rare fast vs frequent slower service, a direct walk to rail vs bus→rail, access cap/equality, minimum/forbidden transfer, pickup/drop-off, near hub across municipality border, no service, same-parent/self and `exact_times=0`. Test one complete real Aarau pilot with independent endpoint/leg checks and source/version hashes before any national compute. Fail closed when affected service classes or pedestrian paths cannot be established; do not quietly select the most convenient observed itinerary.
+
+Frontend filter (authoritative per workplace/home option, including workplace):
 
 ```
-reachable(g) = access[g] != null
-            && rows has g
-            && walk(g) <= maxWalk
-            && (countWalk ? minutes(g) + walk(g) : minutes(g)) <= maxTime
+eligible(o) = accessCandidate(o) is verified
+           && ceil(o.walkSeconds/60) <= maxWalk
+           && ceil(o.transitSeconds/60) <= maxTime
+           && (!countWalk || ceil(o.walkSeconds/60)+ceil(o.transitSeconds/60) <= maxTime)
+reachable(g) = any eligible(o) in to[workplace].rows[g]
+selected(g) = argmin eligible(o) by (o.walkSeconds+o.transitSeconds,
+              o.transitSeconds,o.walkSeconds,o.firstBoardSeconds,stableIds)
 ```
 
-Tax eligibility is a separate later restriction (§9); no workplace/self exemption is allowed.
+With `countWalk` off, the transit cap and walk cap remain **separate**; the active-time comparator does not silently combine them into one threshold. Tax eligibility is a separate later restriction (§9); no workplace/self exemption is allowed.
 
-**Geographic QA:** use geodesic distance `d` km between the exact nominated parent-station endpoints, not municipal centres. Same-parent/forced self zero rows are valid with coincident nominated endpoints; all other zero-time rows are errors. For positive-minute rows define conservative `v = 60 * max(0, d - 0.1) / (minutes + 1)` km/h, allowing 100 m coordinate tolerance and one minute rounding tolerance. `v > 100` requires review evidence; `v > 150` blocks acceptance unless an exact pair/service/feed-scoped exception is independently evidenced and owner-approved in a committed register. Never drop suspicious pairs to pass. Thresholds are plausibility heuristics, not proven universal service bounds; verify against actual services in the pilot. Test shared-parent, positive-distance/zero-time errors and rounding-edge cases.
+**Geographic QA:** use each selected option's actual boarded-origin and destination-terminal coordinates, not municipality centroids or the display reference stop. Only the expressly defined self row may have zero transit without a vehicle; all other zero-time rows require exact same physical endpoint and documented service semantics or are errors. For positive-minute rows retain conservative `v = 60 * max(0, d - 0.1) / (minutes + 1)` km/h with 100 m coordinate and one minute rounding tolerance; `v > 100` requires review evidence, `v > 150` blocks acceptance without an exact pair/service/feed-scoped independently evidenced owner-approved exception. Verify the heuristic against the Aarau pilot; it is not a universal service speed bound.
 
 ## 9. UI spec
 
@@ -228,9 +225,9 @@ The original prototype is unavailable. Reconstruct layout/interactions from this
 
 | Control | Range | Default |
 | --- | --- | --- |
-| Workplace | search box over the 19 supported German-speaking cantonal capitals (§19), accent-insensitive | Zürich |
+| Workplace | search box over the 19 supported German-speaking cantonal capitals, accent-insensitive | Zürich |
 | Max travel time | 5–60 min, step 1 | 25 |
-| Max walk to station | 0–15 min, step 1 | 10 |
+| Max external walk to stop/station entrance | 0–15 min, step 1 | 10 |
 | Count the walk in the travel time | toggle | off |
 | Gross income | slider CHF 40,000–500,000, step 1,000, plus a number field | 120,000 |
 | Civil status | single / married | single |
@@ -241,9 +238,9 @@ The original prototype is unavailable. Reconstruct layout/interactions from this
 - **Summary:** "N reachable Gemeinden with comparable tax data" and the cheapest eligible total. Separately label "M reachable Gemeinden: data under review"; never count withheld places as recommendations.
 - **Ranked list:** rank, name, canton, travel minutes, walk minutes, CHF/year and difference to workplace. Sort by unrounded total, travel minutes, name using `Intl.Collator('de-CH', {sensitivity: 'base', numeric: true})`, then numeric BFS ID. Deltas use an eligible workplace tax baseline independently of workplace travel reachability; otherwise "comparison unavailable".
 - **Map:** Switzerland, tax-eligible reachable Gemeinden in up to 5 equal-count green-to-red groups, others grey with accessible distinct labels for out of reach, no data and data under review. For N > 0, k = min(5, N); contiguous rank-ordered groups have floor(N/k) members, with one extra in the first N mod k groups; N = 0 gives no groups. Use unrounded ranking. Number eligible top 10, mark workplace, zoom to eligible reachable area with padding; empty/no-stop keeps Switzerland overview. Clicking any geographic area selects its detail.
-- **Detail:** Bundes-, Kantons-, Gemeinde-, Kirchen-, Personalsteuer; Gemeinde rate %, main stop, travel/walk and rank. Tax-eligible unreachable places still show detail labelled "out of reach". Quarantined/withheld-unverified places remain geographically selectable but expose **no total, breakdown, tax rank, cheapest status, delta or colour-group membership**; show "data under review". Extra map IDs show "no data" and never join as Gemeinden.
+- **Detail:** Bundes-, Kantons-, Gemeinde-, Kirchen-, Personalsteuer; Gemeinde rate %, local reference stop **and selected route's actual first-boarding stop**, transit/access-walk times and rank. Label representative-location estimates as indicative, not address-specific. Tax-eligible unreachable places still show detail labelled "out of reach". Quarantined/withheld-unverified places remain geographically selectable but expose **no total, breakdown, tax rank, cheapest status, delta or colour-group membership**; show "data under review". Extra map IDs show "no data" and never join as Gemeinden.
 - **Empty travel result:** "No Gemeinde in reach. Allow more time or walking."
-- **No-main-stop workplace:** all Gemeinden remain searchable/selectable, including null access. Check access before fetching `to/`; show "No usable main stop for this workplace", no travel results/ranked recommendations, with map/detail still available. Do not fetch a known-absent file or fabricate a self-row.
+- **No-target workplace:** all Gemeinden remain searchable/selectable, including empty access-candidate lists. Use the explicit target-group status before fetching `to/`; show "No verified destination stop for this workplace", no travel results/ranked recommendations, with map/detail still available. Do not fetch a known-absent file or fabricate a self-row. A missing/corrupt file for a verified target is an error, never a no-target state.
 - **All reachable taxes withheld:** "Reachable Gemeinden have data under review", not a false claim of no travel reachability. Missing/corrupt/incompatible required assets get a distinct readable error/reload state, never a legitimate empty state.
 - **Footer:** tax year, fixed assumptions, "Estimate, not tax advice", sources and Impressum / Datenschutz / Methode links.
 
@@ -280,17 +277,17 @@ Depends on owner creating the repo (O4).
 
 ### T3 — Travel-time data
 Depends on T1 scaffold, genuine 2026 tax ID authority and usable map polygons; do not treat an absent reconstruction input as present.
-1. `scripts/travel/build.py`: pin Python 3.11, JDK 21 (exact distribution/patch in environment lock), compatible r5py/R5, geopandas/pandas and all dependencies. JDK is explicit, not installed by pip; reread pinned-version compatibility docs. §8 metric fixtures must pass before nationwide run.
+1. `scripts/travel/build.py`: pin Python 3.11, JDK 21 (exact distribution/patch in environment lock) and compatible r5py/R5 for paths that still use them, geopandas/pandas and actual exact-event search dependencies. JDK is explicit, not installed by pip; reread pinned-version compatibility docs. §8 metric fixtures must pass before nationwide run; unused timetable libraries are not claimed as the exact router.
 2. Freeze/download genuine Swiss GTFS (opentransportdata.swiss / opendata.swiss), Geofabrik Switzerland OSM, BFS STATPOP hectares or recorded fallback, and swiss-maps 2026 polygons; fill §6.7 manifest and validate coverage/ID joins.
 3. Implement §8 and write §6.3–6.5.
 4. Manual `build-travel.yml` opens PR under T1 permissions. Preflight CPU/RAM/free disk/JDK. Pilot a default batch of 50 sorted workplaces, with manifest-keyed checkpoints; resume only matching inputs/toolchain. Default JVM heap floor(60% available RAM), capped at 9 GiB on a 16 GiB host; leave rest for Python/native/OS. Measure combined peak RAM, heap, temporary/output disk, wall time on pilot **and** full run. Require ≥ 20% RAM/disk headroom and ≤ 5 h on six-hour hosted job; otherwise use owner-approved R3 alternative before full run. Public visibility/checkpoints prove no capacity or time-limit exception. Test unchanged no-PR and changed PR with real CI.
 5. `npm run travel:test` wraps pinned Python test runner if needed, exercising §8 tiny metric fixtures and structural/QA checks below on every push/PR once active.
-6. **T3 collects initial official SBB references:** all 30 §11.2 named pairs at actual nominated stops/date/window. Store `tests/reference/sbb-pairs.csv` with inputs, source URL/retrieval timestamp, itinerary/evidence hash, departure/arrival seconds, rounding, release ID and outputs in evidence sidecars. Missing official values stay empty/pending; T3 is not complete until manual checks pass. T9 revalidates rather than owning initial collection.
+6. **T3 collects initial official SBB references:** all 30 §11.2 named pairs at the selected representative points, actual candidate boarding stops, destination terminals, date and first-board window. Store `tests/reference/sbb-pairs.csv` with inputs, source URL/retrieval timestamp, itinerary/evidence hash, departure/arrival seconds, walk/transit components, rounding, release ID and outputs in evidence sidecars. The historical pair labels do not identify a unique residential point or boarding stop. Missing official values stay empty/pending; T3 is not complete until manual checks pass. T9 revalidates rather than owning initial collection.
 
 **Accept (scripted):**
-- ≥ 95% main-stop coverage; attach no-stop list with reasons.
+- ≥ 95% verified candidate-access coverage from representative origins; separately report local-reference-stop coverage and no-access reasons, without using the reference as compulsory boarding.
 - Main stops: Zürich → Zürich HB; Bern → Bern; Basel → Basel SBB; Genève → Genève (Cornavin); Lausanne → Lausanne; Luzern → Luzern; Winterthur → Winterthur; St. Gallen → St. Gallen; Lugano → Lugano. Correct via documented overrides.
-- Every non-null workplace file exists, contains self 0, unique known home IDs, sorted by minutes/BFS, rows ≤ 60. Null-access workplaces have no required file. Shared-parent zeros/endpoint QA follow §8.
+- Every verified-target workplace has a schema-v2 file with unique known home IDs, exact nondominated options sorted by stable key and within §6.5 bounds; its self row has a zero-transit option **only if** verified access permits one. A no-target workplace has no required file; an ordinary empty/no-service search is distinct. Distinct co-located bus/rail parents cannot manufacture shared-parent zeros; endpoint QA follows §8.
 - Apply §8 speed 100/150 km/h review/blocking policy, tolerances and independently evidenced exceptions; never delete suspicious pairs to pass.
 - Total `travel/` ≤ 25 MB; each file ≤ 100 KB (decimal); metadata included.
 - Deterministic frozen-input rebuild, validated schemas/hashes/release identity; measured resource evidence and no-diff/changed-PR paths.
@@ -309,8 +306,8 @@ Depends on T1 scaffold, genuine 2026 tax ID authority and usable map polygons; d
 Implement exact §8 filter and §9 sorting/colour groups in `src/filter.ts`.
 
 **Accept (Vitest):**
-- Walk toggle membership as formula; null access excluded.
-- Workplace travel component 0 is included **iff** access, walk and effective-time constraints all pass. Walk 10/maxWalk 10/maxTime 5: excluded with countWalk on, included off; null workplace never inserted.
+- Walk toggle membership against each evidenced route alternative; empty access candidates excluded from transit results. With walking excluded from the time cap, walking still influences the least-active-time **route selection**.
+- Workplace zero-transit self option is included **iff** access, walk and effective-time constraints all pass. Walk 10/maxWalk 10/maxTime 5: excluded with countWalk on, included off; no-target workplace never inserted. A shorter-walk/slower-transit option can become eligible when sliders tighten after a longer-walk/faster option was previously selected.
 - Unrounded ties by minutes, explicit de-CH collation, numeric BFS ID; up to 5 balanced groups with N = 0, 1–4 and non-divisible cases.
 - Lower-time result is a subset; empty, all-data-withheld and no-stop states distinct.
 - Full failed-canton and withheld-unverified exclusion from tax-derived list, summary/count, groups, detail, rank/delta and workplace baseline; wrong-release/corrupt/absent asset is an error, not no-stop.
@@ -326,7 +323,7 @@ Depends on T2/T4/T5; explicitly labelled development travel fixtures allowed unt
 - **Golden:** Zürich, maxTime 25, maxWalk 10, countWalk off, single, 0 children, 120,000, no church. Only after real T3 and T9 pass/quarantine integration, owner independently reviews actual top 10. Store `tests/e2e/golden-zurich.json` with release ID, scenario, IDs/values and actual owner approval/date. Development-generated snapshot stays pending. Release/results changes require transparent diff/reapproval; tests cannot approve their own output.
 - Lower maxTime yields subset, not necessarily strictly fewer. Control effects use named independently established fixtures; no universal married/children/church strict tax-direction assertions. Verify church rate and both walk toggle cases, visible clamp notes.
 - Bern workplace gives correct actual Bern-area results; 400 px no horizontal scroll/all controls reachable; keyboard operation of all controls; light/dark themes.
-- Null-access selection, all taxes withheld, quarantine detail/workplace baseline, empty results, release mismatch and genuine asset failure distinct and readable.
+- Empty access-candidate/no-target selection, all taxes withheld, quarantine detail/workplace baseline, empty results, release mismatch and genuine asset failure distinct and readable.
 - Loader checks HTTP status, JSON content type/schema/hash/release. In addition to mocked failure, request genuinely absent `/data/...json?v=...` from production-style server and later Pages preview: HTTP 404, not HTML 200, readable UI handling.
 - §9 warm/cold timing and cold compressed budget, no-cookie/no-unapproved-third-party checks including content pages.
 
@@ -488,7 +485,7 @@ O1–O6 rows/defaults are unchanged. They do not authorize remote/account creati
 - **R2 Unofficial engine.** It is maintained by a small open-source project and recomputes the ESTV calculator. It already needed two fixes. Every year: re-run all 29 official checks.
 - **R3 Resources.** Reviewed standard x64 Linux GitHub specs: private 2 vCPU / 8 GB, public 4 vCPU / 16 GB, 14 GB SSD, six-hour hosted jobs. Recheck current runner/plan docs. Visibility is no capacity proof: T3 requires JDK 21/heap/headroom, measured RAM/temp disk/time pilot and full run. Alternatives remain larger paid runner or suitable local 16 GB+ machine committing real outputs through PR; owner approves paid/external execution, and measured capacity still governs. Never fabricate a result if routing does not fit.
 - **R4 GTFS route types.** The Swiss feed uses extended route types. If r5 rejects them, map them to basic GTFS types in a preprocessing step (unverified).
-- **R5 Main-stop rule.** Cities with several stations (Zürich HB vs Oerlikon) are reduced to one stop. Accepted for v1; fix individual cases via overrides.
+- **R5 Reference-stop versus actual access.** One display reference/main stop per Gemeinde remains useful for orientation, but is not the compulsory first-board location. The §8 alternatives must include verified local stops and walkable cross-border hubs. The target v2 asset can exceed the unchanged 25 MB total/100 KB per-workplace budgets (§10/T3); measure compression on real pilot-scaled data and block release rather than truncate the nondominated frontier to satisfy size.
 - **R6 Gemeinde mergers on 1 Jan 2027.** Tax/map share exact BFS vintage; GTFS spatial assignment validates those IDs. Timetable year may differ with proved feed/service coverage. Release coherently under §6.7, not by merely changing year labels.
 - **R7 Fribourg patch.** Applying the top rate above the table is an assumption. The Fribourg case in §11.1 verifies it.
 
