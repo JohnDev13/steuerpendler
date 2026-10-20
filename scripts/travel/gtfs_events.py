@@ -75,6 +75,36 @@ def _dated_service_exceptions(archive, day, service_ids):
         raise GtfsEventError(f'invalid {name}: {exc}') from exc
 
 
+def _stream_selected_stop_times(archive, active_trips):
+    """Retain parsed stop times only for active trips, while checking every row."""
+    name = 'stop_times.txt'
+    try:
+        with archive.open(name) as raw, io.TextIOWrapper(
+                raw, encoding='utf-8-sig', newline='') as text:
+            for row in csv.DictReader(text):
+                if row.get('timepoint') == '0':
+                    raise InexactStopTimeError(
+                        'stop_times timepoint=0 is not exact')
+                trip_id = row.get('trip_id')
+                if trip_id not in active_trips:
+                    continue
+                try:
+                    sequence = int(row['stop_sequence'])
+                    stop_id = row['stop_id']
+                    arrival = row['arrival_time']
+                    departure = row['departure_time']
+                    arrival_seconds = gtfs_seconds(arrival)
+                    departure_seconds = gtfs_seconds(departure)
+                except (KeyError, TypeError, ValueError) as exc:
+                    raise GtfsEventError(
+                        f'invalid stop time for trip {trip_id}: {exc}') from exc
+                active_trips[trip_id].append((
+                    sequence, stop_id, arrival, departure,
+                    arrival_seconds, departure_seconds))
+    except csv.Error as exc:
+        raise GtfsEventError(f'invalid {name}: {exc}') from exc
+
+
 def _service_ids(day, calendar, exceptions):
     try:
         return active_services(day, calendar, exceptions)
@@ -97,46 +127,33 @@ def scheduled_events(feed_path, service_day):
             trip_service_ids = {row.get('service_id') for row in trips}
             exceptions = _dated_service_exceptions(
                 archive, service_day, trip_service_ids)
-            stop_times = _table(archive, 'stop_times.txt', required=True)
+            if 'stop_times.txt' not in archive.namelist():
+                raise GtfsEventError('missing stop_times.txt')
             frequencies = _table(archive, 'frequencies.txt')
+
+            for row in frequencies:
+                if row.get('exact_times') == '1':
+                    raise UnsupportedExactFrequencyError(
+                        'frequencies exact_times=1 expansion is unsupported')
+                raise InexactFrequencyError(
+                    'frequencies exact_times=0 is not exact')
+
+            services = _service_ids(service_day, calendar, exceptions)
+            active_trips = {}
+            for row in trips:
+                try:
+                    trip_id, service_id = row['trip_id'], row['service_id']
+                except KeyError as exc:
+                    raise GtfsEventError(
+                        f'missing trips field: {exc.args[0]}') from exc
+                if trip_id in active_trips:
+                    raise GtfsEventError(f'duplicate trip_id: {trip_id}')
+                if service_id in services:
+                    active_trips[trip_id] = []
+
+            _stream_selected_stop_times(archive, active_trips)
     except (OSError, zipfile.BadZipFile, UnicodeError) as exc:
         raise GtfsEventError(f'invalid GTFS archive: {exc}') from exc
-
-    for row in frequencies:
-        if row.get('exact_times') == '1':
-            raise UnsupportedExactFrequencyError(
-                'frequencies exact_times=1 expansion is unsupported')
-        raise InexactFrequencyError('frequencies exact_times=0 is not exact')
-
-    services = _service_ids(service_day, calendar, exceptions)
-    active_trips = {}
-    for row in trips:
-        try:
-            trip_id, service_id = row['trip_id'], row['service_id']
-        except KeyError as exc:
-            raise GtfsEventError(f'missing trips field: {exc.args[0]}') from exc
-        if trip_id in active_trips:
-            raise GtfsEventError(f'duplicate trip_id: {trip_id}')
-        if service_id in services:
-            active_trips[trip_id] = []
-
-    for row in stop_times:
-        if row.get('timepoint') == '0':
-            raise InexactStopTimeError('stop_times timepoint=0 is not exact')
-        trip_id = row.get('trip_id')
-        if trip_id not in active_trips:
-            continue
-        try:
-            sequence = int(row['stop_sequence'])
-            stop_id = row['stop_id']
-            arrival = row['arrival_time']
-            departure = row['departure_time']
-            arrival_seconds = gtfs_seconds(arrival)
-            departure_seconds = gtfs_seconds(departure)
-        except (KeyError, TypeError, ValueError) as exc:
-            raise GtfsEventError(f'invalid stop time for trip {trip_id}: {exc}') from exc
-        active_trips[trip_id].append(
-            (sequence, stop_id, arrival, departure, arrival_seconds, departure_seconds))
 
     events = []
     for trip_id, rows in active_trips.items():

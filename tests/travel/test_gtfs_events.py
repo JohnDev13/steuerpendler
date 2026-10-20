@@ -25,6 +25,12 @@ def rewrite_feed(source, target, changes):
 class ScheduledEventTests(unittest.TestCase):
     day = dt.date(2027, 1, 12)  # synthetic service day only
 
+    def _write_minimal_feed(self, path, calendar, trips, stop_times):
+        with zipfile.ZipFile(path, 'w') as archive:
+            archive.writestr('calendar.txt', calendar)
+            archive.writestr('trips.txt', trips)
+            archive.writestr('stop_times.txt', stop_times)
+
     def test_fixture_events_and_inclusive_first_board_window(self):
         with tempfile.TemporaryDirectory() as tmp:
             feed, _ = fixture(pathlib.Path(tmp))
@@ -102,6 +108,97 @@ class ScheduledEventTests(unittest.TestCase):
 
         self.assertEqual(exception_counts, [2])
         self.assertEqual({event.trip_id for event in events}, {'base-trip', 'add-trip'})
+
+    def test_stop_times_are_streamed_and_only_active_rows_are_processed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            feed = pathlib.Path(tmp) / 'large-stop-times.gtfs.zip'
+            calendar = (
+                'service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date\n'
+                'ACTIVE,0,1,0,0,0,0,0,20270101,20270131\n'
+                'INACTIVE,0,0,0,0,0,0,0,20270101,20270131\n'
+            )
+            trips = (
+                'route_id,service_id,trip_id\n'
+                'R,ACTIVE,active-trip\n'
+                'R,INACTIVE,inactive-trip\n'
+            )
+            unrelated = ''.join(
+                f'inactive-trip,08:00:00,08:00:00,U{index},{index + 1}\n'
+                for index in range(10_000))
+            stop_times = (
+                'trip_id,arrival_time,departure_time,stop_id,stop_sequence\n'
+                f'{unrelated}'
+                'active-trip,07:13:17,07:13:17,001,1\n'
+                'active-trip,25:05:19,25:05:19,002,2\n'
+            )
+            self._write_minimal_feed(feed, calendar, trips, stop_times)
+
+            original_table = ge._table
+            table_names = []
+            parsed_clocks = []
+
+            def recording_table(archive, name, required=False):
+                table_names.append(name)
+                return original_table(archive, name, required)
+
+            original_seconds = ge.gtfs_seconds
+
+            def recording_seconds(value):
+                parsed_clocks.append(value)
+                return original_seconds(value)
+
+            with mock.patch.object(ge, '_table', recording_table), \
+                    mock.patch.object(ge, 'gtfs_seconds', recording_seconds):
+                events = ge.scheduled_events(feed, self.day)
+
+        self.assertNotIn('stop_times.txt', table_names)
+        self.assertEqual(parsed_clocks,
+                         ['07:13:17', '07:13:17', '25:05:19', '25:05:19'])
+        self.assertEqual(len(events), 1)
+        self.assertEqual((events[0].from_stop_id, events[0].to_stop_id), ('001', '002'))
+        self.assertEqual((events[0].departure_seconds, events[0].arrival_seconds),
+                         (25997, 90319))
+
+    def test_inactive_timepoint_zero_still_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            feed = pathlib.Path(tmp) / 'inactive-inexact.gtfs.zip'
+            calendar = (
+                'service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date\n'
+                'ACTIVE,0,1,0,0,0,0,0,20270101,20270131\n'
+                'INACTIVE,0,0,0,0,0,0,0,20270101,20270131\n'
+            )
+            trips = (
+                'route_id,service_id,trip_id\n'
+                'R,ACTIVE,active-trip\n'
+                'R,INACTIVE,inactive-trip\n'
+            )
+            stop_times = (
+                'trip_id,arrival_time,departure_time,stop_id,stop_sequence,timepoint\n'
+                'active-trip,07:00:00,07:00:00,A,1,1\n'
+                'active-trip,07:05:00,07:05:00,B,2,1\n'
+                'inactive-trip,08:00:00,08:00:00,U,1,0\n'
+            )
+            self._write_minimal_feed(feed, calendar, trips, stop_times)
+
+            with self.assertRaises(ge.InexactStopTimeError):
+                ge.scheduled_events(feed, self.day)
+
+    def test_no_active_trip_yields_no_events(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            feed = pathlib.Path(tmp) / 'no-active-trip.gtfs.zip'
+            calendar = (
+                'service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date\n'
+                'INACTIVE,0,0,0,0,0,0,0,20270101,20270131\n'
+            )
+            trips = 'route_id,service_id,trip_id\nR,INACTIVE,inactive-trip\n'
+            stop_times = (
+                'trip_id,arrival_time,departure_time,stop_id,stop_sequence\n'
+                'inactive-trip,08:00:00,08:00:00,A,1\n'
+                'inactive-trip,08:05:00,08:05:00,B,2\n'
+            )
+            self._write_minimal_feed(feed, calendar, trips, stop_times)
+
+            self.assertEqual(ge.scheduled_events(feed, self.day), [])
 
     def test_inexact_frequency_and_stop_time_rows_fail_closed(self):
         cases = [
