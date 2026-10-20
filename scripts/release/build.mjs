@@ -19,7 +19,9 @@ export function buildRelease(root=process.cwd()){
  }
  const release=hash(JSON.stringify(sorted({schemaVersion:1,files,inputs})));
  const taxAvailable=!!files['gemeinden-2026.json']&&['s','m'].every(civ=>[0,1,2,3].every(kids=>files[`tax-2026-${civ}-${kids}.json`]));
- const result={schemaVersion:1,release,taxYear:2026,availability:{tax:taxAvailable,map:!!files['map/switzerland-2026.json'],travel:!!files['travel/meta.json']&&!!files['travel/access.json']&&Object.keys(files).some(name=>name.startsWith('travel/to/'))},approvals:{estv:false,sbb:false,content:false,golden:false,geodataLicense:false},status:'reconstruction',files,inputs};
+ // Fail closed until the frontend, schema-v2 validation and official travel checks migrate together.
+ const travelAvailable=false;
+ const result={schemaVersion:1,release,taxYear:2026,availability:{tax:taxAvailable,map:!!files['map/switzerland-2026.json'],travel:travelAvailable},approvals:{estv:false,sbb:false,content:false,golden:false,geodataLicense:false},status:'reconstruction',files,inputs};
  const output=JSON.stringify(sorted(result));
  writeFileSync(join(data,'manifest.json'),output);writeFileSync(join(data,'release.json'),output);
  return result;

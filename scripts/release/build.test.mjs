@@ -19,3 +19,33 @@ test('release inventory is deterministic, excludes itself and changes with actua
   assert.notEqual(module.buildRelease(root).release,first.release);
  }finally{rmSync(root,{recursive:true,force:true});}
 });
+test('travel assets stay inventoried but unavailable until the v2 release migration',async()=>{
+ const {buildRelease}=await import('./build.mjs');
+ for(const [label,assets] of [
+  ['v1',{
+   'meta.json':{schemaVersion:1},
+   'access.json':{'261':['Zürich HB',4]},
+   'to/4001.json':[[261,20]],
+  }],
+  ['v2',{
+   'meta.json':{schemaVersion:2,targetGroups:{4001:['stop:aarau']}},
+   'access.json':{'261':{placeLabel:'Zürich',referenceStop:['stop:zurich','Zürich HB'],centreLV95:[2683000,1247000,'statpop'],candidates:[['stop:zurich','Zürich HB',240]]}},
+   'to/4001.json':{schemaVersion:2,to:4001,rows:[[261,[[240,1200,'stop:zurich','stop:aarau',23400,24600]]]]},
+  }],
+ ]){
+  const root=mkdtempSync(join(tmpdir(),`steuer-release-${label}-`));
+  try{
+   for(const [name,value] of Object.entries(assets)){
+    const path=join(root,'site/data/travel',name);
+    mkdirSync(join(path,'..'),{recursive:true});
+    writeFileSync(path,JSON.stringify(value));
+   }
+   const result=buildRelease(root);
+   assert.equal(result.availability.travel,false,label);
+   assert.equal(result.approvals.sbb,false,label);
+   for(const name of Object.keys(assets)){
+    assert.ok(result.files[`travel/${name}`]?.sha256,`${label} ${name} is inventoried`);
+   }
+  }finally{rmSync(root,{recursive:true,force:true});}
+ }
+});
