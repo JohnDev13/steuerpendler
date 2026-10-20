@@ -6,6 +6,7 @@ import pathlib
 import sys
 import tempfile
 import unittest
+from unittest import mock
 import zipfile
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2] / 'scripts' / 'travel'))
@@ -56,6 +57,51 @@ class ScheduledEventTests(unittest.TestCase):
                          if e.trip_id == 'after-midnight')
         self.assertEqual((event.departure_time, event.arrival_time), ('25:00:00', '25:05:00'))
         self.assertEqual((event.departure_seconds, event.arrival_seconds), (90000, 90300))
+
+    def test_calendar_dates_are_streamed_and_scoped_to_selected_services_and_day(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            feed = pathlib.Path(tmp) / 'large-calendar-dates.gtfs.zip'
+            calendar = (
+                'service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date\n'
+                'BASE,0,1,0,0,0,0,0,20270101,20270131\n'
+                'ADD,0,0,0,0,0,0,0,20270101,20270131\n'
+                'REMOVE,0,1,0,0,0,0,0,20270101,20270131\n'
+                'INACTIVE,0,0,0,0,0,0,0,20270101,20270131\n'
+            )
+            trips = 'route_id,service_id,trip_id\n' + ''.join(
+                f'R,{service},{service.lower()}-trip\n'
+                for service in ('BASE', 'ADD', 'REMOVE', 'INACTIVE'))
+            stop_times = 'trip_id,arrival_time,departure_time,stop_id,stop_sequence\n' + ''.join(
+                f'{service.lower()}-trip,07:00:00,07:00:00,A,1\n'
+                f'{service.lower()}-trip,07:05:00,07:05:00,B,2\n'
+                for service in ('BASE', 'ADD', 'REMOVE', 'INACTIVE'))
+            unrelated = ''.join(
+                f'OTHER-{index},20270111,1\nOTHER-{index},20270113,2\n'
+                for index in range(10_000))
+            calendar_dates = (
+                'service_id,date,exception_type\n'
+                f'{unrelated}'
+                'ADD,20270112,1\n'
+                'REMOVE,20270112,2\n'
+            )
+            with zipfile.ZipFile(feed, 'w') as archive:
+                archive.writestr('calendar.txt', calendar)
+                archive.writestr('calendar_dates.txt', calendar_dates)
+                archive.writestr('trips.txt', trips)
+                archive.writestr('stop_times.txt', stop_times)
+
+            original = ge.active_services
+            exception_counts = []
+
+            def recording_active_services(day, rows, exceptions):
+                exception_counts.append(len(exceptions))
+                return original(day, rows, exceptions)
+
+            with mock.patch.object(ge, 'active_services', recording_active_services):
+                events = ge.scheduled_events(feed, self.day)
+
+        self.assertEqual(exception_counts, [2])
+        self.assertEqual({event.trip_id for event in events}, {'base-trip', 'add-trip'})
 
     def test_inexact_frequency_and_stop_time_rows_fail_closed(self):
         cases = [

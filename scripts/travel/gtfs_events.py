@@ -54,6 +54,27 @@ def _table(archive, name, required=False):
         raise GtfsEventError(f'invalid {name}: {exc}') from exc
 
 
+def _dated_service_exceptions(archive, day, service_ids):
+    """Stream only exceptions that can affect selected trips on ``day``."""
+    name = 'calendar_dates.txt'
+    if name not in archive.namelist():
+        return []
+    date = day.strftime('%Y%m%d')
+    try:
+        with archive.open(name) as raw, io.TextIOWrapper(
+                raw, encoding='utf-8-sig', newline='') as text:
+            rows = csv.DictReader(text)
+            required = {'service_id', 'date', 'exception_type'}
+            if rows.fieldnames is not None and not required <= set(rows.fieldnames):
+                missing = sorted(required - set(rows.fieldnames))
+                raise GtfsEventError(
+                    f'invalid {name}: missing field {missing[0]}')
+            return [row for row in rows
+                    if row.get('service_id') in service_ids and row.get('date') == date]
+    except (csv.Error, UnicodeError) as exc:
+        raise GtfsEventError(f'invalid {name}: {exc}') from exc
+
+
 def _service_ids(day, calendar, exceptions):
     try:
         return active_services(day, calendar, exceptions)
@@ -72,8 +93,10 @@ def scheduled_events(feed_path, service_day):
     try:
         with zipfile.ZipFile(feed_path) as archive:
             calendar = _table(archive, 'calendar.txt')
-            exceptions = _table(archive, 'calendar_dates.txt')
             trips = _table(archive, 'trips.txt', required=True)
+            trip_service_ids = {row.get('service_id') for row in trips}
+            exceptions = _dated_service_exceptions(
+                archive, service_day, trip_service_ids)
             stop_times = _table(archive, 'stop_times.txt', required=True)
             frequencies = _table(archive, 'frequencies.txt')
     except (OSError, zipfile.BadZipFile, UnicodeError) as exc:
