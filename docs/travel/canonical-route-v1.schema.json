@@ -10,7 +10,7 @@
     "kind": {"const": "route"},
     "schemaVersion": {"const": 1},
     "origin": {"$ref": "#/$defs/origin"},
-    "destinationBfs": {"type": "integer", "minimum": 1},
+    "destinationBfs": {"type": "integer", "minimum": 1, "$comment": "Validate membership in the pinned manifest's 19 workplace IDs."},
     "status": {"enum": ["fastest_proven", "best_found_unproven", "unreachable_proven", "unknown"]},
     "itinerary": {"oneOf": [{"$ref": "#/$defs/itinerary"}, {"type": "null"}]},
     "unresolvedReasons": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"}}
@@ -39,7 +39,7 @@
         "tripInstanceId": {"type": "string", "minLength": 1},
         "stopId": {"type": "string", "minLength": 1},
         "stopSequence": {"type": "integer", "minimum": 0},
-        "boardSeconds": {"type": "integer", "minimum": 0}
+        "boardSeconds": {"type": "integer", "minimum": 23400, "maximum": 30600}
       }
     },
     "leg": {
@@ -78,8 +78,8 @@
       "properties": {
         "arrivalStopId": {"type": "string", "minLength": 1},
         "arrivalSeconds": {"type": "integer", "minimum": 0},
-        "elapsedSeconds": {"type": "integer", "minimum": 0},
-        "minutes": {"type": "integer", "minimum": 0},
+        "elapsedSeconds": {"type": "integer", "minimum": 0, "maximum": 1800},
+        "minutes": {"type": "integer", "minimum": 0, "maximum": 30},
         "legs": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/leg"}},
         "transfers": {"type": "array", "items": {"$ref": "#/$defs/transfer"}}
       }
