@@ -66,7 +66,7 @@ async function update(){
   rows=newRows;breakdowns={};const totals:Record<string,number>={};
   for(const [id,g] of Object.entries(gemeinden)){if(reviewCantons.has(g[1]))continue;const tax=calculateTax(profile,g,snapshot.income,snapshot.church);breakdowns[id]=tax;totals[id]=tax.total;}
   results=filterAndRank(gemeinden,access,rows,snapshot,totals,reviewCantons);
-  $('summary').textContent=s.reachable(results.length);$('cheapest').textContent=results[0]?s.cheapest(results[0].name,formatCHF(results[0].total)):'';
+  $('summary').textContent=s.reachabilityOverview(travelReady,results.length,workplaces[snapshot.workplace]?.[0]??s.workplace,snapshot.maxTime,snapshot.maxWalk,Object.keys(gemeinden).length);$('cheapest').textContent=results[0]?s.cheapest(results[0].name,formatCHF(results[0].total)):'';
   $('data-status').classList.remove('error');$('data-status').textContent=!travelReady?s.travelPending:access[snapshot.workplace]==null?s.noStop:'';
   $('empty-state').hidden=!travelReady||access[snapshot.workplace]==null||results.length>0;
   renderList($<HTMLTableSectionElement>('ranked-list'),results,state.selected,selectGemeinde);
