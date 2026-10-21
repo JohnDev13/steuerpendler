@@ -1,0 +1,10 @@
+# Thirty-minute public-transport ceiling — owner decision, 21 October 2026
+
+Source baseline: `main` `dfb76f5b491b25d826b00a0aea0222c0c311dde2`; active contract amended in `SPEC.md` §§6.5, 8 and 9. Frozen GTFS candidate source: `gtfs_fp2026_20261017.zip`, SHA-256 `d5b312e1ff398b505f9a6efef60c365f3c864857f73c55e87b383960a6b3418e`. This note records a **scope/limit decision**, not GTFS conformance or a new data release.
+
+- All **19 selected workplace capitals**, first pilot **Aarau**, use the same selectable upper bound: **30 minutes from first public-transport boarding to eligible workplace arrival**, including transfers and their waiting/walking. The existing default remains 25 minutes; the user may select any 5–30 minutes. Boarding must start within 06:30:00–08:30:00 Europe/Zurich inclusive on an independently approved reference Tuesday.
+- Keep the **separate** 0–15-minute external walk control on the site, measured to a stop/station entrance rather than a boarding platform. The count-walk toggle is unchanged. Residential candidates remain **all 2,110 Swiss Gemeinden**, not the 19 capitals or any one-stop shortlist.
+- A transit-only **complete** search could rule out an origin *stop* with no valid ≤30-minute journey, but cannot rule out a whole Gemeinde until all evidenced residential-access options and nearby cross-border stops are covered. A direct-only or incomplete feed screen may report positive **candidate journeys**, never negatives or Gemeinde eligibility. A sampled result above 30 minutes says nothing about a different departure, boarding stop or transfer route.
+- Source service day 2026-10-27 is provisional (all-26-canton regional/local holidays unresolved). `frequencies.exact_times=0` cannot be given invented fixed departures; GTFS pickup/drop-off and directed transfer rules remain prerequisites. No travel, SBB or ESTV release gate changes here.
+
+On source, target-group, holiday evidence, transfer interpretation or contract changes, repeat the full affected tests and update this note rather than reusing a stale commute matrix.
