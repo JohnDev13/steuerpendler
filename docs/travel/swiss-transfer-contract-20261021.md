@@ -1,0 +1,19 @@
+# Swiss GTFS transfer-rule contract — provisional pilot, 2026-10-21
+
+**Status:** engineering interpretation for synthetic and bounded Aarau diagnostics. Not a travel release or a complete transfer-aware Gemeinde matrix. Source-version/drift ledger below; re-check live documentation and frozen-feed semantics before approving a reference-day result.
+
+## Inputs and facts checked
+
+- Frozen Swiss GTFS: `/home/hermes/data/steuerpendler/2026-10-19/gtfs_fp2026_20261017.zip`, SHA-256 `d5b312e1ff398b505f9a6efef60c365f3c864857f73c55e87b383960a6b3418e`.
+- `transfers.txt` has **1,124,239** rows: transfer_type 2 **819,258**, type 4 **304,689**, type 1 **292**. Every source type-2 row has nonempty `min_transfer_time`. No `pathways.txt`. Exactly **19,867** rows touch Aarau's 17 observed rail/bus target children or their two parents: 313 generic type-2, 17,700 route/trip-specific type-2, 1,854 type-4 with a nonempty `service_id` extension.
+- Standard reference: [GTFS Schedule Reference, transfers.txt](https://gtfs.org/documentation/schedule/reference/#transferstxt), fetched **2026-10-21T10:22Z**, full response SHA-256 `46a50276ab3c1fdbc666b03c2f8e269e59b911503727176883a4c61aa740cfa5`. Its order of applicability is both trip IDs, trip+route, one trip, both routes, one route, stop pair. Stations may govern child stops. Type 2 uses a published directed minimum; type 1 is a timed transfer; type 4 is an in-seat trip link rather than an ordinary footpath.
+- Swiss producer note: [opentransportdata.swiss GTFS cookbook](https://opentransportdata.swiss/en/cookbook/timetable-cookbook/gtfs), fetched **2026-10-21T10:22Z**, full response SHA-256 `b7b1a98edfdbe5bdefb4bfee1b9747cb79c63be5e7c8ba24d884d3440ef9d3dc`. It states a **120-second default transfer time within a stop** that is not listed in the file; type 4 is used for through-journeys where passengers need not change trains; type 1 guaranteed connections have no `min_transfer_time` and may still be disrupted operationally. This 120 seconds is an interchange minimum, **not** an origin entrance-to-platform walking penalty.
+
+## Fail-closed implementation boundary
+
+1. First-board departures remain inclusive **06:30:00–08:30:00 Europe/Zurich**; max elapsed board-to-final-arrival **1,800 seconds**. Include waits and directed interchange minimums within that elapsed duration. Keep the separate external walk setting **0–15 minutes**, without a platform-finding penalty.
+2. Resolve an applicable transfer using the observed child/parent stop IDs, from/to trip and route IDs, and GTFS specificity. Do not flatten a trip-specific rule into a generic station minimum, choose the shortest conflicting rule, reverse its direction, or treat missing cross-station walking data as zero. For an evidenced same-station pair with no overriding rule, test the Swiss 120-second default; a published type-2 minimum overrides it. A rule prohibiting transfer, if encountered in future feeds, blocks the pair.
+3. Preserve type 1 timed connections, type 4 in-seat links and source `transfers.service_id` as **unresolved classes** until their dated applicability and exact scheduled feasibility are implemented and tested. Never reinterpret type 4 as a zero-minute pedestrian interchange or invent departures from `frequencies.exact_times=0`.
+4. A synthetic resolver proves only transfer feasibility on supplied events. It cannot exclude any boarding stop or Gemeinde, prove residential pedestrian access, choose the reference Tuesday, approve SBB comparisons, or set `site/data/manifest.json` travel availability. The 62 Aarau direct-stop localities are positive-only, not the final filter.
+
+**Change control:** record GTFS archive hash, producer/standard page response hashes and checked date with any transfer-semantic change. If page hashes or source-feed hash drift, re-evaluate the contract and dependent tests instead of silently reusing this note.
