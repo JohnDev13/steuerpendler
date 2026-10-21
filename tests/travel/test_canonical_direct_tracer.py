@@ -7,6 +7,7 @@ import sys
 import tempfile
 import unittest
 import zipfile
+from unittest.mock import patch
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2] / "scripts" / "travel"))
 import canonical_direct_tracer as tracer
@@ -237,6 +238,28 @@ class CanonicalDirectTracerTests(unittest.TestCase):
                     expected_source_sha256=source_hash, expected_gtfs_sha256=feed_hash,
                     max_input_rows=20, max_output_rows=20)
             self.assertFalse(output.exists())
+
+    def test_in_place_feed_rewrite_after_hash_does_not_change_parsed_snapshot(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = pathlib.Path(tmp)
+            feed = directory / 'feed.zip'
+            feed_hash = write_feed(feed)
+            source_path = directory / 'source.json'
+            source_hash = write_json(source_path, source([journey()], feed_hash))
+            output = directory / 'out.gz'
+            original_zipfile = zipfile.ZipFile
+
+            def rewrite_original_before_zip_parse(snapshot, *args, **kwargs):
+                feed.write_bytes(b'concurrent in-place rewrite')
+                return original_zipfile(snapshot, *args, **kwargs)
+
+            with patch.object(tracer.zipfile, 'ZipFile', side_effect=rewrite_original_before_zip_parse):
+                report = tracer.trace_direct_routes(
+                    source_path, feed, output, directory / 'report.json',
+                    expected_source_sha256=source_hash, expected_gtfs_sha256=feed_hash,
+                    max_input_rows=20, max_output_rows=20)
+            self.assertEqual(report['route_count'], 1)
+            self.assertTrue(output.exists())
 
 
 if __name__ == "__main__":

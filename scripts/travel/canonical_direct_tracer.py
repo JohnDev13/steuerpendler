@@ -27,6 +27,7 @@ CAP_SECONDS = 1800
 COVERAGE = "PARTIAL_DIRECT_ONLY"
 REASON = "transfer_search_missing"
 MAX_SOURCE_BYTES = 4_000_000
+MAX_GTFS_BYTES = 500_000_000
 AARAU_PARENT_IDS = frozenset({"Parentch:1:sloid:2113", "Parentch:1:sloid:2996"})
 
 
@@ -152,12 +153,21 @@ def _trip_metadata(feed_path, expected_hash, referenced_trips):
     selected = {}
     scanned = 0
     try:
-        with feed_path.open("rb") as feed:
-            actual_hash = hashlib.file_digest(feed, "sha256").hexdigest()
+        scratch = os.environ.get("TMPDIR", "/home/hermes/.hermes/cache/scratch")
+        with tempfile.TemporaryFile(dir=scratch) as snapshot, feed_path.open("rb") as feed:
+            digest = hashlib.sha256()
+            copied = 0
+            while part := feed.read(1024 * 1024):
+                copied += len(part)
+                if copied > MAX_GTFS_BYTES:
+                    raise TracerError("GTFS exceeds snapshot byte limit")
+                digest.update(part)
+                snapshot.write(part)
+            actual_hash = digest.hexdigest()
             if actual_hash != expected_hash:
                 raise TracerError("GTFS SHA-256 mismatch")
-            feed.seek(0)
-            with zipfile.ZipFile(feed) as archive:
+            snapshot.seek(0)
+            with zipfile.ZipFile(snapshot) as archive:
                 if "trips.txt" not in archive.namelist():
                     raise TracerError("missing trips.txt")
                 with archive.open("trips.txt") as raw, io.TextIOWrapper(
