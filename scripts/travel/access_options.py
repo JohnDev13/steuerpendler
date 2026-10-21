@@ -17,7 +17,7 @@ from gtfs_events import ScheduledEvent
 
 
 MAX_SUPPORTED_WALK_MINUTES = 15
-MAX_SUPPORTED_TRANSIT_MINUTES = 60
+MAX_SUPPORTED_TRANSIT_MINUTES = 30
 DEFAULT_START_TIME = '06:30:00'
 DEFAULT_END_TIME = '08:30:00'
 
@@ -185,7 +185,7 @@ def build_access_options(
     Each access candidate is searched independently so an out-of-Gemeinde rail
     hub and a local bus stop can both survive. ``find_itinerary`` receives only
     caller-supplied directed transfer minima. Options outside the supported
-    15-minute external-walk or 60-minute transit bounds are removed by ceiling.
+    15-minute external-walk or 30-minute transit bounds are removed by ceiling.
     """
     _validate_destination(destination)
     candidates = tuple(access_candidates)
@@ -228,10 +228,15 @@ def build_access_options(
 def eligible_options(options, max_walk_minutes, max_transit_minutes,
                      count_walk=False):
     """Return options satisfying separate caps and the optional combined cap."""
-    for value, field in ((max_walk_minutes, 'max_walk_minutes'),
-                         (max_transit_minutes, 'max_transit_minutes')):
+    for value, field, supported_maximum in (
+            (max_walk_minutes, 'max_walk_minutes', MAX_SUPPORTED_WALK_MINUTES),
+            (max_transit_minutes, 'max_transit_minutes',
+             MAX_SUPPORTED_TRANSIT_MINUTES)):
         if type(value) is not int or value < 0:
             raise AccessOptionError(f'{field} must be a non-negative integer')
+        if value > supported_maximum:
+            raise AccessOptionError(
+                f'{field} must not exceed {supported_maximum}')
     if type(count_walk) is not bool:
         raise AccessOptionError('count_walk must be a boolean')
 

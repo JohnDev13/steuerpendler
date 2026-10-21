@@ -59,9 +59,9 @@ class AccessOptionTests(unittest.TestCase):
             self.events, self.transfers, [bus, far_rail], self.destination)
 
         self.assertEqual(len(near), 2)
-        self.assertEqual(self.access.select_option(near, 15, 60).origin_parent_id,
+        self.assertEqual(self.access.select_option(near, 15, 30).origin_parent_id,
                          'SYN_LENZ_RAIL_PARENT')
-        self.assertEqual(self.access.select_option(far, 15, 60).origin_parent_id,
+        self.assertEqual(self.access.select_option(far, 15, 30).origin_parent_id,
                          'SYN_STAUFEN_BUS_PARENT')
         bus_option = next(o for o in near
                           if o.origin_parent_id == 'SYN_STAUFEN_BUS_PARENT')
@@ -108,18 +108,27 @@ class AccessOptionTests(unittest.TestCase):
         departure = 7 * 3600
         options = self.access.build_access_options(
             [event('SYN_CAP', 'SYN_ORIGIN', 'SYN_AARAU_PLATFORM',
-                   departure, departure + 20 * 60)],
+                   departure, departure + 15 * 60)],
             {}, [candidate], self.destination)
 
         self.assertEqual(self.access.ceil_minutes(1), 1)
         self.assertEqual(self.access.ceil_minutes(60), 1)
-        self.assertEqual(len(self.access.eligible_options(options, 15, 20)), 1)
-        self.assertEqual(self.access.eligible_options(options, 14, 20), ())
-        self.assertEqual(self.access.eligible_options(options, 15, 19), ())
+        self.assertEqual(len(self.access.eligible_options(options, 15, 15)), 1)
+        self.assertEqual(self.access.eligible_options(options, 14, 15), ())
+        self.assertEqual(self.access.eligible_options(options, 15, 14), ())
         self.assertEqual(
-            self.access.eligible_options(options, 15, 20, count_walk=True), ())
+            self.access.eligible_options(options, 15, 29, count_walk=True), ())
         self.assertEqual(
-            len(self.access.eligible_options(options, 15, 35, count_walk=True)), 1)
+            len(self.access.eligible_options(options, 15, 30, count_walk=True)), 1)
+
+    def test_requested_caps_cannot_exceed_supported_controls(self):
+        for method in (self.access.eligible_options, self.access.select_option):
+            with self.subTest(method=method.__name__, cap='walk'):
+                with self.assertRaises(self.access.AccessOptionError):
+                    method((), 16, 30)
+            with self.subTest(method=method.__name__, cap='transit'):
+                with self.assertRaises(self.access.AccessOptionError):
+                    method((), 15, 31)
 
     def test_nondominated_frontier_keeps_short_walk_fallback(self):
         departure = 7 * 3600
@@ -163,19 +172,31 @@ class AccessOptionTests(unittest.TestCase):
 
     def test_supported_build_bounds_use_ceiling(self):
         departure = 7 * 3600
-        candidates = [
-            self.candidate('SYN_WALK_OK', 'SYN_WALK_OK_P', 15 * 60),
-            self.candidate('SYN_WALK_OVER', 'SYN_WALK_OVER_P', 15 * 60 + 1),
-        ]
-        events = [
-            event('SYN_OK', 'SYN_WALK_OK_P', 'SYN_AARAU_PLATFORM', departure, departure + 60 * 60),
-            event('SYN_OVER', 'SYN_WALK_OVER_P', 'SYN_AARAU_PLATFORM', departure, departure + 60 * 60 + 1),
-        ]
+        for walk_seconds in (0, 15 * 60):
+            with self.subTest(bound='transit-exact', walk_seconds=walk_seconds):
+                candidate = self.candidate('SYN_TRANSIT_EXACT', 'SYN_ORIGIN', walk_seconds)
+                options = self.access.build_access_options(
+                    [event('SYN_TRANSIT_EXACT', 'SYN_ORIGIN', 'SYN_AARAU_PLATFORM',
+                           departure, departure + 30 * 60)],
+                    {}, [candidate], self.destination)
+                self.assertEqual(options[0].transit_seconds, 30 * 60)
 
-        options = self.access.build_access_options(events, {}, candidates, self.destination)
+            with self.subTest(bound='transit-over', walk_seconds=walk_seconds):
+                candidate = self.candidate('SYN_TRANSIT_OVER', 'SYN_ORIGIN', walk_seconds)
+                options = self.access.build_access_options(
+                    [event('SYN_TRANSIT_OVER', 'SYN_ORIGIN', 'SYN_AARAU_PLATFORM',
+                           departure, departure + 30 * 60 + 1)],
+                    {}, [candidate], self.destination)
+                self.assertEqual(options, ())
 
-        self.assertEqual([(o.origin_parent_id, o.transit_seconds) for o in options],
-                         [('SYN_WALK_OK', 60 * 60)])
+        for walk_seconds, expected_count in ((15 * 60, 1), (15 * 60 + 1, 0)):
+            with self.subTest(bound='walk', walk_seconds=walk_seconds):
+                candidate = self.candidate('SYN_WALK', 'SYN_ORIGIN', walk_seconds)
+                options = self.access.build_access_options(
+                    [event('SYN_WALK', 'SYN_ORIGIN', 'SYN_AARAU_PLATFORM',
+                           departure, departure + 60)],
+                    {}, [candidate], self.destination)
+                self.assertEqual(len(options), expected_count)
 
     def test_missing_or_invalid_access_evidence_fails_closed(self):
         bad_candidates = [
