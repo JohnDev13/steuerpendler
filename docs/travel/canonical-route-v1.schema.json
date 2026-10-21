@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/JohnDev13/steuerpendler/blob/main/docs/travel/canonical-route-v1.schema.json",
+  "title": "Canonical scheduled Route record v1",
+  "description": "One first-boarding event and one workplace destination; not a residence-to-entrance walk.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["kind", "schemaVersion", "origin", "destinationBfs", "status", "itinerary", "unresolvedReasons"],
+  "properties": {
+    "kind": {"const": "route"},
+    "schemaVersion": {"const": 1},
+    "origin": {"$ref": "#/$defs/origin"},
+    "destinationBfs": {"type": "integer", "minimum": 1},
+    "status": {"enum": ["fastest_proven", "best_found_unproven", "unreachable_proven", "unknown"]},
+    "itinerary": {"oneOf": [{"$ref": "#/$defs/itinerary"}, {"type": "null"}]},
+    "unresolvedReasons": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"}}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"status": {"enum": ["fastest_proven", "unreachable_proven"]}}, "required": ["status"]},
+      "then": {"properties": {"unresolvedReasons": {"maxItems": 0}}}
+    },
+    {
+      "if": {"properties": {"status": {"enum": ["best_found_unproven", "unknown"]}}, "required": ["status"]},
+      "then": {"properties": {"unresolvedReasons": {"minItems": 1}}}
+    },
+    {
+      "if": {"properties": {"status": {"enum": ["fastest_proven", "best_found_unproven"]}}, "required": ["status"]},
+      "then": {"properties": {"itinerary": {"$ref": "#/$defs/itinerary"}}},
+      "else": {"properties": {"itinerary": {"type": "null"}}}
+    }
+  ],
+  "$defs": {
+    "origin": {
+      "type": "object", "additionalProperties": false,
+      "required": ["tripId", "tripInstanceId", "stopId", "stopSequence", "boardSeconds"],
+      "properties": {
+        "tripId": {"type": "string", "minLength": 1},
+        "tripInstanceId": {"type": "string", "minLength": 1},
+        "stopId": {"type": "string", "minLength": 1},
+        "stopSequence": {"type": "integer", "minimum": 0},
+        "boardSeconds": {"type": "integer", "minimum": 0}
+      }
+    },
+    "leg": {
+      "type": "object", "additionalProperties": false,
+      "required": ["tripId", "tripInstanceId", "routeId", "serviceId", "boardStopId", "alightStopId", "boardSequence", "alightSequence", "boardSeconds", "alightSeconds"],
+      "properties": {
+        "tripId": {"type": "string", "minLength": 1},
+        "tripInstanceId": {"type": "string", "minLength": 1},
+        "routeId": {"type": "string", "minLength": 1},
+        "serviceId": {"type": "string", "minLength": 1},
+        "boardStopId": {"type": "string", "minLength": 1},
+        "alightStopId": {"type": "string", "minLength": 1},
+        "boardSequence": {"type": "integer", "minimum": 0},
+        "alightSequence": {"type": "integer", "minimum": 0},
+        "boardSeconds": {"type": "integer", "minimum": 0},
+        "alightSeconds": {"type": "integer", "minimum": 0}
+      }
+    },
+    "transfer": {
+      "type": "object", "additionalProperties": false,
+      "required": ["fromStopId", "toStopId", "fromTripInstanceId", "toTripInstanceId", "arrivalSeconds", "departureSeconds", "minimumSeconds", "source"],
+      "properties": {
+        "fromStopId": {"type": "string", "minLength": 1},
+        "toStopId": {"type": "string", "minLength": 1},
+        "fromTripInstanceId": {"type": "string", "minLength": 1},
+        "toTripInstanceId": {"type": "string", "minLength": 1},
+        "arrivalSeconds": {"type": "integer", "minimum": 0},
+        "departureSeconds": {"type": "integer", "minimum": 0},
+        "minimumSeconds": {"type": "integer", "minimum": 0},
+        "source": {"type": "string", "minLength": 1}
+      }
+    },
+    "itinerary": {
+      "type": "object", "additionalProperties": false,
+      "required": ["arrivalStopId", "arrivalSeconds", "elapsedSeconds", "minutes", "legs", "transfers"],
+      "properties": {
+        "arrivalStopId": {"type": "string", "minLength": 1},
+        "arrivalSeconds": {"type": "integer", "minimum": 0},
+        "elapsedSeconds": {"type": "integer", "minimum": 0},
+        "minutes": {"type": "integer", "minimum": 0},
+        "legs": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/leg"}},
+        "transfers": {"type": "array", "items": {"$ref": "#/$defs/transfer"}}
+      }
+    }
+  }
+}
