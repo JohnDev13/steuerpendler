@@ -183,6 +183,19 @@ class FeederConeTests(unittest.TestCase):
             self.assertTrue(all(item['first_leg_trip_id'] != item['second_leg_trip_id']
                                 for item in result['sample_candidates']))
 
+    def test_sample_limit_is_hard_bounded_before_any_output(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = pathlib.Path(tmp)
+            feed, direct = write_fixture(directory)
+            for limit in (-1, 101, True, 1.5):
+                output = directory / 'should-not-exist.json'
+                with self.assertRaisesRegex(cone.FeederConeError, 'sample_limit'):
+                    cone.build_feeder_cone(feed, direct, DAY, output, sample_limit=limit)
+                self.assertFalse(output.exists())
+            zero = cone.build_feeder_cone(feed, direct, DAY, directory / 'zero.json', sample_limit=0)
+            self.assertEqual(zero['candidate_count'], 3)
+            self.assertEqual(zero['sample_candidates'], [])
+
     def test_large_candidate_product_keeps_only_bounded_evidence_sample(self):
         with tempfile.TemporaryDirectory() as tmp:
             directory = pathlib.Path(tmp)

@@ -21,6 +21,7 @@ DEFAULT_DAY = direct.DEFAULT_DAY
 WINDOW_START = direct.WINDOW_START
 WINDOW_END = direct.WINDOW_END
 CAP_SECONDS = direct.CAP_SECONDS
+MAX_SAMPLE_LIMIT = 100
 
 
 class FeederConeError(ValueError):
@@ -86,8 +87,8 @@ def build_feeder_cone(feed_path, direct_result_path, service_day, result_path,
     """Count candidates, retaining only a bounded deterministic evidence sample."""
     if not isinstance(service_day, dt.date):
         raise FeederConeError("service_day must be a date")
-    if type(sample_limit) is not int or sample_limit < 0:
-        raise FeederConeError("sample_limit must be a nonnegative integer")
+    if type(sample_limit) is not int or not 0 <= sample_limit <= MAX_SAMPLE_LIMIT:
+        raise FeederConeError("sample_limit must be an integer from 0 to 100")
     feed_path = pathlib.Path(feed_path)
     direct_result_path = pathlib.Path(direct_result_path)
     result_path = pathlib.Path(result_path)
