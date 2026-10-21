@@ -1,6 +1,8 @@
 # T3 travel diagnostics — BLOCKED, not a national generator
 
-Commands below run from the repository root. No Swiss travel JSON is generated.
+Commands below run from the repository root. No accepted Swiss residential
+travel JSON is generated; the direct-ride screen writes provisional, outside-Git
+diagnostic JSON only.
 `build.py` always exits **2**: the exact metric and national pipeline remain
 incomplete. Neither a larger machine nor a supplied manifest bypasses the gates.
 
@@ -31,6 +33,32 @@ limits, affinity CPUs, free disk and Java, and never downloads routing inputs.
 The default report is `artifacts/travel/preflight.json` relative to the working
 directory. `--inputs <local-manifest.json>` only records presence/hash (<=1 MB),
 not validation; it still blocks. The national input validator does not exist.
+
+## Bounded direct-ride positive screen (not a residential generator)
+
+From the repository root, use the pinned GTFS source and actual station-parent
+IDs; repeat `--destination-parent` for each selected target parent. An explicit
+source hash rejects changed input before writing the result. The scan emits
+scheduled direct journeys only; it does not add residential access walks,
+transfer-aware journeys or workplace egress, and cannot exclude a Gemeinde.
+
+```sh
+python3 scripts/travel/gtfs_direct_cap.py \
+  --feed /home/hermes/data/steuerpendler/2026-10-19/gtfs_fp2026_20261017.zip \
+  --service-day 2026-10-27 \
+  --destination-parent Parentch:1:sloid:2113 \
+  --destination-parent Parentch:1:sloid:2996 \
+  --result /home/hermes/data/steuerpendler/2026-10-19/aarau-direct-30-provisional-20261027.json \
+  --expected-sha256 d5b312e1ff398b505f9a6efef60c365f3c864857f73c55e87b383960a6b3418e
+```
+
+The date remains **provisional** pending the all-canton holiday test. The 30-minute
+first-boarding-to-arrival cap and 06:30–08:30 boarding window are independent of
+the 0–15-minute website walking control. Use an outside-Git result path: see
+`docs/travel/aarau-direct-30-screen-20261021.md` for source checks, observed
+counts, a 19-workplace repeat and unresolved acceptance gates. The release
+manifest must stay travel-unavailable; a positive screen must not be copied into
+`site/data/travel/` as an accepted matrix.
 
 ## Evidence and failures
 
