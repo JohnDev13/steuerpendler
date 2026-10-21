@@ -1,4 +1,18 @@
 import { test, expect } from '@playwright/test';
+test('caps the public-transport control at 30 minutes for Aarau while keeping walking separate',async({page})=>{
+ await page.goto('./');
+ const time=page.getByLabel('Maximale Fahrzeit',{exact:true});
+ const walk=page.getByLabel('Maximaler Fussweg',{exact:true});
+ await expect(time).toHaveAttribute('max','30');
+ await expect(walk).toHaveAttribute('max','15');
+ await page.getByRole('combobox',{name:'Arbeitsort'}).fill('Aarau');
+ await page.getByRole('option',{name:'Aarau (AG)'}).click();
+ await time.evaluate((input:HTMLInputElement)=>{input.value='30';input.dispatchEvent(new Event('input',{bubbles:true}));});
+ await expect(page.locator('#summary')).toContainText('Aarau: Erreichbarkeit');
+ await expect(page.locator('#summary')).toContainText('max. 30 Min. Fahrzeit und 10 Min. Fussweg');
+ await expect(page.locator('#summary')).toContainText('noch ungeprüft');
+});
+
 test('offers German labelled controls and remains usable at 400px',async({page})=>{
  await page.setViewportSize({width:400,height:850});
  await page.goto('./');
