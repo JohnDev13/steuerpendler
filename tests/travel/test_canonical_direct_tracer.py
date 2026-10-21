@@ -51,7 +51,11 @@ def source(rows, feed_hash):
     return {
         "boarding_window_inclusive": ["06:30:00", "08:30:00"],
         "cap_seconds_inclusive": 1800,
-        "destination_children": {"P1": ["A1", "A2"]},
+        "destination_children": {
+            "Parentch:1:sloid:2113": ["A1", "A2"],
+            "Parentch:1:sloid:2996": ["B1"],
+        },
+        "destination_parent_ids": ["Parentch:1:sloid:2113", "Parentch:1:sloid:2996"],
         "direct_only": True,
         "journey_count": len(rows),
         "journeys": rows,
@@ -201,6 +205,38 @@ class CanonicalDirectTracerTests(unittest.TestCase):
                     expected_source_sha256=source_hash, expected_gtfs_sha256=feed_hash,
                     max_input_rows=20, max_output_rows=20)
             self.assertEqual(hashlib.sha256(source_path.read_bytes()).hexdigest(), source_hash)
+
+    def test_rejects_wrong_aarau_parent_ids_even_with_matching_caller_hash(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = pathlib.Path(tmp)
+            feed = directory / "feed.zip"
+            feed_hash = write_feed(feed)
+            payload = source([journey()], feed_hash)
+            payload['destination_parent_ids'] = ['P1']
+            source_path = directory / "source.json"
+            source_hash = write_json(source_path, payload)
+            output = directory / "out.gz"
+            with self.assertRaisesRegex(tracer.TracerError, "Aarau destination parent IDs mismatch"):
+                tracer.trace_direct_routes(source_path, feed, output, directory / 'report.json',
+                    expected_source_sha256=source_hash, expected_gtfs_sha256=feed_hash,
+                    max_input_rows=20, max_output_rows=20)
+            self.assertFalse(output.exists())
+
+    def test_large_source_is_rejected_before_json_parse(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = pathlib.Path(tmp)
+            feed = directory / "feed.zip"
+            feed_hash = write_feed(feed)
+            payload = source([journey()], feed_hash)
+            payload['padding'] = 'x' * 4_100_000
+            source_path = directory / "source.json"
+            source_hash = write_json(source_path, payload)
+            output = directory / "out.gz"
+            with self.assertRaisesRegex(tracer.TracerError, "source JSON exceeds byte limit"):
+                tracer.trace_direct_routes(source_path, feed, output, directory / 'report.json',
+                    expected_source_sha256=source_hash, expected_gtfs_sha256=feed_hash,
+                    max_input_rows=20, max_output_rows=20)
+            self.assertFalse(output.exists())
 
 
 if __name__ == "__main__":

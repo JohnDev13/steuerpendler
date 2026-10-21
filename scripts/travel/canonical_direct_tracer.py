@@ -26,15 +26,12 @@ WINDOW_END_SECONDS = 8 * 3600 + 30 * 60
 CAP_SECONDS = 1800
 COVERAGE = "PARTIAL_DIRECT_ONLY"
 REASON = "transfer_search_missing"
+MAX_SOURCE_BYTES = 4_000_000
+AARAU_PARENT_IDS = frozenset({"Parentch:1:sloid:2113", "Parentch:1:sloid:2996"})
 
 
 class TracerError(ValueError):
     """An input cannot safely support the bounded diagnostic."""
-
-
-def _sha256(path):
-    with open(path, "rb") as source:
-        return hashlib.file_digest(source, "sha256").hexdigest()
 
 
 def _require_int(row, field, index):
@@ -54,11 +51,18 @@ def _require_string(row, field, index):
 def _load_source(path, expected_hash, expected_gtfs_hash, max_input_rows):
     if type(max_input_rows) is not int or max_input_rows < 1:
         raise TracerError("max_input_rows must be a positive integer")
-    actual_hash = _sha256(path)
+    try:
+        with path.open("rb") as source:
+            raw = source.read(MAX_SOURCE_BYTES + 1)
+    except OSError as exc:
+        raise TracerError(f"unreadable source JSON: {exc}") from exc
+    if len(raw) > MAX_SOURCE_BYTES:
+        raise TracerError("source JSON exceeds byte limit")
+    actual_hash = hashlib.sha256(raw).hexdigest()
     if actual_hash != expected_hash:
         raise TracerError("source SHA-256 mismatch")
     try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
+        payload = json.loads(raw.decode("utf-8"))
     except (OSError, UnicodeError, json.JSONDecodeError) as exc:
         raise TracerError(f"invalid source JSON: {exc}") from exc
     if not isinstance(payload, dict):
@@ -83,6 +87,9 @@ def _load_source(path, expected_hash, expected_gtfs_hash, max_input_rows):
     groups = payload.get("destination_children")
     if not isinstance(groups, dict) or not groups:
         raise TracerError("missing destination_children")
+    if (payload.get("destination_parent_ids") != sorted(AARAU_PARENT_IDS)
+            or set(groups) != AARAU_PARENT_IDS):
+        raise TracerError("Aarau destination parent IDs mismatch")
     children = set()
     for parent, values in groups.items():
         if not isinstance(parent, str) or not parent or not isinstance(values, list) or not values:
@@ -142,37 +149,39 @@ def _validated_rows(journeys, destination_children):
 
 
 def _trip_metadata(feed_path, expected_hash, referenced_trips):
-    actual_hash = _sha256(feed_path)
-    if actual_hash != expected_hash:
-        raise TracerError("GTFS SHA-256 mismatch")
     selected = {}
     scanned = 0
     try:
-        with zipfile.ZipFile(feed_path) as archive:
-            if "trips.txt" not in archive.namelist():
-                raise TracerError("missing trips.txt")
-            with archive.open("trips.txt") as raw, io.TextIOWrapper(
-                    raw, encoding="utf-8-sig", newline="") as text:
-                reader = csv.DictReader(text)
-                required = {"trip_id", "route_id", "service_id"}
-                missing = required - set(reader.fieldnames or ())
-                if missing:
-                    raise TracerError(f"invalid trips.txt: missing {sorted(missing)[0]}")
-                for row in reader:
-                    scanned += 1
-                    trip_id = row["trip_id"]
-                    if trip_id not in referenced_trips:
-                        continue
-                    if trip_id in selected:
-                        raise TracerError(f"duplicate trip_id in trips.txt: {trip_id}")
-                    if not row["route_id"]:
-                        raise TracerError(f"missing route_id for trip: {trip_id}")
-                    if not row["service_id"]:
-                        raise TracerError(f"missing service_id for trip: {trip_id}")
-                    selected[trip_id] = {
-                        "route_id": row["route_id"],
-                        "service_id": row["service_id"],
-                    }
+        with feed_path.open("rb") as feed:
+            actual_hash = hashlib.file_digest(feed, "sha256").hexdigest()
+            if actual_hash != expected_hash:
+                raise TracerError("GTFS SHA-256 mismatch")
+            feed.seek(0)
+            with zipfile.ZipFile(feed) as archive:
+                if "trips.txt" not in archive.namelist():
+                    raise TracerError("missing trips.txt")
+                with archive.open("trips.txt") as raw, io.TextIOWrapper(
+                        raw, encoding="utf-8-sig", newline="") as text:
+                    reader = csv.DictReader(text)
+                    required = {"trip_id", "route_id", "service_id"}
+                    missing = required - set(reader.fieldnames or ())
+                    if missing:
+                        raise TracerError(f"invalid trips.txt: missing {sorted(missing)[0]}")
+                    for row in reader:
+                        scanned += 1
+                        trip_id = row["trip_id"]
+                        if trip_id not in referenced_trips:
+                            continue
+                        if trip_id in selected:
+                            raise TracerError(f"duplicate trip_id in trips.txt: {trip_id}")
+                        if not row["route_id"]:
+                            raise TracerError(f"missing route_id for trip: {trip_id}")
+                        if not row["service_id"]:
+                            raise TracerError(f"missing service_id for trip: {trip_id}")
+                        selected[trip_id] = {
+                            "route_id": row["route_id"],
+                            "service_id": row["service_id"],
+                        }
     except (OSError, UnicodeError, csv.Error, zipfile.BadZipFile) as exc:
         raise TracerError(f"unreadable GTFS trips.txt: {exc}") from exc
     absent = sorted(referenced_trips - set(selected))
@@ -327,16 +336,14 @@ def main():
     parser.add_argument("--feed", required=True)
     parser.add_argument("--output", required=True)
     parser.add_argument("--report", required=True)
-    parser.add_argument("--expected-source-sha256", default=EXPECTED_SOURCE_SHA256)
-    parser.add_argument("--expected-gtfs-sha256", default=EXPECTED_GTFS_SHA256)
     parser.add_argument("--max-input-rows", required=True, type=int)
     parser.add_argument("--max-output-rows", required=True, type=int)
     args = parser.parse_args()
     started = time.monotonic()
     report = trace_direct_routes(
         args.source, args.feed, args.output, args.report,
-        expected_source_sha256=args.expected_source_sha256,
-        expected_gtfs_sha256=args.expected_gtfs_sha256,
+        expected_source_sha256=EXPECTED_SOURCE_SHA256,
+        expected_gtfs_sha256=EXPECTED_GTFS_SHA256,
         max_input_rows=args.max_input_rows,
         max_output_rows=args.max_output_rows,
     )
