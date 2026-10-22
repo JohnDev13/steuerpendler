@@ -413,6 +413,68 @@ class FeederConeTests(unittest.TestCase):
             self.assertFalse(report.exists())
             self.assertEqual(list(directory.glob(".*.tmp")), [])
 
+    def test_candidate_stream_is_removed_on_mid_enumeration_interrupt(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = pathlib.Path(tmp)
+            feed, direct = write_fixture(directory)
+            report = directory / "report.json"
+            output = directory / "candidates.ndjson.gz"
+            report.write_bytes(b"OLD REPORT")
+            output.write_bytes(b"OLD STREAM")
+            for interruption in (KeyboardInterrupt(), SystemExit(7)):
+                with self.subTest(interruption=type(interruption).__name__):
+                    with mock.patch.object(
+                            cone._CandidateStream, "write_candidate",
+                            side_effect=interruption):
+                        with self.assertRaises(type(interruption)):
+                            cone.build_feeder_cone(
+                                feed, direct, DAY, report,
+                                candidate_output_path=output)
+                    self.assertEqual(report.read_bytes(), b"OLD REPORT")
+                    self.assertEqual(output.read_bytes(), b"OLD STREAM")
+                    self.assertEqual(list(directory.glob(".*.tmp")), [])
+
+    def test_abort_unlinks_candidate_temp_when_raw_close_fails(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = pathlib.Path(tmp)
+            stream = cone._CandidateStream(
+                directory / "candidates.ndjson.gz", {"kind": "manifest"})
+            temporary_path = stream.temporary_path
+            with mock.patch.object(
+                    stream.raw, "close", side_effect=OSError("close failed")):
+                with self.assertRaisesRegex(OSError, "close failed"):
+                    stream.abort()
+            self.assertFalse(temporary_path.exists())
+            stream.raw.close()
+
+    def test_interrupt_after_report_rename_restores_previous_outputs(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = pathlib.Path(tmp)
+            feed, direct = write_fixture(directory)
+            report = directory / "report.json"
+            output = directory / "candidates.ndjson.gz"
+            report.write_bytes(b"OLD REPORT")
+            output.write_bytes(b"OLD STREAM")
+            real_replace = os.replace
+            report_replacements = 0
+
+            def replace_report_then_interrupt(source, target):
+                nonlocal report_replacements
+                real_replace(source, target)
+                if pathlib.Path(target) == report:
+                    report_replacements += 1
+                    if report_replacements == 1:
+                        raise KeyboardInterrupt()
+
+            with mock.patch.object(
+                    cone.os, "replace", side_effect=replace_report_then_interrupt):
+                with self.assertRaises(KeyboardInterrupt):
+                    cone.build_feeder_cone(
+                        feed, direct, DAY, report, candidate_output_path=output)
+            self.assertEqual(report.read_bytes(), b"OLD REPORT")
+            self.assertEqual(output.read_bytes(), b"OLD STREAM")
+            self.assertEqual(list(directory.glob(".*.tmp")), [])
+
     def test_output_aliases_are_rejected_without_modifying_any_file(self):
         with tempfile.TemporaryDirectory() as tmp:
             directory = pathlib.Path(tmp)

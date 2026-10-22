@@ -139,8 +139,10 @@ class _CandidateStream:
             if hasattr(self, "gzip"):
                 self.gzip.close()
         finally:
-            self.raw.close()
-            self.temporary_path.unlink(missing_ok=True)
+            try:
+                self.raw.close()
+            finally:
+                self.temporary_path.unlink(missing_ok=True)
 
 
 def _load_direct_result(path, expected_hash, feed_hash, service_day):
@@ -373,7 +375,7 @@ def build_feeder_cone(feed_path, direct_result_path, service_day, result_path,
                                 bisect.insort(sample, (order, candidate))
                                 if len(sample) > sample_limit:
                                     sample.pop()
-    except Exception:
+    except BaseException:
         if candidate_stream is not None:
             candidate_stream.abort()
         raise
@@ -403,10 +405,13 @@ def build_feeder_cone(feed_path, direct_result_path, service_day, result_path,
         "unresolved_frequency_trips": unresolved_frequency_trips,
     }
     staged_report = None
+    report_backup = None
     candidate_backup = None
+    report_publication_started = False
     candidate_publication_started = False
     publication_complete = False
-    rollback_complete = False
+    report_rollback_complete = False
+    candidate_rollback_complete = False
     try:
         if candidate_stream is not None:
             candidate_stream.finish()
@@ -415,6 +420,12 @@ def build_feeder_cone(feed_path, direct_result_path, service_day, result_path,
                                          prefix=f".{result_path.name}.", suffix=".tmp", delete=False) as stage:
             staged_report = pathlib.Path(stage.name)
             stage.write(json.dumps(payload, indent=2, sort_keys=True, ensure_ascii=False) + "\n")
+        if result_path.exists():
+            with tempfile.NamedTemporaryFile(dir=result_path.parent,
+                                             prefix=f".{result_path.name}.",
+                                             suffix=".tmp", delete=False) as backup:
+                report_backup = pathlib.Path(backup.name)
+            shutil.copyfile(result_path, report_backup)
         if candidate_stream is not None:
             if candidate_stream.target.exists():
                 with tempfile.NamedTemporaryFile(dir=candidate_stream.target.parent,
@@ -424,29 +435,53 @@ def build_feeder_cone(feed_path, direct_result_path, service_day, result_path,
                 shutil.copyfile(candidate_stream.target, candidate_backup)
             candidate_publication_started = True
             candidate_stream.publish()
+        report_publication_started = True
         os.replace(staged_report, result_path)
         publication_complete = True
     except BaseException:
+        rollback_errors = []
         try:
-            if candidate_stream is not None and candidate_publication_started:
-                if candidate_backup is not None:
-                    os.replace(candidate_backup, candidate_stream.target)
+            if report_publication_started:
+                if staged_report is not None and staged_report.exists():
+                    report_rollback_complete = True
                 else:
-                    candidate_stream.target.unlink(missing_ok=True)
-                rollback_complete = True
-        except BaseException as rollback_error:
-            raise FeederConeError(
-                f"candidate rollback failed; recovery backup retained: {candidate_backup}"
-            ) from rollback_error
+                    try:
+                        if report_backup is not None:
+                            os.replace(report_backup, result_path)
+                        else:
+                            result_path.unlink(missing_ok=True)
+                        report_rollback_complete = True
+                    except BaseException as rollback_error:
+                        rollback_errors.append(("report", report_backup, rollback_error))
+            if candidate_stream is not None and candidate_publication_started:
+                try:
+                    if candidate_backup is not None:
+                        os.replace(candidate_backup, candidate_stream.target)
+                    else:
+                        candidate_stream.target.unlink(missing_ok=True)
+                    candidate_rollback_complete = True
+                except BaseException as rollback_error:
+                    rollback_errors.append(("candidate", candidate_backup, rollback_error))
         finally:
             if candidate_stream is not None:
                 candidate_stream.abort()
+        if rollback_errors:
+            target, backup, rollback_error = rollback_errors[0]
+            raise FeederConeError(
+                f"{target} rollback failed; recovery backup retained: {backup}"
+            ) from rollback_error
         raise
     finally:
         if staged_report is not None:
             staged_report.unlink(missing_ok=True)
+        if report_backup is not None and (
+            publication_complete or report_rollback_complete or
+            not report_publication_started
+        ):
+            report_backup.unlink(missing_ok=True)
         if candidate_backup is not None and (
-            publication_complete or rollback_complete or not candidate_publication_started
+            publication_complete or candidate_rollback_complete or
+            not candidate_publication_started
         ):
             candidate_backup.unlink(missing_ok=True)
     return payload
