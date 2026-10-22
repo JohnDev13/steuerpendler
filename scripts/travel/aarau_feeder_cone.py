@@ -6,9 +6,14 @@ not establish that any transfer or municipality is eligible.
 import argparse
 import bisect
 import datetime as dt
+import gzip
+import hashlib
 import json
+import os
 import pathlib
 import resource
+import shutil
+import tempfile
 import time
 import zipfile
 
@@ -22,6 +27,10 @@ WINDOW_START = direct.WINDOW_START
 WINDOW_END = direct.WINDOW_END
 CAP_SECONDS = direct.CAP_SECONDS
 MAX_SAMPLE_LIMIT = 100
+MAX_DIRECT_RESULT_BYTES = 4 * 1024 * 1024
+MAX_GTFS_BYTES = 500 * 1024 * 1024
+MAX_CANDIDATE_OUTPUT_COUNT = 100_000
+COPY_CHUNK_BYTES = 1024 * 1024
 
 
 class FeederConeError(ValueError):
@@ -32,13 +41,118 @@ def _sha256(path):
     return direct._sha256(path)
 
 
+def _read_bounded(path, limit, label):
+    try:
+        with pathlib.Path(path).open("rb") as source:
+            payload = source.read(limit + 1)
+    except OSError as exc:
+        raise FeederConeError(f"unreadable {label}: {exc}") from exc
+    if len(payload) > limit:
+        raise FeederConeError(f"{label} exceeds {limit // (1024 * 1024)} MiB cap")
+    return payload
+
+
+def _snapshot_feed(path):
+    digest = hashlib.sha256()
+    snapshot = tempfile.TemporaryFile(mode="w+b")
+    total = 0
+    try:
+        with pathlib.Path(path).open("rb") as source:
+            while chunk := source.read(COPY_CHUNK_BYTES):
+                total += len(chunk)
+                if total > MAX_GTFS_BYTES:
+                    raise FeederConeError("GTFS exceeds 500 MiB cap")
+                digest.update(chunk)
+                snapshot.write(chunk)
+        snapshot.seek(0)
+        return snapshot, digest.hexdigest()
+    except OSError as exc:
+        snapshot.close()
+        raise FeederConeError(f"unreadable GTFS archive: {exc}") from exc
+    except Exception:
+        snapshot.close()
+        raise
+
+
+def _paths_alias(first, second):
+    first = pathlib.Path(first)
+    second = pathlib.Path(second)
+    if first.resolve(strict=False) == second.resolve(strict=False):
+        return True
+    try:
+        return first.exists() and second.exists() and os.path.samefile(first, second)
+    except OSError:
+        return False
+
+
+def _validate_output_paths(feed_path, direct_result_path, result_path,
+                           candidate_output_path):
+    inputs = (feed_path, direct_result_path)
+    if any(_paths_alias(result_path, source) for source in inputs):
+        raise FeederConeError("report output must not alias an input")
+    if candidate_output_path is not None:
+        if (any(_paths_alias(candidate_output_path, source) for source in inputs) or
+                _paths_alias(candidate_output_path, result_path)):
+            raise FeederConeError("candidate output must not alias feed/direct/report")
+
+
+class _CandidateStream:
+    def __init__(self, target, manifest):
+        self.target = pathlib.Path(target)
+        self.target.parent.mkdir(parents=True, exist_ok=True)
+        temporary = tempfile.NamedTemporaryFile(
+            mode="w+b", dir=self.target.parent,
+            prefix=f".{self.target.name}.", suffix=".tmp", delete=False)
+        self.temporary_path = pathlib.Path(temporary.name)
+        self.raw = temporary
+        try:
+            self.gzip = gzip.GzipFile(filename="", mode="wb", fileobj=temporary, mtime=0)
+            self.count = 0
+            self._write(manifest)
+        except BaseException:
+            self.abort()
+            raise
+
+    def _write(self, row):
+        encoded = (json.dumps(row, sort_keys=True, ensure_ascii=False,
+                              separators=(",", ":")) + "\n").encode("utf-8")
+        self.gzip.write(encoded)
+
+    def write_candidate(self, candidate):
+        if self.count >= MAX_CANDIDATE_OUTPUT_COUNT:
+            self.abort()
+            raise FeederConeError(
+                f"candidate output count would exceed {MAX_CANDIDATE_OUTPUT_COUNT}")
+        self._write({"kind": "candidate", **candidate})
+        self.count += 1
+
+    def finish(self):
+        self._write({"candidate_count": self.count, "kind": "summary"})
+        self.gzip.close()
+        self.raw.close()
+
+    def publish(self):
+        os.replace(self.temporary_path, self.target)
+
+    def abort(self):
+        try:
+            if hasattr(self, "gzip"):
+                self.gzip.close()
+        finally:
+            try:
+                self.raw.close()
+            finally:
+                self.temporary_path.unlink(missing_ok=True)
+
+
 def _load_direct_result(path, expected_hash, feed_hash, service_day):
-    observed_hash = _sha256(path)
+    encoded = _read_bounded(path, MAX_DIRECT_RESULT_BYTES, "direct result (4 MiB)")
+    observed_hash = hashlib.sha256(encoded).hexdigest()
     if expected_hash is not None and observed_hash != expected_hash:
         raise FeederConeError("direct result SHA-256 mismatch")
     try:
-        payload = json.loads(pathlib.Path(path).read_text(encoding="utf-8"))
-    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        payload = json.loads(encoded)
+    except (UnicodeError, json.JSONDecodeError) as exc:
         raise FeederConeError(f"invalid direct result: {exc}") from exc
     if payload.get("source_sha256") != feed_hash:
         raise FeederConeError("direct result source SHA-256 mismatch")
@@ -83,7 +197,7 @@ def _known_stops(archive, counts):
 
 def build_feeder_cone(feed_path, direct_result_path, service_day, result_path,
                       *, expected_feed_sha256=None, expected_direct_sha256=None,
-                      sample_limit=10):
+                      sample_limit=10, candidate_output_path=None):
     """Count candidates, retaining only a bounded deterministic evidence sample."""
     if not isinstance(service_day, dt.date):
         raise FeederConeError("service_day must be a date")
@@ -92,11 +206,20 @@ def build_feeder_cone(feed_path, direct_result_path, service_day, result_path,
     feed_path = pathlib.Path(feed_path)
     direct_result_path = pathlib.Path(direct_result_path)
     result_path = pathlib.Path(result_path)
-    feed_hash = _sha256(feed_path)
+    candidate_output_path = (None if candidate_output_path is None else
+                             pathlib.Path(candidate_output_path))
+    _validate_output_paths(
+        feed_path, direct_result_path, result_path, candidate_output_path)
+    feed_snapshot, feed_hash = _snapshot_feed(feed_path)
     if expected_feed_sha256 is not None and feed_hash != expected_feed_sha256:
+        feed_snapshot.close()
         raise FeederConeError("GTFS SHA-256 mismatch")
-    direct_hash, downstream = _load_direct_result(
-        direct_result_path, expected_direct_sha256, feed_hash, service_day)
+    try:
+        direct_hash, downstream = _load_direct_result(
+            direct_result_path, expected_direct_sha256, feed_hash, service_day)
+    except Exception:
+        feed_snapshot.close()
+        raise
     hub_ids = set(downstream)
 
     counts = {name: 0 for name in (
@@ -115,7 +238,7 @@ def build_feeder_cone(feed_path, direct_result_path, service_day, result_path,
     }
     excluded = {"pickup_type_1": 0, "drop_off_type_1": 0}
     try:
-        with zipfile.ZipFile(feed_path) as archive:
+        with zipfile.ZipFile(feed_snapshot) as archive:
             known_stops = _known_stops(archive, counts)
             missing_hubs = sorted(hub_ids - known_stops)
             if missing_hubs:
@@ -136,6 +259,8 @@ def build_feeder_cone(feed_path, direct_result_path, service_day, result_path,
         raise FeederConeError(str(exc)) from exc
     except (OSError, zipfile.BadZipFile) as exc:
         raise FeederConeError(f"unreadable GTFS archive: {exc}") from exc
+    finally:
+        feed_snapshot.close()
 
     unresolved_frequency_trips = []
     for trip_id, classes in sorted(frequencies.items()):
@@ -151,91 +276,109 @@ def build_feeder_cone(feed_path, direct_result_path, service_day, result_path,
     end = direct.gtfs_seconds(WINDOW_END)
     candidate_count = 0
     sample = []
-    for trip_id, rows in sorted(rows_by_trip.items()):
-        rows.sort(key=lambda row: (row["stop_sequence"], row["stop_id"]))
-        if len({row["stop_sequence"] for row in rows}) != len(rows):
-            unresolved["duplicate_sequence_trips"] += 1
-            continue
-        chronology_invalid = False
-        previous_departure = None
-        for row in rows:
-            if (row["arrival_seconds"] > row["departure_seconds"] or
-                    (previous_departure is not None and
-                     row["arrival_seconds"] < previous_departure)):
-                chronology_invalid = True
-                break
-            previous_departure = row["departure_seconds"]
-        if chronology_invalid:
-            unresolved["nonmonotonic_trip_time"] += 1
-            continue
-        for hub_index, hub_row in enumerate(rows):
-            if hub_row["stop_id"] not in hub_ids:
+    candidate_stream = None
+    if candidate_output_path is not None:
+        candidate_stream = _CandidateStream(candidate_output_path, {
+            "direct_result_sha256": direct_hash,
+            "kind": "manifest",
+            "service_day": service_day.isoformat(),
+            "source_sha256": feed_hash,
+            "status": "necessary_only",
+        })
+    # Stable source-trip order is not event-time order. Downstream route consumers
+    # must key/sort by exact first-boarding seconds, never infer chronology here.
+    try:
+        for trip_id, rows in sorted(rows_by_trip.items()):
+            rows.sort(key=lambda row: (row["stop_sequence"], row["stop_id"]))
+            if len({row["stop_sequence"] for row in rows}) != len(rows):
+                unresolved["duplicate_sequence_trips"] += 1
                 continue
-            if hub_row["drop_off_type"] == "1":
-                excluded["drop_off_type_1"] += 1
+            chronology_invalid = False
+            previous_departure = None
+            for row in rows:
+                if (row["arrival_seconds"] > row["departure_seconds"] or
+                        (previous_departure is not None and
+                         row["arrival_seconds"] < previous_departure)):
+                    chronology_invalid = True
+                    break
+                previous_departure = row["departure_seconds"]
+            if chronology_invalid:
+                unresolved["nonmonotonic_trip_time"] += 1
                 continue
-            if hub_row["drop_off_type"] in {"2", "3"}:
-                continue
-            for boarding in rows[:hub_index]:
-                if boarding["pickup_type"] == "1":
-                    excluded["pickup_type_1"] += 1
+            for hub_index, hub_row in enumerate(rows):
+                if hub_row["stop_id"] not in hub_ids:
                     continue
-                if boarding["pickup_type"] in {"2", "3"}:
+                if hub_row["drop_off_type"] == "1":
+                    excluded["drop_off_type_1"] += 1
                     continue
-                first_board = boarding["departure_seconds"]
-                if not start <= first_board <= end:
+                if hub_row["drop_off_type"] in {"2", "3"}:
                     continue
-                for second in downstream[hub_row["stop_id"]]:
-                    # Continuing aboard the same trip is already counted by
-                    # the direct screen, not a two-vehicle feeder candidate.
-                    if trip_id == second["trip_id"]:
+                for boarding in rows[:hub_index]:
+                    if boarding["pickup_type"] == "1":
+                        excluded["pickup_type_1"] += 1
                         continue
-                    total = second["arrival_seconds"] - first_board
-                    if (hub_row["arrival_seconds"] > second["boarding_seconds"] or
-                            not 0 <= total <= CAP_SECONDS):
+                    if boarding["pickup_type"] in {"2", "3"}:
                         continue
-                    candidate = {
-                        "first_board_arrival_seconds": boarding["arrival_seconds"],
-                        "first_board_arrival_time": boarding["arrival_time"],
-                        "first_board_departure_time": boarding["departure_time"],
-                        "first_board_pickup_type": boarding["pickup_type"],
-                        "first_board_seconds": first_board,
-                        "first_board_stop_id": boarding["stop_id"],
-                        "first_board_stop_sequence": boarding["stop_sequence"],
-                        "first_leg_trip_id": trip_id,
-                        "hub_arrival_seconds": hub_row["arrival_seconds"],
-                        "hub_arrival_time": hub_row["arrival_time"],
-                        "hub_departure_seconds": hub_row["departure_seconds"],
-                        "hub_departure_time": hub_row["departure_time"],
-                        "hub_drop_off_type": hub_row["drop_off_type"],
-                        "hub_stop_id": hub_row["stop_id"],
-                        "hub_stop_sequence": hub_row["stop_sequence"],
-                        "second_leg_arrival_seconds": second["arrival_seconds"],
-                        "second_leg_arrival_time": second["arrival_time"],
-                        "second_leg_boarding_seconds": second["boarding_seconds"],
-                        "second_leg_boarding_time": second["boarding_time"],
-                        "second_leg_trip_id": second["trip_id"],
-                        "service_id": active_trips[trip_id],
-                        "service_provenance": provenance[active_trips[trip_id]],
-                        "total_transit_seconds": total,
-                    }
-                    candidate_count += 1
-                    if sample_limit:
-                        order = (
-                            candidate["first_board_seconds"],
-                            candidate["second_leg_arrival_seconds"],
-                            candidate["first_leg_trip_id"],
-                            candidate["first_board_stop_sequence"],
-                            candidate["hub_stop_sequence"],
-                            candidate["second_leg_trip_id"],
-                            candidate["first_board_stop_id"],
-                            candidate["hub_stop_id"],
-                            candidate_count,
-                        )
-                        if len(sample) < sample_limit or order < sample[-1][0]:
-                            bisect.insort(sample, (order, candidate))
-                            if len(sample) > sample_limit:
-                                sample.pop()
+                    first_board = boarding["departure_seconds"]
+                    if not start <= first_board <= end:
+                        continue
+                    for second in downstream[hub_row["stop_id"]]:
+                        # Continuing aboard the same trip is already counted by
+                        # the direct screen, not a two-vehicle feeder candidate.
+                        if trip_id == second["trip_id"]:
+                            continue
+                        total = second["arrival_seconds"] - first_board
+                        if (hub_row["arrival_seconds"] > second["boarding_seconds"] or
+                                not 0 <= total <= CAP_SECONDS):
+                            continue
+                        candidate = {
+                            "first_board_arrival_seconds": boarding["arrival_seconds"],
+                            "first_board_arrival_time": boarding["arrival_time"],
+                            "first_board_departure_time": boarding["departure_time"],
+                            "first_board_pickup_type": boarding["pickup_type"],
+                            "first_board_seconds": first_board,
+                            "first_board_stop_id": boarding["stop_id"],
+                            "first_board_stop_sequence": boarding["stop_sequence"],
+                            "first_leg_trip_id": trip_id,
+                            "hub_arrival_seconds": hub_row["arrival_seconds"],
+                            "hub_arrival_time": hub_row["arrival_time"],
+                            "hub_departure_seconds": hub_row["departure_seconds"],
+                            "hub_departure_time": hub_row["departure_time"],
+                            "hub_drop_off_type": hub_row["drop_off_type"],
+                            "hub_stop_id": hub_row["stop_id"],
+                            "hub_stop_sequence": hub_row["stop_sequence"],
+                            "second_leg_arrival_seconds": second["arrival_seconds"],
+                            "second_leg_arrival_time": second["arrival_time"],
+                            "second_leg_boarding_seconds": second["boarding_seconds"],
+                            "second_leg_boarding_time": second["boarding_time"],
+                            "second_leg_trip_id": second["trip_id"],
+                            "service_id": active_trips[trip_id],
+                            "service_provenance": provenance[active_trips[trip_id]],
+                            "total_transit_seconds": total,
+                        }
+                        if candidate_stream is not None:
+                            candidate_stream.write_candidate(candidate)
+                        candidate_count += 1
+                        if sample_limit:
+                            order = (
+                                candidate["first_board_seconds"],
+                                candidate["second_leg_arrival_seconds"],
+                                candidate["first_leg_trip_id"],
+                                candidate["first_board_stop_sequence"],
+                                candidate["hub_stop_sequence"],
+                                candidate["second_leg_trip_id"],
+                                candidate["first_board_stop_id"],
+                                candidate["hub_stop_id"],
+                                candidate_count,
+                            )
+                            if len(sample) < sample_limit or order < sample[-1][0]:
+                                bisect.insort(sample, (order, candidate))
+                                if len(sample) > sample_limit:
+                                    sample.pop()
+    except BaseException:
+        if candidate_stream is not None:
+            candidate_stream.abort()
+        raise
     payload = {
         "boarding_window_inclusive": [WINDOW_START, WINDOW_END],
         "candidate_count": candidate_count,
@@ -246,7 +389,7 @@ def build_feeder_cone(feed_path, direct_result_path, service_day, result_path,
             "This is a necessary feeder cone, not proof of a feasible transfer.",
             "Transfer minima, same-parent walking, trip-specific rules, and linked trips remain unresolved.",
             "Absence from this cone is unknown, not proof of ineligibility.",
-            "The provisional service day is not an approved reference day.",
+            "The owner approved the 2026-10-27 reference day; independent all-canton holiday review is incomplete.",
         ],
         "removed_service_count": len(removed_services),
         "sample_candidates": [candidate for _, candidate in sample],
@@ -261,11 +404,86 @@ def build_feeder_cone(feed_path, direct_result_path, service_day, result_path,
         "unresolved_counts": unresolved,
         "unresolved_frequency_trips": unresolved_frequency_trips,
     }
-    result_path.parent.mkdir(parents=True, exist_ok=True)
-    result_path.write_text(
-        json.dumps(payload, indent=2, sort_keys=True, ensure_ascii=False) + "\n",
-        encoding="utf-8",
-    )
+    staged_report = None
+    report_backup = None
+    candidate_backup = None
+    report_publication_started = False
+    candidate_publication_started = False
+    publication_complete = False
+    report_rollback_complete = False
+    candidate_rollback_complete = False
+    try:
+        if candidate_stream is not None:
+            candidate_stream.finish()
+        result_path.parent.mkdir(parents=True, exist_ok=True)
+        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=result_path.parent,
+                                         prefix=f".{result_path.name}.", suffix=".tmp", delete=False) as stage:
+            staged_report = pathlib.Path(stage.name)
+            stage.write(json.dumps(payload, indent=2, sort_keys=True, ensure_ascii=False) + "\n")
+        if result_path.exists():
+            with tempfile.NamedTemporaryFile(dir=result_path.parent,
+                                             prefix=f".{result_path.name}.",
+                                             suffix=".tmp", delete=False) as backup:
+                report_backup = pathlib.Path(backup.name)
+            shutil.copyfile(result_path, report_backup)
+        if candidate_stream is not None:
+            if candidate_stream.target.exists():
+                with tempfile.NamedTemporaryFile(dir=candidate_stream.target.parent,
+                                                 prefix=f".{candidate_stream.target.name}.",
+                                                 suffix=".tmp", delete=False) as backup:
+                    candidate_backup = pathlib.Path(backup.name)
+                shutil.copyfile(candidate_stream.target, candidate_backup)
+            candidate_publication_started = True
+            candidate_stream.publish()
+        report_publication_started = True
+        os.replace(staged_report, result_path)
+        publication_complete = True
+    except BaseException:
+        rollback_errors = []
+        try:
+            if report_publication_started:
+                if staged_report is not None and staged_report.exists():
+                    report_rollback_complete = True
+                else:
+                    try:
+                        if report_backup is not None:
+                            os.replace(report_backup, result_path)
+                        else:
+                            result_path.unlink(missing_ok=True)
+                        report_rollback_complete = True
+                    except BaseException as rollback_error:
+                        rollback_errors.append(("report", report_backup, rollback_error))
+            if candidate_stream is not None and candidate_publication_started:
+                try:
+                    if candidate_backup is not None:
+                        os.replace(candidate_backup, candidate_stream.target)
+                    else:
+                        candidate_stream.target.unlink(missing_ok=True)
+                    candidate_rollback_complete = True
+                except BaseException as rollback_error:
+                    rollback_errors.append(("candidate", candidate_backup, rollback_error))
+        finally:
+            if candidate_stream is not None:
+                candidate_stream.abort()
+        if rollback_errors:
+            target, backup, rollback_error = rollback_errors[0]
+            raise FeederConeError(
+                f"{target} rollback failed; recovery backup retained: {backup}"
+            ) from rollback_error
+        raise
+    finally:
+        if staged_report is not None:
+            staged_report.unlink(missing_ok=True)
+        if report_backup is not None and (
+            publication_complete or report_rollback_complete or
+            not report_publication_started
+        ):
+            report_backup.unlink(missing_ok=True)
+        if candidate_backup is not None and (
+            publication_complete or candidate_rollback_complete or
+            not candidate_publication_started
+        ):
+            candidate_backup.unlink(missing_ok=True)
     return payload
 
 
@@ -278,6 +496,7 @@ def main():
     parser.add_argument("--expected-feed-sha256", default=EXPECTED_GTFS_SHA256)
     parser.add_argument("--expected-direct-sha256", default=EXPECTED_DIRECT_SHA256)
     parser.add_argument("--sample-limit", type=int, default=10)
+    parser.add_argument("--candidate-output")
     args = parser.parse_args()
     try:
         day = dt.date.fromisoformat(args.service_day)
@@ -289,6 +508,7 @@ def main():
         expected_feed_sha256=args.expected_feed_sha256,
         expected_direct_sha256=args.expected_direct_sha256,
         sample_limit=args.sample_limit,
+        candidate_output_path=args.candidate_output,
     )
     print(json.dumps({
         "candidate_count": payload["candidate_count"],

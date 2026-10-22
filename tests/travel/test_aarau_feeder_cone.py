@@ -1,12 +1,15 @@
 """Synthetic tests for the bounded Aarau feeder candidate cone."""
 import datetime as dt
+import gzip
 import hashlib
 import json
+import os
 import pathlib
 import sys
 import tempfile
 import unittest
 import zipfile
+from unittest import mock
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2] / "scripts" / "travel"))
 import aarau_feeder_cone as cone
@@ -217,6 +220,274 @@ class FeederConeTests(unittest.TestCase):
             self.assertEqual(len(result['sample_candidates']), 2)
             self.assertFalse('candidates' in result)
             self.assertLess(result_path.stat().st_size, 20_000)
+
+    def test_candidate_stream_manifest_order_summary_and_repeat_bytes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = pathlib.Path(tmp)
+            feed, direct = write_fixture(directory)
+            expected_feed = hashlib.sha256(feed.read_bytes()).hexdigest()
+            expected_direct = hashlib.sha256(direct.read_bytes()).hexdigest()
+            streams = []
+            for suffix in ("one", "two"):
+                output = directory / f"candidates-{suffix}.ndjson.gz"
+                cone.build_feeder_cone(
+                    feed, direct, DAY, directory / f"report-{suffix}.json",
+                    expected_feed_sha256=expected_feed,
+                    expected_direct_sha256=expected_direct,
+                    candidate_output_path=output,
+                )
+                streams.append(output.read_bytes())
+            self.assertEqual(streams[0], streams[1])
+            lines = [json.loads(line) for line in gzip.decompress(streams[0]).splitlines()]
+            self.assertEqual(lines[0], {
+                "direct_result_sha256": expected_direct,
+                "kind": "manifest",
+                "service_day": DAY.isoformat(),
+                "source_sha256": expected_feed,
+                "status": "necessary_only",
+            })
+            self.assertEqual([row["first_leg_trip_id"] for row in lines[1:-1]],
+                             ["lower", "lower", "upper"])
+            self.assertTrue(all(row["kind"] == "candidate" for row in lines[1:-1]))
+            self.assertEqual(lines[-1], {"candidate_count": 3, "kind": "summary"})
+
+    def test_candidate_count_cap_fails_without_partial_or_replaced_outputs(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = pathlib.Path(tmp)
+            feed, direct = write_fixture(directory)
+            report = directory / "report.json"
+            output = directory / "candidates.ndjson.gz"
+            report.write_bytes(b"old report")
+            output.write_bytes(b"old candidates")
+            with mock.patch.object(cone, "MAX_CANDIDATE_OUTPUT_COUNT", 2):
+                with self.assertRaisesRegex(cone.FeederConeError, "candidate output count"):
+                    cone.build_feeder_cone(
+                        feed, direct, DAY, report, candidate_output_path=output)
+            self.assertEqual(report.read_bytes(), b"old report")
+            self.assertEqual(output.read_bytes(), b"old candidates")
+            self.assertEqual(list(directory.glob(".*.tmp")), [])
+
+    def test_direct_json_byte_cap_is_checked_before_parse(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = pathlib.Path(tmp)
+            feed, direct = write_fixture(directory)
+            direct.write_bytes(b" " * (cone.MAX_DIRECT_RESULT_BYTES + 1))
+            with mock.patch.object(cone.json, "loads", side_effect=AssertionError("parsed")):
+                with self.assertRaisesRegex(cone.FeederConeError, "4 MiB"):
+                    cone.build_feeder_cone(feed, direct, DAY, directory / "report.json")
+
+    def test_feed_is_parsed_from_hashed_private_snapshot(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = pathlib.Path(tmp)
+            feed, direct = write_fixture(directory)
+            expected_feed = hashlib.sha256(feed.read_bytes()).hexdigest()
+            original_zipfile = zipfile.ZipFile
+            opened = False
+
+            def rewrite_then_open(snapshot, *args, **kwargs):
+                nonlocal opened
+                if not opened:
+                    opened = True
+                    feed.write_bytes(b"rewritten after digest")
+                return original_zipfile(snapshot, *args, **kwargs)
+
+            with mock.patch.object(cone.zipfile, "ZipFile", side_effect=rewrite_then_open):
+                payload = cone.build_feeder_cone(
+                    feed, direct, DAY, directory / "report.json",
+                    expected_feed_sha256=expected_feed,
+                )
+            self.assertTrue(opened)
+            self.assertEqual(payload["source_sha256"], expected_feed)
+            self.assertEqual(payload["candidate_count"], 3)
+
+    def test_manifest_failure_cleans_new_candidate_temp_file(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = pathlib.Path(tmp)
+            feed, direct = write_fixture(directory)
+            output = directory / 'candidates.ndjson.gz'
+            with mock.patch.object(cone._CandidateStream, '_write', side_effect=OSError('manifest write')):
+                with self.assertRaisesRegex(OSError, 'manifest write'):
+                    cone.build_feeder_cone(feed, direct, DAY, directory / 'report.json', candidate_output_path=output)
+            self.assertFalse(output.exists())
+            self.assertEqual(list(directory.glob('.*.tmp')), [])
+
+    def test_candidate_publish_failure_preserves_existing_report_and_stream(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = pathlib.Path(tmp)
+            feed, direct = write_fixture(directory)
+            report = directory / 'report.json'
+            output = directory / 'candidates.ndjson.gz'
+            report.write_bytes(b'OLD REPORT')
+            output.write_bytes(b'OLD STREAM')
+            with mock.patch.object(cone._CandidateStream, 'publish', side_effect=OSError('publish failed')):
+                with self.assertRaisesRegex(OSError, 'publish failed'):
+                    cone.build_feeder_cone(feed, direct, DAY, report, candidate_output_path=output)
+            self.assertEqual(report.read_bytes(), b'OLD REPORT')
+            self.assertEqual(output.read_bytes(), b'OLD STREAM')
+            self.assertEqual(list(directory.glob('.*.tmp')), [])
+
+    def test_report_publish_failure_restores_previous_candidate_stream(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = pathlib.Path(tmp)
+            feed, direct = write_fixture(directory)
+            report = directory / 'report.json'
+            output = directory / 'candidates.ndjson.gz'
+            report.write_bytes(b'OLD REPORT')
+            output.write_bytes(b'OLD STREAM')
+            real_replace = os.replace
+            def fail_report_only(source, target):
+                if pathlib.Path(target) == report:
+                    raise OSError('report publish failed')
+                return real_replace(source, target)
+            with mock.patch.object(cone.os, 'replace', side_effect=fail_report_only):
+                with self.assertRaisesRegex(OSError, 'report publish failed'):
+                    cone.build_feeder_cone(feed, direct, DAY, report, candidate_output_path=output)
+            self.assertEqual(report.read_bytes(), b'OLD REPORT')
+            self.assertEqual(output.read_bytes(), b'OLD STREAM')
+            self.assertEqual(list(directory.glob('.*.tmp')), [])
+
+    def test_interrupt_after_candidate_rename_restores_previous_outputs(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = pathlib.Path(tmp)
+            feed, direct = write_fixture(directory)
+            report = directory / 'report.json'
+            output = directory / 'candidates.ndjson.gz'
+            report.write_bytes(b'OLD REPORT')
+            output.write_bytes(b'OLD STREAM')
+            real_publish = cone._CandidateStream.publish
+            def publish_then_interrupt(stream):
+                real_publish(stream)
+                raise KeyboardInterrupt()
+            with mock.patch.object(cone._CandidateStream, 'publish', publish_then_interrupt):
+                with self.assertRaises(KeyboardInterrupt):
+                    cone.build_feeder_cone(feed, direct, DAY, report, candidate_output_path=output)
+            self.assertEqual(report.read_bytes(), b'OLD REPORT')
+            self.assertEqual(output.read_bytes(), b'OLD STREAM')
+            self.assertEqual(list(directory.glob('.*.tmp')), [])
+
+    def test_failed_rollback_retains_recovery_copy_for_manual_repair(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = pathlib.Path(tmp)
+            feed, direct = write_fixture(directory)
+            report = directory / 'report.json'
+            output = directory / 'candidates.ndjson.gz'
+            report.write_bytes(b'OLD REPORT')
+            output.write_bytes(b'OLD STREAM')
+            real_replace = os.replace
+            output_replacements = 0
+            def fail_publication_and_rollback(source, target):
+                nonlocal output_replacements
+                if pathlib.Path(target) == report:
+                    raise OSError('report publish failed')
+                if pathlib.Path(target) == output:
+                    output_replacements += 1
+                    if output_replacements == 2:
+                        raise OSError('rollback failed')
+                return real_replace(source, target)
+            with mock.patch.object(cone.os, 'replace', side_effect=fail_publication_and_rollback):
+                with self.assertRaisesRegex(cone.FeederConeError, 'backup retained'):
+                    cone.build_feeder_cone(feed, direct, DAY, report, candidate_output_path=output)
+            self.assertEqual(report.read_bytes(), b'OLD REPORT')
+            backups = list(directory.glob(f'.{output.name}.*.tmp'))
+            self.assertEqual(len(backups), 1)
+            self.assertEqual(backups[0].read_bytes(), b'OLD STREAM')
+
+    def test_owner_approved_day_is_not_described_as_unapproved(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = pathlib.Path(tmp)
+            feed, direct = write_fixture(directory)
+            report = cone.build_feeder_cone(feed, direct, DAY, directory / 'report.json')
+            self.assertTrue(any('owner approved' in value.lower() for value in report['limitations']))
+            self.assertFalse(any('not an approved reference day' in value.lower() for value in report['limitations']))
+
+    def test_candidate_stream_is_removed_on_mid_enumeration_error(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = pathlib.Path(tmp)
+            feed, direct = write_fixture(directory)
+            report = directory / "report.json"
+            output = directory / "candidates.ndjson.gz"
+            with mock.patch.object(cone._CandidateStream, "write_candidate", side_effect=RuntimeError("mid-loop")):
+                with self.assertRaisesRegex(RuntimeError, "mid-loop"):
+                    cone.build_feeder_cone(feed, direct, DAY, report, candidate_output_path=output)
+            self.assertFalse(output.exists())
+            self.assertFalse(report.exists())
+            self.assertEqual(list(directory.glob(".*.tmp")), [])
+
+    def test_candidate_stream_is_removed_on_mid_enumeration_interrupt(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = pathlib.Path(tmp)
+            feed, direct = write_fixture(directory)
+            report = directory / "report.json"
+            output = directory / "candidates.ndjson.gz"
+            report.write_bytes(b"OLD REPORT")
+            output.write_bytes(b"OLD STREAM")
+            for interruption in (KeyboardInterrupt(), SystemExit(7)):
+                with self.subTest(interruption=type(interruption).__name__):
+                    with mock.patch.object(
+                            cone._CandidateStream, "write_candidate",
+                            side_effect=interruption):
+                        with self.assertRaises(type(interruption)):
+                            cone.build_feeder_cone(
+                                feed, direct, DAY, report,
+                                candidate_output_path=output)
+                    self.assertEqual(report.read_bytes(), b"OLD REPORT")
+                    self.assertEqual(output.read_bytes(), b"OLD STREAM")
+                    self.assertEqual(list(directory.glob(".*.tmp")), [])
+
+    def test_abort_unlinks_candidate_temp_when_raw_close_fails(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = pathlib.Path(tmp)
+            stream = cone._CandidateStream(
+                directory / "candidates.ndjson.gz", {"kind": "manifest"})
+            temporary_path = stream.temporary_path
+            with mock.patch.object(
+                    stream.raw, "close", side_effect=OSError("close failed")):
+                with self.assertRaisesRegex(OSError, "close failed"):
+                    stream.abort()
+            self.assertFalse(temporary_path.exists())
+            stream.raw.close()
+
+    def test_interrupt_after_report_rename_restores_previous_outputs(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = pathlib.Path(tmp)
+            feed, direct = write_fixture(directory)
+            report = directory / "report.json"
+            output = directory / "candidates.ndjson.gz"
+            report.write_bytes(b"OLD REPORT")
+            output.write_bytes(b"OLD STREAM")
+            real_replace = os.replace
+            report_replacements = 0
+
+            def replace_report_then_interrupt(source, target):
+                nonlocal report_replacements
+                real_replace(source, target)
+                if pathlib.Path(target) == report:
+                    report_replacements += 1
+                    if report_replacements == 1:
+                        raise KeyboardInterrupt()
+
+            with mock.patch.object(
+                    cone.os, "replace", side_effect=replace_report_then_interrupt):
+                with self.assertRaises(KeyboardInterrupt):
+                    cone.build_feeder_cone(
+                        feed, direct, DAY, report, candidate_output_path=output)
+            self.assertEqual(report.read_bytes(), b"OLD REPORT")
+            self.assertEqual(output.read_bytes(), b"OLD STREAM")
+            self.assertEqual(list(directory.glob(".*.tmp")), [])
+
+    def test_output_aliases_are_rejected_without_modifying_any_file(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = pathlib.Path(tmp)
+            for alias_name in ("feed", "direct", "report"):
+                feed, direct = write_fixture(directory)
+                report = directory / "report.json"
+                report.write_bytes(b"old report")
+                alias = {"feed": feed, "direct": direct, "report": report}[alias_name]
+                before = {path: path.read_bytes() for path in (feed, direct, report)}
+                with self.assertRaisesRegex(cone.FeederConeError, "alias"):
+                    cone.build_feeder_cone(
+                        feed, direct, DAY, report, candidate_output_path=alias)
+                self.assertEqual({path: path.read_bytes() for path in before}, before)
 
 if __name__ == "__main__":
     unittest.main()
