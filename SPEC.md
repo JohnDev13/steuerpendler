@@ -1,11 +1,11 @@
-# Steuerpendler — Build Spec v1.2
+# Steuerpendler — Build Spec v1.3
 
-Active scope clarification: 17 Oct 2026 (§19). Workplace destinations are narrowed; all 2,110 residential/tax Gemeinden and all 26 cantons remain in scope. Source v1.1 is preserved at `docs/source/SPEC-v1.1-2026-10-17.md`.
+Active scope clarification: 17 Oct 2026 (§19). Workplace destinations are narrowed; all 2,110 residential/tax Gemeinden and all 26 cantons remain in scope. The v1.2 source is preserved byte-for-byte at `docs/source/SPEC-v1.2-2026-10-22.md`; §20 adds a narrow owner-directed Aarau preview. Earlier v1.1 is at `docs/source/SPEC-v1.1-2026-10-17.md`.
 
-Amended: 17 Oct 2026 (UTC) · Owner: John · Tax year: 2026
+Amended: 22 Oct 2026 (UTC) · Owner: John · Tax year: 2026
 Supplied v1 stated status: 17 Oct 2026 (source metadata, not verified chronology).
 
-**Reconstruction status:** The original implementation/commit is unrecovered. Reconstruction from real upstream is now authorized; this is not recovery of the lost implementation. The original `docs/prototype.html` is unavailable. This amendment certifies no implementation, official reference, licence clearance, owner approval or launch. Source lineage and F01–F15 mapping: `docs/spec-amendments-v1.1.md`.
+**Reconstruction status:** The original implementation/commit is unrecovered; this repository contains a new reconstruction, not the lost implementation. The original `docs/prototype.html` remains unavailable. Historical v1 statements were not implementation, official-reference, licence or launch certifications; the current narrow preview in §20 is separate. Source lineage and F01–F15 mapping: `docs/spec-amendments-v1.1.md`.
 
 ## 0. How to use this file (agents read first)
 
@@ -142,6 +142,10 @@ The self-home/workplace option alone has transit seconds 0 by definition, but st
 ### 6.5a Canonical first-boarding Route artifact (owner amendment, 2026-10-21)
 
 `docs/travel/canonical-route-v1-20261021.md` and `docs/travel/canonical-route-v1.schema.json` define one versioned authoritative stop-event→workplace route-time dataset, `data/travel/canonical-routes-v1-20261027.ndjson.gz`. For every eligible first-boarding event and each of the 19 workplace destinations, record exactly one proof status; include an evidenced dated itinerary for `fastest_proven` or `best_found_unproven`, reserving the claim **fastest** for the former. Keep exact elapsed seconds and derived ceiling minutes; retain legs and directed transfer evidence. Derive any public workplace/Gemeinde views from this file only. A positive best-found but non-optimality-proven result may be labelled indicative; an unresolved case cannot become a negative exclusion. This contract is a **new internal data schema** and does not silently turn the existing v1 `site/data/travel` files into v2. The owner's interim external residential access assumption is zero *unmeasured* seconds, not the measured OSM walk promised by §6.4 for a validated v2 release; keep the UI walking control separate and visibly identify its provisional mode. Publishing actual source-backed indicative results must not await another owner walk/date/SBB sign-off, but no missing or fabricated route rows may be released.
+
+### 6.5b Aarau observed-direct preview (temporary, owner amendment 2026-10-22)
+
+Before the **complete** §6.5a file exists, a separately labelled Aarau-only positive preview may be derived from the hash-pinned partial direct-route diagnostic (`routeSha256:5f9c6c8648f87ff88cf0c1dc4f158d471a6e55f57ed28cd53e649940d1d4b89e`), not described as a complete canonical file or global optimum. Its derived `site/data/travel/aarau-direct-observed-20261027.json` has SHA-256 `311420191be00d7f8b6d96f81f1e8295f801a26e34deb6d49ad5ec2e7f78b988` and uses the frozen 2026 Gemeinde polygons, a 100 m boundary quarantine and the owner-approved 2026-10-27 service day. The 59 observed stop-locality rows within 30 minutes include 36 within **exactly ≤1,200 seconds**; these are positive direct-trip observations at stops in polygons, **not proven residential access**. Unlisted Gemeinden remain unknown, not excluded. The release builder inventories the copy, while `availability.travel` and independent SBB/ESTV approvals remain false. The browser must verify release bytes and source/map/Gemeinde hashes, display unmeasured zero external access, label tax estimates as non-advisory, preserve the VS quarantine, and leave the other 18 workplace travel views pending. This limited exception does not alter the eventual single-source-of-truth Route v1 file, v2/OSM/full coverage, T9, or production gates. See §20 and `docs/spec-amendments-v1.3.md` for supersession and drift.
 
 ### 6.6 Map: `site/data/map/switzerland-2026.json` (task T2)
 
@@ -544,3 +548,7 @@ This section supersedes only the earlier workplace-selection/destination-count a
 - The narrower destination list is a versioned release input. Preserve all tax files and map IDs. Tests must assert 19 workplaces, 2,110 residences, non-capital/cross-canton selection and separate time/walk controls.
 - A report of newly granted GitHub permissions is not proof of a refreshed credential or successful source CI. Recheck the effective credential and actual workflow upload/run; never mark a pending/failing accuracy stage passed. Non-commercial preview publication remains authorized under §18, not production launch.
 - All numerical, direct official, travel, content and owner launch gates remain in force. Until they pass, the preview continues to withhold unverified tax recommendations. Scope/navigation acceptance is not a working all-origin timetable/tax acceptance claim.
+
+## 20. Narrow owner-approved non-production preview — 22 Oct 2026
+
+The owner directed publication of **indicative** tax-first Aarau results rather than withholding them pending another walk/date/SBB sign-off. For this preview **only**, the §18–19 blanket withholding of all unverified tax estimates is superseded for the positive stop-localities evidenced under §6.5b, except quarantined/known-failed cantons (currently VS). Annual tax, selected-workplace difference and transit minutes can appear with a conspicuous non-advisory warning; the lowest amount is lowest **among observed positives**, not a proven cheapest reachable residence. Other 18 workplaces retain the pending state. At Aarau, missing/longer routes and unlisted Gemeinden remain unknown; no residential, transfer-complete, fastest or negative-reachability claim follows. The walking control remains separate: external residence→entrance access is assumed zero *unmeasured*, and there is no entrance→platform walk. No independent ESTV/SBB approval flag or T9/full-travel release gate changes. Public release remains the existing non-commercial GitHub Pages **test preview**, never the Cloudflare production launch; versioned source/bytes, attribution and site verification must accompany it.

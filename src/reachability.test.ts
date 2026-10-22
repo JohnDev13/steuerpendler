@@ -10,3 +10,9 @@ it('reports an actual zero only after travel becomes available', () => {
   expect(strings.reachabilityOverview(true, 0, 'Aarau', 20, 15, 2110))
     .toBe(strings.reachable(0));
 });
+
+it('does not turn zero observed preview rows into a negative reachability claim', () => {
+  expect(strings.previewOverview(0, 20)).toContain('keine vollständige Erreichbarkeitsmenge');
+  expect(strings.previewOverview(0, 20)).not.toContain('Keine Gemeinde in Reichweite');
+  expect(strings.previewUnknown).toContain('unbekannt');
+});
