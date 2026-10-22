@@ -72,44 +72,27 @@ total = bund + kanton + gemeinde + kirche + personal</code></pre>
     <p>Nicht berücksichtigt werden insbesondere Miete, Krankenkassenprämien, Vermögenssteuer,
       individuelle Abzüge und zwei Erwerbseinkommen. Die persönliche Veranlagung kann erheblich abweichen.
       Schätzung, keine Steuerberatung; die Tabellen sind keine verbindliche ESTV-Veranlagung.</p>
-    <h2 id="reisen">Pendelzeiten: geplante Pipeline, Verfügbarkeit ausstehend</h2>
-    <p>Vorgesehen sind Schweizer GTFS-Fahrplandaten und OpenStreetMap-Fusswege mit r5py/R5.
-      Erst die Prüfung der exakten Routing-Semantik und echte, eingefrorene Eingangsdaten erlauben
-      eine landesweite Berechnung. Ein synthetischer Testfall oder eine Bedienoberfläche belegt
-      weder reale Erreichbarkeit noch SBB-validierte Zeiten.</p>
-    <h3>Eine Haupthaltestelle je Gemeinde</h3>
-    <p>Aktive Haltestellen innerhalb einer Gemeinde werden nach Abfahrten 06:00–09:00 am Referenztag
-      geordnet, zusammengefasst nach übergeordneter Station (<code>parent station</code>).
-      Gleichstände entscheidet die lexikografische Stations-ID. Ohne geeignete Abfahrten innerhalb
-      der Gemeinde wird die nächste aktive Station höchstens 2'000 Meter vom Bevölkerungsschwerpunkt
-      entfernt gesucht; sonst bleibt der Zugang ohne nutzbare Haupthaltestelle.</p>
-    <p>Der Bevölkerungsschwerpunkt soll aus BFS STATPOP-Hektardaten stammen; ein ersatzweise verwendeter
-      repräsentativer Polygonpunkt muss ausdrücklich dokumentiert werden. Fusswege zur Station werden
-      über das OSM-Fusswegnetz mit 1,2 m/s berechnet, auf volle Minuten aufgerundet und bei 60 Minuten
-      begrenzt. Gibt es keinen zulässigen Fussweg, wird die nächste geeignete Station versucht;
-      ohne nutzbare Station gibt es keine Pendel-Empfehlung. Dokumentierte manuelle Korrekturen sind möglich.</p>
-    <h3>Was die Reisezeit zählt</h3>
-    <p>Gesucht ist das exakte Minimum der verstrichenen Zeit vom ersten Einsteigen an einem zulässigen
-      Bahnsteig der nominierten Herkunftsstation bis zur Ankunft an einem zulässigen Bahnsteig der
-      nominierten Zielstation. Erste Abfahrten müssen im inklusiven Fenster 06:30–08:30
-      (Europe/Zurich) an einem eingefrorenen, vom GTFS abgedeckten Dienstag liegen.
-      Kalender- und gegebenenfalls Ausnahmefreigabe sind noch zu belegen.</p>
-    <p>Die Wartezeit vor dem ersten Einsteigen ist ausgeschlossen; Umsteige-Wartezeiten und
-      Umsteige-Fusswege sind enthalten. Externe Zugangs- und Abgangswege sind nicht Teil der Stationszeit.
-      Nach dem exakten Minimum in Sekunden wird auf volle Minuten aufgerundet; ausgeliefert werden
-      nur Stationszeiten bis 60 Minuten. Dieselbe übergeordnete Station und die eigene Gemeinde haben
-      per Definition einen Reiseanteil von 0; das hebt die Fussweggrenzen nicht auf.</p>
-    <p>Geplant sind fahrplanmässige Bahn-, Tram-, Bus-, Schiff- und Seilbahnfahrten, keine reinen
-      Fussreisen, kein Auto-/Velorouting und keine Tür-zu-Tür-Zeit. Alternative Stationen werden nicht
-      beliebig ausprobiert. Ein häufiges langsames Angebot kann anders abschneiden als eine seltene
-      schnelle Verbindung: Die Kennzahl ist ausdrücklich kein Perzentil, Durchschnitt oder Wartezeitversprechen.</p>
-    <h3>Filter nach Zeit und Fussweg</h3>
-    <p>Eine Gemeinde ist nur erreichbar, wenn ein nutzbarer Stationszugang und eine Reisezeile vorhanden
-      sind und der Fussweg die eingestellte Fussweggrenze nicht überschreitet. Ohne Fussweg-Schalter
-      muss die Stationszeit innerhalb der maximalen Reisezeit liegen; mit Schalter wird zusätzlich
-      der Fussweg der Wohngemeinde addiert. Der Weg von der Zielstation zum Arbeitsplatz ist nicht enthalten.
-      Diese Regeln gelten auch für den Arbeitsort selbst. Fehlende oder beschädigte Datendateien
-      sind ein Ladefehler, kein Beweis für fehlende Verbindungen.</p>
+    <h2 id="reisen">Pendelzeiten: begrenzte Aarau-Direktvorschau</h2>
+    <p>Für den Arbeitsort Aarau zeigt der Testbetrieb beobachtete <strong>direkte</strong> Fahrten
+      am 27. Oktober 2026. Der Einstieg lag an einer Haltestelle innerhalb des 2026-Gemeindepolygons;
+      Haltestellen nahe einer unsicheren Grenze (100&nbsp;m) sind ausgeschlossen. Ein Halt im Polygon
+      beweist nicht, dass jede Wohnung der Gemeinde diesen Halt erreicht. Alle nicht angezeigten
+      Gemeinden bleiben <strong>ungeprüft</strong>, nicht «unerreichbar». Von 59 beobachteten
+      Haltestellen-Gemeinden bis 30 Minuten liegen 36 bis einschliesslich 20 Minuten.</p>
+    <h3>Zeitraum, Fussweg und fehlende Routen</h3>
+    <p>Erste Einstiege liegen im Fenster 06:30–08:30 Uhr (Europe/Zurich), beide Grenzen inklusive.
+      Die Fahrzeit läuft vom ersten Einsteigen bis zur Ankunft; ein direkter Fahrtabschnitt enthält
+      keine Umstiege. Der Zeitfilter verwendet exakte Sekunden einschliesslich der Grenze, die
+      Anzeige rundet danach auf volle Minuten auf. Die Vorschau deckt höchstens 30 Minuten ab,
+      nicht alle Reiseoptionen oder den nachweislich schnellsten Weg. Umsteigeverbindungen und
+      Alternativhaltestellen können weitere oder schnellere positive Fälle ergeben.</p>
+    <p>Der externe Weg von der Wohnung zum Haltestelleneingang ist vorläufig mit null Sekunden
+      <strong>angenommen, nicht gemessen</strong>. Der Fusswegregler bleibt separat, misst aber
+      in dieser Vorschau keine Adresse oder Zugangsstrecke; es gibt keinen zusätzlichen
+      Eingang-zu-Bahnsteig-Zuschlag. Damit ist die Liste keine wohnungsbezogene
+      Erreichbarkeits- oder Fahrplanempfehlung. Für die übrigen 18 Arbeitsorte stehen noch keine
+      angezeigten Fahrtergebnisse zur Verfügung. Die vollständige transferbewusste GTFS-/OSM-Pipeline
+      und unabhängige SBB-Prüfung sind weiterhin ausstehend.</p>
     <h2 id="grenzen">Daten in Prüfung und Grenzen</h2>
     <p>Die offiziellen Vergleiche sind ausstehend: alle 29 ESTV-Fälle zur direkt ausgelieferten
       Steuerberechnung und alle 30 SBB-Verbindungen mit denselben Stationen, Datum, Zeitfenster und
@@ -121,13 +104,14 @@ total = bund + kanton + gemeinde + kirche + personal</code></pre>
       Fehler. Auch die oberste Tarifstufe von Fribourg muss gesondert geprüft werden.
       Fehlgeschlagene Kantone müssen vollständig von Steuertotal, Aufschlüsselung, Rang, günstigster
       Gemeinde, Farbgruppe und Differenzen ausgeschlossen bleiben, nicht nur grau eingefärbt werden.</p>
-    <p>Für noch ungeprüfte Kantone und einen allfälligen Start mit eingeschränkter Abdeckung fehlt
-      die ausdrückliche Betreiberentscheidung; sichere Vorgabe ist Zurückhalten statt Empfehlung.
-      Die flächendeckende Umsetzung dieser Vorgabe ist vor Veröffentlichung nachzuweisen.
-      Geografische Auswahl bedeutet nicht geprüfte Steuerdaten. «Nicht erreichbar», «keine Daten»,
+    <p>Der Betreiber lässt für die <strong>begrenzte Aarau-Vorschau</strong> indikative
+      Steuerbeträge, Differenzen und eine Sortierung unter positiven Direktbeobachtungen zu.
+      Sie sind keine amtlich abgeglichenen Steuerergebnisse oder geprüften Empfehlungen;
+      VS und bekannte Fehler bleiben gesperrt. Andere Arbeitsorte haben keine freigegebene
+      Reiseliste. Geografische Auswahl bedeutet nicht geprüfte Steuerdaten. «Ungeprüft»,
       «Daten in Prüfung» und technische Ladefehler sind unterschiedliche Zustände.</p>
-    <p>Eine Station je Gemeinde vereinfacht grosse Städte stark. Ein Dienstag und das schnellste
-      Angebot im Morgenfenster sagen nichts über tägliche Zuverlässigkeit, Verspätungen, reale
+    <p>Ein Tag und ein beobachtetes direktes Angebot im Morgenfenster sagen nichts über
+      tägliche Zuverlässigkeit, Verspätungen, reale
       Wartezeiten, Barrierefreiheit, Schulwege oder die Rückfahrt aus.</p>
     <h2 id="quellen">Quellen, Lizenzen und Rechte – Freigabe ausstehend</h2>
     <dl>
@@ -139,8 +123,12 @@ total = bund + kanton + gemeinde + kirche + personal</code></pre>
         dokumentierten Patches ist im Release-Nachweis zu belegen; MIT allein klärt nicht alle Quelldatenbedingungen.</dd>
       <dt>Fahrplan</dt>
       <dd><a href="https://opentransportdata.swiss/">opentransportdata.swiss</a> /
-        <a href="https://opendata.swiss/">opendata.swiss</a>, vorgesehene GTFS-Quelle.
-        Quellenangabe und die tatsächlich geltenden Nutzungsbedingungen sind mit dem eingefrorenen Feed zu erhalten.
+        <a href="https://opendata.swiss/">opendata.swiss</a>, Quelle der eingefrorenen GTFS-Fahrplandaten
+        für den 27. Oktober 2026; bearbeitet und ausgewertet vom Projekt Steuerpendler (JohnDev13).
+        Die <a href="https://opentransportdata.swiss/en/terms-of-use/">Nutzungsbedingungen</a>
+        verlangen Quellenangabe und regelmässige Aktualisierung der Rohdaten. Die Vorschau ist
+        ausdrücklich ein datierter historischer Ausschnitt, kein aktueller Fahrplan; die Anwendbarkeit
+        der Aktualisierungspflicht auf diesen eingefrorenen Ausschnitt ist nicht rechtlich geklärt.
         <a href="https://www.sbb.ch/">SBB-Fahrplan</a> als unabhängige Vergleichsquelle, noch ohne abgeschlossene Prüfreihe.</dd>
       <dt>Fusswege</dt>
       <dd>© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap-Mitwirkende</a>,
@@ -153,9 +141,10 @@ total = bund + kanton + gemeinde + kirche + personal</code></pre>
         <a href="https://github.com/interactivethings/swiss-maps">Originalprojekt und Hinweise</a>.
         Die erhaltene Paket-README unterscheidet den BSD-3-Clause-Code von den Geodaten und sagt:
         <q lang="en">The geodata is published under a non-commercial license and needs to be attributed with the source "Bundesamt für Statistik (BFS), GEOSTAT".</q>
-        Dies ist keine Freigabe der Geodatenrechte. Die exakten Rechte der 2026-Daten, Weitergabe und
-        zulässige Nutzung müssen vor Veröffentlichung geklärt werden. Ein allgemeiner swisstopo-Verweis
-        oder die Code-Lizenz ersetzt weder BFS/GEOSTAT noch diese Klärung.</dd>
+        Die nicht-kommerzielle Testverwendung und widersprüchliche Quellbedingungen sind in
+        <code>docs/map/publication-assessment.md</code> dokumentiert; kommerzielle/produktive Rechte
+        bleiben offen. Ein allgemeiner swisstopo-Verweis oder die Code-Lizenz ersetzt weder
+        BFS/GEOSTAT noch die gesonderte Prüfung.</dd>
       <dt>Bevölkerung</dt>
       <dd><a href="https://www.bfs.admin.ch/">Bundesamt für Statistik (BFS)</a>, STATPOP;
         konkret zu beziehender Hektardatensatz mit Jahr und Nutzungsbedingungen noch zu dokumentieren,
@@ -199,31 +188,30 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</pre>
       sind die jeweils geltenden Bedingungen und Hinweise versionsgenau zu sichern; die Rechte- und Inhaltsfreigabe
       durch die verantwortliche Person und gegebenenfalls fachkundige Prüfung bleiben ausstehend.</p>
     <h2 id="stand">Versionen, Herkunft und Dokumentationsdrift</h2>
-    <p>Inhaltsabgleich am <time datetime="2026-10-16">16. Oktober 2026 (UTC)</time> mit
-      <code>SPEC.md</code>, Build Spec v1.1 (Änderung vom selben Tag), §§7–8, T7, §16 und
-      <code>docs/spec-amendments-v1.1.md</code>. Die gelieferte v1 nennt den 17. Oktober 2026;
-      das ist eine übernommene Datumsangabe der Quelle, nicht das tatsächliche Datum dieses Inhaltsabgleichs oder eine Freigabe.
-      Der ursprüngliche Implementierungsstand und Prototyp sind nicht wiederhergestellt.</p>
-    <p>Steuer- und Gemeinde-/Karten-Zieljahr ist 2026. Das Fahrplanjahr folgt den Metadaten des tatsächlich
-      eingefrorenen GTFS-Feeds samt Abdeckung, Referenzdatum, Zeitfenster und Build-/Release-Nachweis;
-      es muss nicht 2026 sein. Das Beispiel 2027 / 2027-01-12 in §6.3 ist keine bestätigte Fahrplanauswahl.
-      Ein realer Feed und Referenztag sind in diesem Stand nicht freigegeben.</p>
-    <p>Der lokale Kartenbericht <code>docs/map/README.md</code> dokumentiert das Paket swiss-maps@4.7.0
-      und 2026-Eingaben. Er beschreibt aktuell LV95-Koordinaten und die zusätzlichen Gebiete
-      2391, 5391, 5394 in der Gemeinde-Geometrie mit Metadatenmarkierung. Die v1.1 fordert dagegen
-      WGS84 und ein separates <code>noData</code>-Objekt. Dieser dokumentierte Unterschied muss
-      in der Integration bzw. mit einer genehmigten Spezifikationsänderung geklärt werden;
-      vorhandene Kartendateien bedeuten keine vollständige T2-Abnahme.</p>
+    <p>Aktualisiert am <time datetime="2026-10-22">22. Oktober 2026 (UTC)</time> nach
+      <code>SPEC.md</code> v1.3 (§§6.5b, 8, 18–20) und
+      <code>docs/spec-amendments-v1.3.md</code>. Der eingefrorene v1.2-Wortlaut steht unter
+      <code>docs/source/SPEC-v1.2-2026-10-22.md</code>; v1.1 und die ursprünglich gelieferte v1
+      bleiben getrennt nachvollziehbar. Der ursprüngliche Implementierungsstand und Prototyp
+      sind nicht wiederhergestellt.</p>
+    <p>Steuer-, Gemeinde- und Kartenstand ist 2026. Der Vorschau-Fahrplantag
+      <time datetime="2026-10-27">27. Oktober 2026</time> wurde vom Betreiber gewählt; dies ist
+      weder ein vollständiger Ferienkalender-Abgleich noch unabhängige SBB- oder Steuerfreigabe.
+      Die abgeleiteten Aarau-Vorschaudaten sind an SHA-256
+      <code>311420191be00d7f8b6d96f81f1e8295f801a26e34deb6d49ad5ec2e7f78b988</code>
+      und die Karten-/Gemeindequellen im Release-Manifest gebunden. Jede Datenänderung erfordert
+      Abgleich von Seite, SPEC, Quellnachweis und Build.</p>
+    <p>Der Kartenbericht <code>docs/map/README.md</code> beschreibt die gemeinsame LV95-Topologie
+      mit den drei nicht für Steuern verwendeten IDs 2391, 5391, 5394; diese Vertragsänderung
+      ist bereits in §6.6 dokumentiert. Die Kartenvorschau ist nicht die vollständige T2-Abnahme.</p>
     <p>Die Spezifikationshistorie nennt für das Engine-Upstream eine HEAD-Beobachtung vom 16. Oktober 2026:
       <code>43064402b1e52dbbc34dded6a305d7d536737c73</code>. Das ist keine Bestätigung eines
       eingebundenen, gepatchten oder offiziell geprüften Engine-/Daten-Releases. Eingaben, Toolversionen,
       Änderungen und Hashes müssen im kohärenten Release-Manifest nachgewiesen werden.</p>
-    <p>Dieser Inhaltsabgleich beruht auf lokalen Spezifikationen, Code und erhaltenen Paketnotizen;
-      externe Quellen wurden hier nicht erneut vollständig abgerufen oder rechtlich geprüft.
-      Vor Veröffentlichung und jeder Jahresaktualisierung sind aktuelle Primärdokumente und
-      Nutzungsbedingungen gegen die festgehaltenen Versionen zu lesen, Abrufdatum und Inhaltsnachweis
-      zu sichern und Abweichungen ausdrücklich zu bearbeiten. Alte Prüfungen dürfen nicht umdatiert
-      werden; Dokumentationsdrift erlaubt keine stillschweigende Änderung der Formel, Kennzahl oder Freigaben.</p>
+    <p>Die Fahrplan-Nutzungsbedingungen wurden am 22. Oktober 2026 erneut gelesen; das ersetzt
+      keine rechtliche Prüfung oder Klärung der Aktualisierungspflicht für eingefrorene historische
+      Ergebnisse. Alle anderen älteren Quellenprüfungen behalten ihre ursprünglichen Abrufdaten.
+      Dokumentationsdrift erlaubt keine stillschweigende Änderung der Formel, Kennzahl oder Freigaben.</p>
   </main>
   <footer>
     <p>Entwurf · Steuerjahr 2026 als Zielstand · Schätzung, keine Steuerberatung.
