@@ -9,6 +9,7 @@ import {
   type PreviewReleaseInventory,
 } from './preview';
 import type { Gemeinde } from './tax';
+import { TRANSFER_WITNESS_FILE, adaptObservedAarau, validateTransferWitness } from './transfer-preview';
 
 const hashes = AARAU_PREVIEW_SOURCE;
 const inventory: PreviewReleaseInventory = {
@@ -109,5 +110,35 @@ describe('Aarau indicative direct-positive preview', () => {
     const preview = validateAarauPreview(fixture(), inventory, gemeinden);
     expect(previewKnowledge(preview, 1)).toBe('witnessed-positive');
     expect(previewKnowledge(preview, 999)).toBe('unknown');
+  });
+});
+
+describe('Aarau live transfer witness', () => {
+  const witness = {
+    status: 'witnessed_transfer_not_proven_fastest', serviceDay: '2026-10-27',
+    originBfs: 4210, destinationBfs: 4001,
+    boardingStopId: 'ch:1:sloid:78699_gen:missingSLOID_pf:B',
+    firstBoardSeconds: 24420, arrivalSeconds: 25500, elapsedSeconds: 1080,
+    transferCount: 1, minimumTransferSeconds: 240, availableTransferSeconds: 300,
+    sourceWitnessSha256: '3dd58a1f9f89cbb8a86f654d09ca4c78cea9c8c5b4d385063593deb368a307c8',
+    boardStopIndexSha256: '53380d7c232074d6097148a7c29a08fe6e3f06213a2301b91a6fb281714f36bb',
+    gtfsSha256: hashes.gtfsSha256,
+  };
+  const release = { files: { [TRANSFER_WITNESS_FILE]: { sha256: '1310173f1ac78ff41b966c1cb5a2ce56ac8567d8b80ee139c4dd3e3e05f017ad', bytes: 582 } } };
+  const places = { ...gemeinden, '4210': ['Staufen', 'AG', 100, 100, 0, 0] as const };
+  it('adds the witnessed 18-minute change by default and leaves direct-only optional', () => {
+    const direct = validateAarauPreview(fixture(), inventory, places);
+    const transfer = validateTransferWitness(witness, release, places);
+    const combined = adaptObservedAarau(direct, transfer, false);
+    expect(combined.rows).toContainEqual([4210, 18]);
+    expect(combined.access[4210]).toEqual([witness.boardingStopId, witness.boardingStopId, 0]);
+    const onlyDirect = adaptObservedAarau(direct, transfer, true);
+    expect(onlyDirect.rows.find(([bfs]) => bfs === 4210)).toBeUndefined();
+  });
+  it('rejects invalid provenance and impossible time or transfer', () => {
+    for (const change of [
+      { sourceWitnessSha256: '0'.repeat(64) }, { elapsedSeconds: 1079 },
+      { availableTransferSeconds: 239 }, { originBfs: 1 },
+    ]) expect(() => validateTransferWitness({ ...witness, ...change }, release, places)).toThrow(/Fahrplandaten/);
   });
 });

@@ -12,7 +12,8 @@ import { formatCHF } from './format';
 import { createMap } from './map';
 import { renderList } from './list';
 import { renderDetail } from './detail';
-import { adaptAarauPreview, loadAarauPreview, type AarauPreview, type AdaptedAarauPreview } from './preview';
+import { loadAarauPreview, type AarauPreview, type AdaptedAarauPreview } from './preview';
+import { adaptObservedAarau, loadTransferWitness, type TransferWitness } from './transfer-preview';
 const app=document.querySelector<HTMLDivElement>('#app')!;
 app.innerHTML=`<header class="site-header"><a class="brand" href="${sitePath('')}">↗ ${s.appName}</a><button id="theme" type="button" aria-label="${s.theme}">◐</button></header>
 <section class="hero"><p class="eyebrow">${s.eyebrow}</p><h1>${s.appName}</h1><p class="hero-copy">${s.intro}</p><p class="release-status" data-testid="release-status">${s.preview}</p></section>
@@ -20,7 +21,7 @@ app.innerHTML=`<header class="site-header"><a class="brand" href="${sitePath('')
 <div class="field search-field"><label for="workplace">${s.workplace}</label><input id="workplace" value="Zürich" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="workplace-options" autocomplete="off"><div id="workplace-options" role="listbox" hidden></div><small>${s.workplaceHint}</small></div>
 <div class="field"><div class="label-row"><label for="max-time">${s.maxTime}</label><output id="time-value">25 ${s.minutes}</output></div><input id="max-time" type="range" min="5" max="30" step="1" value="25"></div>
 <div class="field"><div class="label-row"><label for="max-walk">${s.maxWalk}</label><output id="walk-value">10 ${s.minutes}</output></div><input id="max-walk" type="range" min="0" max="15" step="1" value="10"></div>
-<label class="toggle"><input id="count-walk" type="checkbox"><span>${s.countWalk}</span></label><hr>
+<label class="toggle"><input id="count-walk" type="checkbox"><span>${s.countWalk}</span></label><label class="toggle"><input id="direct-only" type="checkbox"><span>${s.directOnly}</span></label><hr>
 <div class="field"><label for="income">${s.income}</label><input id="income" type="number" inputmode="numeric" min="40000" max="500000" step="1000" value="120000"><input id="income-slider" type="range" aria-label="${s.incomeSlider}" min="40000" max="500000" step="1000" value="120000"><small id="clamp-note" hidden>${s.clamped}</small></div>
 <div class="field"><label for="civil">${s.civil}</label><select id="civil"><option value="s">${s.single}</option><option value="m">${s.married}</option></select></div>
 <div class="paired"><div class="field"><label for="kids">${s.children}</label><select id="kids"><option>0</option><option>1</option><option>2</option><option value="3">3+</option></select></div><div class="field"><label for="church">${s.church}</label><select id="church"><option value="none">${s.none}</option><option value="reformed">${s.reformed}</option><option value="catholic">${s.catholic}</option></select></div></div></aside>
@@ -33,7 +34,7 @@ const $=<T extends HTMLElement=HTMLElement>(id:string)=>document.getElementById(
 const state={...initialState},repository=new TaxRepository(fetch,sitePath('data'),DATA_RELEASE.release,DATA_RELEASE.files);
 let gemeinden:Record<string,Gemeinde>={},access:Access={},verifiedAccess:Access={},rows:TravelRows=[],results:RankedResult[]=[],breakdowns:Record<string,TaxBreakdown>={};
 let map:ReturnType<typeof createMap>|null=null,revision=0,travelReady=false;
-let preview:AarauPreview|null=null,previewData:AdaptedAarauPreview|null=null;
+let preview:AarauPreview|null=null,previewData:AdaptedAarauPreview|null=null,transferWitness:TransferWitness|null=null,directOnly=false;
 let workplaces:Record<string,Gemeinde>={};
 let reviewCantons:ReadonlySet<string>=QUARANTINED_CANTONS;
 const travelCache=new Map<number,Promise<TravelRows>>();
@@ -78,8 +79,8 @@ async function update(){
   rows=newRows;breakdowns={};const totals:Record<string,number>={};
   for(const [id,g] of Object.entries(gemeinden)){if(activeReview.has(g[1]))continue;const tax=calculateTax(profile,g,snapshot.income,snapshot.church);breakdowns[id]=tax;totals[id]=tax.total;}
   access=indicative?previewData!.access:verifiedAccess;results=filterAndRank(gemeinden,access,rows,snapshot,totals,activeReview);
-  $('summary').textContent=indicative?s.previewOverview(results.length,snapshot.maxTime):s.reachabilityOverview(available,results.length,workplaces[snapshot.workplace]?.[0]??s.workplace,snapshot.maxTime,snapshot.maxWalk,Object.keys(gemeinden).length);$('cheapest').textContent=results[0]?(indicative?s.cheapestPreview:s.cheapest)(results[0].name,formatCHF(results[0].total)):'';
-  $('result-notice').textContent=indicative?s.indicativeWarning:s.unverified;
+  $('summary').textContent=indicative?(directOnly?s.directPreviewOverview:s.previewOverview)(results.length,snapshot.maxTime):s.reachabilityOverview(available,results.length,workplaces[snapshot.workplace]?.[0]??s.workplace,snapshot.maxTime,snapshot.maxWalk,Object.keys(gemeinden).length);$('cheapest').textContent=results[0]?(indicative?s.cheapestPreview:s.cheapest)(results[0].name,formatCHF(results[0].total)):'';
+  $('result-notice').textContent=indicative?(directOnly?s.indicativeDirectWarning:s.indicativeWarning):s.unverified;
   $('data-status').classList.remove('error');$('data-status').textContent=!available?s.travelPending:!indicative&&access[snapshot.workplace]==null?s.noStop:'';
   $('empty-state').hidden=indicative||!travelReady||access[snapshot.workplace]==null||results.length>0;
   renderList($<HTMLTableSectionElement>('ranked-list'),results,state.selected,selectGemeinde);
@@ -92,6 +93,7 @@ installMunicipalitySearch($<HTMLInputElement>('workplace'),$('workplace-options'
 installMunicipalitySearch($<HTMLInputElement>('residence'),$('residence-options'),()=>gemeinden,()=>gemeinden[state.selected??state.workplace]?.[0]??'',selectGemeinde);
 for(const [id,key] of [['max-time','maxTime'],['max-walk','maxWalk']] as const)$<HTMLInputElement>(id).addEventListener('input',e=>{state[key]=Number((e.target as HTMLInputElement).value);void update();});
 $('count-walk').addEventListener('change',e=>{state.countWalk=(e.target as HTMLInputElement).checked;void update();});
+$<HTMLInputElement>('direct-only').addEventListener('change',e=>{directOnly=(e.target as HTMLInputElement).checked;if(preview&&transferWitness)previewData=adaptObservedAarau(preview,transferWitness,directOnly);void update();});
 function setIncome(raw:number){if(!Number.isFinite(raw)){showError(new Error(s.invalidIncome));return;}const income=Math.min(500000,Math.max(40000,raw));state.income=income;$<HTMLInputElement>('income').value=String(income);$<HTMLInputElement>('income-slider').value=String(income);$('clamp-note').hidden=income===raw;void update();}
 $('income').addEventListener('change',e=>setIncome(Number((e.target as HTMLInputElement).value)));$('income-slider').addEventListener('input',e=>setIncome(Number((e.target as HTMLInputElement).value)));
 $('civil').addEventListener('change',e=>{state.civ=(e.target as HTMLSelectElement).value as 's'|'m';void update();});$('kids').addEventListener('change',e=>{state.kids=Number((e.target as HTMLSelectElement).value);void update();});$('church').addEventListener('change',e=>{state.church=(e.target as HTMLSelectElement).value as typeof state.church;void update();});
@@ -104,7 +106,7 @@ async function init(){
   const coverage=document.createElement('p');coverage.dataset.testid='candidate-coverage';coverage.className='assumptions';coverage.textContent=s.coverage(Object.keys(gemeinden).length,Object.keys(workplaces).length);coverage.dataset.residences=String(Object.keys(gemeinden).length);coverage.dataset.workplaces=String(Object.keys(workplaces).length);$('profile-status').after(coverage);
   reviewCantons=withheldCantons(Object.values(gemeinden).map(g=>g[1]),!!DATA_RELEASE.approvals.estv,QUARANTINED_CANTONS);
   if(DATA_RELEASE.availability.map){const topology=await repository.json<any>('map/switzerland-2026.json');map=createMap($('map'),topology,gemeinden,selectGemeinde);}
-  preview=await loadAarauPreview(repository,DATA_RELEASE,gemeinden);if(preview)previewData=adaptAarauPreview(preview);
+  preview=await loadAarauPreview(repository,DATA_RELEASE,gemeinden);if(preview){transferWitness=await loadTransferWitness(repository,DATA_RELEASE,gemeinden);previewData=adaptObservedAarau(preview,transferWitness,directOnly);}
   if(DATA_RELEASE.availability.travel){const [a,meta]=await Promise.all([repository.json<{gemeinden:Access}>('travel/access.json'),repository.json<{fixture?:boolean}>('travel/meta.json')]);
    if(!a.gemeinden)throw new Error(s.invalidTravel);
    for(const id of Object.keys(gemeinden)){const stop=a.gemeinden[id];if(stop!==null&&(!Array.isArray(stop)||stop.length!==3||typeof stop[0]!=='string'||typeof stop[1]!=='string'||!Number.isFinite(stop[2])||stop[2]<0||stop[2]>60))throw new Error(s.invalidTravel);}

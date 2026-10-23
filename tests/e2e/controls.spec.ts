@@ -8,9 +8,9 @@ test('caps the public-transport control at 30 minutes for Aarau while keeping wa
  await page.getByRole('combobox',{name:'Arbeitsort'}).fill('Aarau');
  await page.getByRole('option',{name:'Aarau (AG)'}).click();
  await time.evaluate((input:HTMLInputElement)=>{input.value='30';input.dispatchEvent(new Event('input',{bubbles:true}));});
- await expect(page.locator('#summary')).toContainText('Aarau: Erreichbarkeit');
- await expect(page.locator('#summary')).toContainText('max. 30 Min. Fahrzeit und 10 Min. Fussweg');
- await expect(page.locator('#summary')).toContainText('noch ungeprüft');
+ await expect(page.locator('#summary')).toContainText('60 Gemeinden mit beobachteter Verbindung nach Aarau bis 30 Min.');
+ await expect(page.locator('#summary')).toContainText('keine vollständige Erreichbarkeitsmenge');
+ await expect(page.locator('#result-notice')).toContainText('Externer Zugang zur Einstiegshaltestelle ist ungemessen');
 });
 
 test('offers German labelled controls and remains usable at 400px',async({page})=>{
