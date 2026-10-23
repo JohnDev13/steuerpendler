@@ -100,20 +100,29 @@ total = bund + kanton + gemeinde + kirche + personal</code></pre>
     <p>Nicht berücksichtigt werden insbesondere Miete, Krankenkassenprämien, Vermögenssteuer,
       individuelle Abzüge und zwei Erwerbseinkommen. Die persönliche Veranlagung kann erheblich abweichen.
       Schätzung, keine Steuerberatung; die Tabellen sind keine verbindliche ESTV-Veranlagung.</p>
-    <h2 id="reisen">Pendelzeiten: begrenzte Aarau-Direktvorschau</h2>
+    <h2 id="reisen">Pendelzeiten: begrenzte Aarau-Live-Debug-Vorschau</h2>
     <p>Für den Arbeitsort Aarau zeigt der Testbetrieb beobachtete <strong>direkte</strong> Fahrten
       am 27. Oktober 2026. Der Einstieg lag an einer Haltestelle innerhalb des 2026-Gemeindepolygons;
       Haltestellen nahe einer unsicheren Grenze (100&nbsp;m) sind ausgeschlossen. Ein Halt im Polygon
       beweist nicht, dass jede Wohnung der Gemeinde diesen Halt erreicht. Alle nicht angezeigten
       Gemeinden bleiben <strong>ungeprüft</strong>, nicht «unerreichbar». Von 59 beobachteten
       Haltestellen-Gemeinden bis 30 Minuten liegen 36 bis einschliesslich 20 Minuten.</p>
+    <p>Ergänzt wird genau <strong>eine</strong> quellengestützte Umsteigeverbindung: Staufen,
+      Lindenplatz 06:47 → Lenzburg, Bahnhof 06:53 → Aarau 07:05, 18 Minuten ab erstem Einstieg.
+      Der gerichtete Umstieg erfordert mindestens 240 Sekunden bei 300 Sekunden verfügbarer Zeit.
+      Die Einstiegshaltestelle wurde der Gemeinde Staufen (BFS 4210) zugeordnet. Dies ist ein
+      nachgewiesener positiver Reiseweg, <strong>nicht</strong> der nachweislich schnellste Weg.
+      «Nur direkt» blendet diesen Nachweis aus und ist standardmässig ausgeschaltet.
+      Diese Ergänzung ist aus dem gepinnten GTFS und dem datierten Haltestellenindex abgeleitet;
+      unabhängige SBB-Verifikation steht aus.</p>
     <h3>Zeitraum, Fussweg und fehlende Routen</h3>
     <p>Erste Einstiege liegen im Fenster 06:30–08:30 Uhr (Europe/Zurich), beide Grenzen inklusive.
-      Die Fahrzeit läuft vom ersten Einsteigen bis zur Ankunft; ein direkter Fahrtabschnitt enthält
-      keine Umstiege. Der Zeitfilter verwendet exakte Sekunden einschliesslich der Grenze, die
+      Die Fahrzeit läuft vom ersten Einsteigen bis zur Ankunft; Wartezeit und zulässiger Umstieg
+      sind enthalten, der Weg zum Einstiegspunkt wird nicht zusätzlich aufgeschlagen.
+      Der Zeitfilter verwendet exakte Sekunden einschliesslich der Grenze, die
       Anzeige rundet danach auf volle Minuten auf. Die Vorschau deckt höchstens 30 Minuten ab,
-      nicht alle Reiseoptionen oder den nachweislich schnellsten Weg. Umsteigeverbindungen und
-      Alternativhaltestellen können weitere oder schnellere positive Fälle ergeben.</p>
+      nicht alle Reiseoptionen oder den nachweislich schnellsten Weg. Weitere Umsteigeverbindungen
+      und Alternativhaltestellen können zusätzliche oder schnellere positive Fälle ergeben.</p>
     <p>Der externe Weg von der Wohnung zum Haltestelleneingang ist vorläufig mit null Sekunden
       <strong>angenommen, nicht gemessen</strong>. Der Fusswegregler bleibt separat, misst aber
       in dieser Vorschau keine Adresse oder Zugangsstrecke; es gibt keinen zusätzlichen
@@ -133,12 +142,12 @@ total = bund + kanton + gemeinde + kirche + personal</code></pre>
       Fehlgeschlagene Kantone müssen vollständig von Steuertotal, Aufschlüsselung, Rang, günstigster
       Gemeinde, Farbgruppe und Differenzen ausgeschlossen bleiben, nicht nur grau eingefärbt werden.</p>
     <p>Der Betreiber lässt für die <strong>begrenzte Aarau-Vorschau</strong> indikative
-      Steuerbeträge, Differenzen und eine Sortierung unter positiven Direktbeobachtungen zu.
+      Steuerbeträge, Differenzen und eine Sortierung unter den positiven Beobachtungen zu.
       Sie sind keine amtlich abgeglichenen Steuerergebnisse oder geprüften Empfehlungen;
       VS und bekannte Fehler bleiben gesperrt. Andere Arbeitsorte haben keine freigegebene
       Reiseliste. Geografische Auswahl bedeutet nicht geprüfte Steuerdaten. «Ungeprüft»,
       «Daten in Prüfung» und technische Ladefehler sind unterschiedliche Zustände.</p>
-    <p>Ein Tag und ein beobachtetes direktes Angebot im Morgenfenster sagen nichts über
+    <p>Ein Tag und beobachtete Angebote im Morgenfenster sagen nichts über
       tägliche Zuverlässigkeit, Verspätungen, reale
       Wartezeiten, Barrierefreiheit, Schulwege oder die Rückfahrt aus.</p>
     <h2 id="quellen">Quellen, Lizenzen und Rechte – Freigabe ausstehend</h2>
