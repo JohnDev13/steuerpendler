@@ -5,9 +5,10 @@ directed footpaths. It does not add origin access, destination egress, or pure
 walking, and is not itself a source-complete timetable adapter.
 """
 from dataclasses import dataclass
-from typing import Mapping, Optional, Sequence, Tuple
+from typing import Iterable, Mapping, Optional, Sequence, Tuple
 
 from gtfs_events import GtfsEventError, ScheduledEvent, eligible_first_board_departures
+from transfer_rules import TransferResult, resolve_transfer
 
 
 @dataclass(frozen=True)
@@ -15,6 +16,37 @@ class TransferFootpath:
     from_stop_id: str
     to_stop_id: str
     seconds: int
+    available_seconds: Optional[int] = None
+    provenance: Optional[str] = None
+
+
+@dataclass(frozen=True)
+class DatedTransferResolver:
+    """Resolve each exact trip change against the supplied dated GTFS context."""
+
+    rows: Tuple[Mapping[str, object], ...]
+    stop_parents: Mapping[str, str]
+    trip_route_ids: Mapping[str, str]
+
+    def __init__(self, rows: Iterable[Mapping[str, object]],
+                 stop_parents: Mapping[str, str],
+                 trip_route_ids: Mapping[str, str]):
+        object.__setattr__(self, 'rows', tuple(rows))
+        object.__setattr__(self, 'stop_parents', dict(stop_parents))
+        object.__setattr__(self, 'trip_route_ids', dict(trip_route_ids))
+
+    def resolve(self, arriving: ScheduledEvent,
+                departing: ScheduledEvent) -> TransferResult:
+        return resolve_transfer(
+            self.rows, self.stop_parents,
+            from_stop_id=arriving.to_stop_id,
+            to_stop_id=departing.from_stop_id,
+            from_trip_id=arriving.trip_id,
+            to_trip_id=departing.trip_id,
+            from_route_id=self.trip_route_ids.get(arriving.trip_id, ''),
+            to_route_id=self.trip_route_ids.get(departing.trip_id, ''),
+            arrival_seconds=arriving.arrival_seconds,
+            departure_seconds=departing.departure_seconds)
 
 
 @dataclass(frozen=True)
@@ -140,7 +172,8 @@ def find_itinerary(events: Sequence[ScheduledEvent],
                    footpath_seconds: Mapping[Tuple[str, str], int],
                    origin_stop_ids, destination_stop_ids,
                    start_time='06:30:00', end_time='08:30:00',
-                   max_elapsed_seconds=1800, direct_only=False):
+                   max_elapsed_seconds=1800, direct_only=False,
+                   transfer_resolver: Optional[DatedTransferResolver] = None):
     """Return the minimum-elapsed scheduled itinerary, or ``None``.
 
     The first transit boarding must depart an origin platform inside the
@@ -149,7 +182,10 @@ def find_itinerary(events: Sequence[ScheduledEvent],
     minimum. Its walk and subsequent wait are included once because elapsed
     time ends at the final transit arrival. ``max_elapsed_seconds`` is exact
     and inclusive. ``direct_only`` permits intermediate calls on one trip but
-    no vehicle change.
+    no vehicle change. When ``transfer_resolver`` is supplied, it is consulted
+    for every temporally possible different-trip boarding. Only its ``allowed``
+    results become edges; ``footpath_seconds`` is then deliberately not used as
+    a fallback for rejected or unresolved rule outcomes.
     """
     if (type(max_elapsed_seconds) is not int
             or not 0 <= max_elapsed_seconds <= 1800):
@@ -219,6 +255,36 @@ def find_itinerary(events: Sequence[ScheduledEvent],
             continue
 
         deadline = itinerary.first_board_seconds + max_elapsed_seconds
+        if transfer_resolver is not None:
+            for next_event in events:
+                if next_event.departure_seconds > deadline:
+                    break
+                if (next_event.trip_id == alighting.trip_id
+                        or next_event.departure_seconds < alighting.arrival_seconds):
+                    continue
+                result = transfer_resolver.resolve(alighting, next_event)
+                if not isinstance(result, TransferResult):
+                    raise GtfsEventError(
+                        'transfer resolver must return TransferResult values')
+                if result.status != 'allowed':
+                    continue
+                available = next_event.departure_seconds - alighting.arrival_seconds
+                if (type(result.minimum_seconds) is not int
+                        or result.minimum_seconds < 0
+                        or result.available_seconds != available
+                        or not isinstance(result.provenance, str)
+                        or not result.provenance):
+                    raise GtfsEventError('invalid allowed transfer resolution')
+                transfer = TransferFootpath(
+                    alighting.to_stop_id, next_event.from_stop_id,
+                    result.minimum_seconds, result.available_seconds,
+                    result.provenance)
+                for next_ride in continuations(next_event):
+                    enqueue(_itinerary(
+                        itinerary.transit_legs + next_ride,
+                        itinerary.transfers + (transfer,)))
+            continue
+
         for transfer in footpaths_by_origin.get(alighting.to_stop_id, ()):
             ready = alighting.arrival_seconds + transfer.seconds
             if ready > deadline:
