@@ -9,6 +9,18 @@ import gtfs_events as ge
 from metric_probe import fixture
 
 
+def event(trip_id, origin, destination, departure, arrival, sequence=1):
+    """Build one exact synthetic adjacent-stop event."""
+    def clock(seconds):
+        return f'{seconds // 3600:02}:{seconds // 60 % 60:02}:{seconds % 60:02}'
+
+    return ge.ScheduledEvent(
+        trip_id=trip_id, from_stop_id=origin, to_stop_id=destination,
+        from_stop_sequence=sequence, to_stop_sequence=sequence + 1,
+        departure_time=clock(departure), arrival_time=clock(arrival),
+        departure_seconds=departure, arrival_seconds=arrival)
+
+
 class ExactItineraryTests(unittest.TestCase):
     def setUp(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -48,6 +60,10 @@ class ExactItineraryTests(unittest.TestCase):
         self.assertEqual(
             itinerary.transfer,
             exact.TransferFootpath('X', 'Y', 120))
+        self.assertEqual(
+            itinerary.transfers,
+            (exact.TransferFootpath('X', 'Y', 120),))
+        self.assertEqual(itinerary.transfer_count, 1)
 
     def test_no_service_and_footpath_only_return_no_itinerary(self):
         import exact_itinerary as exact
@@ -71,6 +87,176 @@ class ExactItineraryTests(unittest.TestCase):
 
         self.assertEqual(itinerary.elapsed_seconds, 300)
         self.assertEqual(itinerary.arrival_seconds, 90300)
+
+    def test_two_three_and_four_transfers_have_no_search_cap(self):
+        import exact_itinerary as exact
+
+        events = []
+        footpaths = {}
+        current = 7 * 3600
+        for index in range(5):
+            events.append(event(
+                f'trip-{index}', f'board-{index}', f'alight-{index}',
+                current, current + 120))
+            current += 120
+            if index < 4:
+                footpaths[(f'alight-{index}', f'board-{index + 1}')] = 30
+                current += 60
+
+        for final_index, expected_transfers in ((2, 2), (3, 3), (4, 4)):
+            itinerary = exact.find_itinerary(
+                events[:final_index + 1], footpaths, {'board-0'},
+                {f'alight-{final_index}'})
+            self.assertIsNotNone(itinerary)
+            self.assertEqual(itinerary.transfer_count, expected_transfers)
+            self.assertLessEqual(itinerary.elapsed_seconds, 1800)
+
+    def test_selected_elapsed_limit_is_exact_and_inclusive(self):
+        import exact_itinerary as exact
+
+        departure = 7 * 3600
+        events = [
+            event('exact-1200', 'O', 'D', departure, departure + 1200),
+            event('exact-1201', 'O', 'E', departure, departure + 1201),
+        ]
+        self.assertEqual(exact.find_itinerary(
+            events, {}, {'O'}, {'D'}, max_elapsed_seconds=1200).elapsed_seconds, 1200)
+        self.assertIsNone(exact.find_itinerary(
+            events, {}, {'O'}, {'E'}, max_elapsed_seconds=1200))
+        self.assertEqual(exact.find_itinerary(
+            events, {}, {'O'}, {'E'}, max_elapsed_seconds=1201).elapsed_seconds, 1201)
+
+    def test_first_board_edges_are_inclusive_but_later_boards_are_unrestricted(self):
+        import exact_itinerary as exact
+
+        start = 6 * 3600 + 30 * 60
+        end = 8 * 3600 + 30 * 60
+        events = [
+            event('lower', 'O', 'X', start, start + 5 * 60),
+            event('later', 'Y', 'D', start + 6 * 60, start + 8 * 60),
+            event('upper', 'O', 'D', end, end + 300),
+        ]
+        itinerary = exact.find_itinerary(
+            events[:2], {('X', 'Y'): 0}, {'O'}, {'D'})
+        self.assertEqual(itinerary.first_board_seconds, start)
+        self.assertEqual(itinerary.arrival_seconds, start + 8 * 60)
+        self.assertEqual(exact.find_itinerary(
+            [events[2]], {}, {'O'}, {'D'}).first_board_seconds, end)
+
+        after_window = [
+            event('near-upper', 'O', 'X', end - 2 * 60, end - 60),
+            event('after-window', 'Y', 'D', end + 60, end + 5 * 60),
+        ]
+        self.assertEqual(exact.find_itinerary(
+            after_window, {('X', 'Y'): 60}, {'O'}, {'D'}).arrival_seconds,
+            end + 5 * 60)
+
+    def test_faster_transfer_path_beats_slower_direct(self):
+        import exact_itinerary as exact
+
+        departure = 7 * 3600
+        events = [
+            event('direct', 'O', 'D', departure, departure + 1000),
+            event('first', 'O', 'X', departure, departure + 200),
+            event('second', 'Y', 'D', departure + 300, departure + 700),
+        ]
+        itinerary = exact.find_itinerary(
+            events, {('X', 'Y'): 60}, {'O'}, {'D'})
+        self.assertEqual([leg.trip_id for leg in itinerary.transit_legs],
+                         ['first', 'second'])
+        self.assertEqual(itinerary.elapsed_seconds, 700)
+
+    def test_same_trip_intermediate_calls_are_one_vehicle_leg(self):
+        import exact_itinerary as exact
+
+        departure = 7 * 3600
+        events = [
+            event('through', 'O', 'M', departure, departure + 100, 1),
+            event('through', 'M', 'D', departure + 120, departure + 300, 2),
+        ]
+        itinerary = exact.find_itinerary(events, {}, {'O'}, {'D'})
+        self.assertEqual(len(itinerary.transit_legs), 2)
+        self.assertEqual(itinerary.transfer_count, 0)
+        self.assertIsNone(itinerary.transfer)
+
+    def test_equal_elapsed_prefers_fewer_vehicle_changes(self):
+        import exact_itinerary as exact
+
+        departure = 7 * 3600
+        events = [
+            event('z-direct', 'O', 'D', departure, departure + 600),
+            event('a-first', 'O', 'X', departure, departure + 200),
+            event('a-second', 'Y', 'D', departure + 300, departure + 600),
+        ]
+        itinerary = exact.find_itinerary(
+            events, {('X', 'Y'): 50}, {'O'}, {'D'})
+        self.assertEqual([leg.trip_id for leg in itinerary.transit_legs], ['z-direct'])
+
+    def test_missing_or_reverse_only_footpath_forbids_transfer(self):
+        import exact_itinerary as exact
+
+        departure = 7 * 3600
+        events = [
+            event('first', 'O', 'X', departure, departure + 100),
+            event('second', 'Y', 'D', departure + 200, departure + 300),
+        ]
+        self.assertIsNone(exact.find_itinerary(events, {}, {'O'}, {'D'}))
+        self.assertIsNone(exact.find_itinerary(
+            events, {('Y', 'X'): 0}, {'O'}, {'D'}))
+        with self.assertRaises(ge.GtfsEventError):
+            exact.find_itinerary(events, {('X', 'Y'): -1}, {'O'}, {'D'})
+
+    def test_zero_time_cycle_terminates(self):
+        import exact_itinerary as exact
+
+        departure = 7 * 3600
+        events = [
+            event('loop-a', 'A', 'B', departure, departure),
+            event('loop-b', 'B', 'A', departure, departure),
+            event('finish', 'A', 'D', departure, departure + 60),
+        ]
+        itinerary = exact.find_itinerary(
+            events, {('B', 'B'): 0, ('A', 'A'): 0}, {'A'}, {'D'})
+        self.assertEqual(itinerary.elapsed_seconds, 60)
+        self.assertLessEqual(itinerary.transfer_count, 2)
+
+    def test_direct_only_excludes_source_derived_staufen_fixture(self):
+        """Source-derived example, not a complete scan or fastest-route proof."""
+        import exact_itinerary as exact
+
+        bus_stop = 'ch:1:sloid:78699_gen:missingSLOID_pf:B'
+        lenzburg_bus = 'ch:1:sloid:78736:0:01'
+        lenzburg_rail = 'ch:1:sloid:2119:3:3'
+        aarau = 'ch:1:sloid:2113:3:4'
+        events = [
+            event('.ojp-92-390.1.TA.127.j26', bus_stop, lenzburg_bus,
+                  6 * 3600 + 47 * 60, 6 * 3600 + 53 * 60),
+            event('.ojp-91-37-E.1.TA.582.j26', lenzburg_rail, aarau,
+                  6 * 3600 + 58 * 60, 7 * 3600 + 5 * 60),
+        ]
+        footpaths = {(lenzburg_bus, lenzburg_rail): 240}
+        itinerary = exact.find_itinerary(events, footpaths, {bus_stop}, {aarau})
+        self.assertEqual(itinerary.elapsed_seconds, 1080)
+        self.assertEqual(itinerary.transfer_count, 1)
+        self.assertIsNone(exact.find_itinerary(
+            events, footpaths, {bus_stop}, {aarau}, direct_only=True))
+
+    def test_invalid_events_and_limits_fail_closed_without_mutating_inputs(self):
+        import exact_itinerary as exact
+
+        invalid = event('bad', 'O', 'D', 100, 99)
+        events = [invalid]
+        footpaths = {('X', 'Y'): 0}
+        with self.assertRaises(ge.GtfsEventError):
+            exact.find_itinerary(events, footpaths, {'O'}, {'D'})
+        with self.assertRaises(ge.GtfsEventError):
+            exact.find_itinerary([], footpaths, {'O'}, {'D'}, max_elapsed_seconds=-1)
+        with self.assertRaises(ge.GtfsEventError):
+            exact.find_itinerary([], footpaths, {'O'}, {'D'}, max_elapsed_seconds=1801)
+        with self.assertRaises(ge.GtfsEventError):
+            exact.find_itinerary([object()], footpaths, {'O'}, {'D'})
+        self.assertEqual(events, [invalid])
+        self.assertEqual(footpaths, {('X', 'Y'): 0})
 
 
 if __name__ == '__main__':
