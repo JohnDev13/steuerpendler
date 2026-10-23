@@ -40,6 +40,8 @@ class ScheduledEvent:
     arrival_time: str
     departure_seconds: int
     arrival_seconds: int
+    board_allowed: bool = True
+    alight_allowed: bool = True
 
 
 def _table(archive, name, required=False):
@@ -95,12 +97,19 @@ def _stream_selected_stop_times(archive, active_trips):
                     departure = row['departure_time']
                     arrival_seconds = gtfs_seconds(arrival)
                     departure_seconds = gtfs_seconds(departure)
+                    pickup_type = row.get('pickup_type', '') or '0'
+                    drop_off_type = row.get('drop_off_type', '') or '0'
+                    if (pickup_type not in {'0', '1'}
+                            or drop_off_type not in {'0', '1'}):
+                        raise ValueError(
+                            'conditional pickup/drop-off is unresolved')
                 except (KeyError, TypeError, ValueError) as exc:
                     raise GtfsEventError(
                         f'invalid stop time for trip {trip_id}: {exc}') from exc
                 active_trips[trip_id].append((
                     sequence, stop_id, arrival, departure,
-                    arrival_seconds, departure_seconds))
+                    arrival_seconds, departure_seconds,
+                    pickup_type != '1', drop_off_type != '1'))
     except csv.Error as exc:
         raise GtfsEventError(f'invalid {name}: {exc}') from exc
 
@@ -173,6 +182,8 @@ def scheduled_events(feed_path, service_day):
                 arrival_time=destination[2],
                 departure_seconds=origin[5],
                 arrival_seconds=destination[4],
+                board_allowed=origin[6],
+                alight_allowed=destination[7],
             ))
     return events
 
@@ -189,4 +200,5 @@ def eligible_first_board_departures(events, origin_stop_ids,
     origins = set(origin_stop_ids)
     return [event for event in events
             if event.from_stop_id in origins
+            and event.board_allowed
             and start <= event.departure_seconds <= end]
