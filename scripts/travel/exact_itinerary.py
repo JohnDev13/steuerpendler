@@ -92,6 +92,8 @@ def _validate_events(events):
                 or event.to_stop_sequence <= event.from_stop_sequence
                 or type(event.departure_seconds) is not int
                 or type(event.arrival_seconds) is not int
+                or type(event.board_allowed) is not bool
+                or type(event.alight_allowed) is not bool
                 or event.departure_seconds < 0
                 or event.arrival_seconds < event.departure_seconds):
             raise GtfsEventError(f'invalid scheduled event for trip {event.trip_id!r}')
@@ -249,9 +251,11 @@ def find_itinerary(events: Sequence[ScheduledEvent],
         if best_states.get(_state_key(itinerary)) != _state_rank(itinerary):
             continue
         alighting = itinerary.transit_legs[-1]
-        if alighting.to_stop_id in destinations:
+        if alighting.to_stop_id in destinations and alighting.alight_allowed:
             candidates.append(itinerary)
         if direct_only:
+            continue
+        if not alighting.alight_allowed:
             continue
 
         deadline = itinerary.first_board_seconds + max_elapsed_seconds
@@ -260,6 +264,7 @@ def find_itinerary(events: Sequence[ScheduledEvent],
                 if next_event.departure_seconds > deadline:
                     break
                 if (next_event.trip_id == alighting.trip_id
+                        or not next_event.board_allowed
                         or next_event.departure_seconds < alighting.arrival_seconds):
                     continue
                 result = transfer_resolver.resolve(alighting, next_event)
@@ -293,6 +298,7 @@ def find_itinerary(events: Sequence[ScheduledEvent],
                 if next_event.departure_seconds > deadline:
                     break
                 if (next_event.trip_id == alighting.trip_id
+                        or not next_event.board_allowed
                         or next_event.departure_seconds < ready):
                     continue
                 for next_ride in continuations(next_event):

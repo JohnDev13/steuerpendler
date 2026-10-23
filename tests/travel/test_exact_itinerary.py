@@ -9,7 +9,8 @@ import gtfs_events as ge
 from metric_probe import fixture
 
 
-def event(trip_id, origin, destination, departure, arrival, sequence=1):
+def event(trip_id, origin, destination, departure, arrival, sequence=1, *,
+          board_allowed=True, alight_allowed=True):
     """Build one exact synthetic adjacent-stop event."""
     def clock(seconds):
         return f'{seconds // 3600:02}:{seconds // 60 % 60:02}:{seconds % 60:02}'
@@ -18,7 +19,8 @@ def event(trip_id, origin, destination, departure, arrival, sequence=1):
         trip_id=trip_id, from_stop_id=origin, to_stop_id=destination,
         from_stop_sequence=sequence, to_stop_sequence=sequence + 1,
         departure_time=clock(departure), arrival_time=clock(arrival),
-        departure_seconds=departure, arrival_seconds=arrival)
+        departure_seconds=departure, arrival_seconds=arrival,
+        board_allowed=board_allowed, alight_allowed=alight_allowed)
 
 
 def transfer_row(origin, destination, minimum='0', **changes):
@@ -192,6 +194,42 @@ class ExactItineraryTests(unittest.TestCase):
         self.assertEqual(len(itinerary.transit_legs), 2)
         self.assertEqual(itinerary.transfer_count, 0)
         self.assertIsNone(itinerary.transfer)
+
+    def test_board_and_alight_permissions_apply_only_when_entering_or_leaving(self):
+        import exact_itinerary as exact
+
+        departure = 7 * 3600
+        through = [
+            event('through', 'O', 'M', departure, departure + 100, 1,
+                  alight_allowed=False),
+            event('through', 'M', 'D', departure + 120, departure + 300, 2,
+                  board_allowed=False),
+        ]
+        itinerary = exact.find_itinerary(through, {}, {'O'}, {'D'})
+        self.assertEqual([leg.from_stop_id for leg in itinerary.transit_legs],
+                         ['O', 'M'])
+        self.assertIsNone(exact.find_itinerary(
+            [event('no-board', 'O', 'D', departure, departure + 60,
+                   board_allowed=False)], {}, {'O'}, {'D'}))
+        self.assertIsNone(exact.find_itinerary(
+            [event('no-alight', 'O', 'D', departure, departure + 60,
+                   alight_allowed=False)], {}, {'O'}, {'D'}))
+
+    def test_transfer_requires_permission_to_alight_and_board(self):
+        import exact_itinerary as exact
+
+        departure = 7 * 3600
+        for first_alight, second_board in ((False, True), (True, False)):
+            with self.subTest(first_alight=first_alight,
+                              second_board=second_board):
+                events = [
+                    event('first', 'O', 'X', departure, departure + 100,
+                          alight_allowed=first_alight),
+                    event('second', 'Y', 'D', departure + 200,
+                          departure + 300, board_allowed=second_board),
+                ]
+                self.assertIsNone(exact.find_itinerary(
+                    events, {('X', 'Y'): 0}, {'O'}, {'D'}))
 
     def test_equal_elapsed_prefers_fewer_vehicle_changes(self):
         import exact_itinerary as exact
