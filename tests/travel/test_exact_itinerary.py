@@ -21,6 +21,20 @@ def event(trip_id, origin, destination, departure, arrival, sequence=1):
         departure_seconds=departure, arrival_seconds=arrival)
 
 
+def transfer_row(origin, destination, minimum='0', **changes):
+    return {
+        'from_stop_id': origin,
+        'to_stop_id': destination,
+        'from_route_id': '',
+        'to_route_id': '',
+        'from_trip_id': '',
+        'to_trip_id': '',
+        'transfer_type': '2',
+        'min_transfer_time': minimum,
+        'service_id': '',
+    } | changes
+
+
 class ExactItineraryTests(unittest.TestCase):
     def setUp(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -240,6 +254,126 @@ class ExactItineraryTests(unittest.TestCase):
         self.assertEqual(itinerary.transfer_count, 1)
         self.assertIsNone(exact.find_itinerary(
             events, footpaths, {bus_stop}, {aarau}, direct_only=True))
+
+    def test_trip_aware_staufen_transfer_retains_exact_rule_evidence(self):
+        """Illustrative source-derived positive, not a whole-feed fastest proof."""
+        import exact_itinerary as exact
+
+        bus_stop = 'ch:1:sloid:78699_gen:missingSLOID_pf:B'
+        lenzburg_bus = 'ch:1:sloid:78736:0:01'
+        lenzburg_rail = 'ch:1:sloid:2119:3:3'
+        aarau = 'ch:1:sloid:2113:3:4'
+        bus_trip = '.ojp-92-390.1.TA.127.j26'
+        train_trip = '.ojp-91-37-E.1.TA.582.j26'
+        events = [
+            event(bus_trip, bus_stop, lenzburg_bus,
+                  6 * 3600 + 47 * 60, 6 * 3600 + 53 * 60),
+            event(train_trip, lenzburg_rail, aarau,
+                  6 * 3600 + 58 * 60, 7 * 3600 + 5 * 60),
+        ]
+        resolver = exact.DatedTransferResolver(
+            [transfer_row(lenzburg_bus, lenzburg_rail, '240')], {},
+            {bus_trip: '92-390-j26-1', train_trip: '91-37-E-j26-1'})
+
+        itinerary = exact.find_itinerary(
+            events, {}, {bus_stop}, {aarau}, transfer_resolver=resolver)
+
+        self.assertEqual(itinerary.elapsed_seconds, 1080)
+        self.assertEqual(itinerary.transfer_count, 1)
+        self.assertEqual(itinerary.transfer.seconds, 240)
+        self.assertEqual(itinerary.transfer.available_seconds, 300)
+        self.assertEqual(
+            itinerary.transfer.provenance,
+            'transfers.txt row 1 (stop_pair, child_pair)')
+
+    def test_trip_specific_prohibition_rejects_only_that_departing_trip(self):
+        import exact_itinerary as exact
+
+        departure = 7 * 3600
+        events = [
+            event('arrive', 'O', 'X', departure, departure + 120),
+            event('forbidden', 'Y', 'D', departure + 360, departure + 500),
+            event('allowed', 'Y', 'D', departure + 420, departure + 600),
+        ]
+        rows = [
+            transfer_row('X', 'Y', '180'),
+            transfer_row('X', 'Y', '', transfer_type='3',
+                         from_trip_id='arrive', to_trip_id='forbidden'),
+        ]
+        resolver = exact.DatedTransferResolver(
+            rows, {}, {'arrive': 'bus', 'forbidden': 'fast', 'allowed': 'later'})
+
+        itinerary = exact.find_itinerary(
+            events, {('X', 'Y'): 0}, {'O'}, {'D'},
+            transfer_resolver=resolver)
+
+        self.assertEqual([leg.trip_id for leg in itinerary.transit_legs],
+                         ['arrive', 'allowed'])
+        self.assertEqual(itinerary.transfer.available_seconds, 300)
+
+    def test_route_minimum_and_unresolved_rule_cannot_use_static_fallback(self):
+        import exact_itinerary as exact
+
+        departure = 7 * 3600
+        events = [
+            event('arrive', 'O', 'X', departure, departure + 100),
+            event('depart', 'Y', 'D', departure + 300, departure + 500),
+        ]
+        routes = {'arrive': 'bus', 'depart': 'rail'}
+        static_fallback = {('X', 'Y'): 0}
+        too_long = exact.DatedTransferResolver([
+            transfer_row('X', 'Y', '0'),
+            transfer_row('X', 'Y', '240', from_route_id='bus',
+                         to_route_id='rail'),
+        ], {}, routes)
+        unresolved = exact.DatedTransferResolver([
+            transfer_row('X', 'Y', '', transfer_type='1'),
+        ], {}, routes)
+        service_specific = exact.DatedTransferResolver([
+            transfer_row('X', 'Y', '0', service_id='dated-service'),
+        ], {}, routes)
+
+        for resolver in (too_long, unresolved, service_specific):
+            with self.subTest(resolver=resolver):
+                self.assertIsNone(exact.find_itinerary(
+                    events, static_fallback, {'O'}, {'D'},
+                    transfer_resolver=resolver))
+
+    def test_trip_aware_reverse_only_rule_and_four_changes_fail_closed_or_pass(self):
+        import exact_itinerary as exact
+
+        departure = 7 * 3600
+        reverse_events = [
+            event('arrive', 'O', 'X', departure, departure + 100),
+            event('depart', 'Y', 'D', departure + 200, departure + 300),
+        ]
+        reverse = exact.DatedTransferResolver(
+            [transfer_row('Y', 'X', '0')],
+            {'X': 'X-parent', 'Y': 'Y-parent'},
+            {'arrive': 'r0', 'depart': 'r1'})
+        self.assertIsNone(exact.find_itinerary(
+            reverse_events, {('X', 'Y'): 0}, {'O'}, {'D'},
+            transfer_resolver=reverse))
+
+        events = []
+        rows = []
+        routes = {}
+        current = departure
+        for index in range(5):
+            trip = f'trip-{index}'
+            routes[trip] = f'route-{index}'
+            events.append(event(
+                trip, f'board-{index}', f'alight-{index}', current, current + 120))
+            current += 120
+            if index < 4:
+                rows.append(transfer_row(
+                    f'alight-{index}', f'board-{index + 1}', '30'))
+                current += 60
+        resolver = exact.DatedTransferResolver(rows, {}, routes)
+        itinerary = exact.find_itinerary(
+            events, {}, {'board-0'}, {'alight-4'}, transfer_resolver=resolver)
+        self.assertEqual(itinerary.transfer_count, 4)
+        self.assertEqual(itinerary.elapsed_seconds, 14 * 60)
 
     def test_invalid_events_and_limits_fail_closed_without_mutating_inputs(self):
         import exact_itinerary as exact
