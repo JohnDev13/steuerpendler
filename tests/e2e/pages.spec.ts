@@ -5,10 +5,10 @@ test('public preview draws genuine geography, searches Gemeinden, and withholds 
  page.on('request',r=>requests.push(r.url()));
  await page.goto('./');
  await expect(page.locator('#map path.municipality')).toHaveCount(2113);
- await expect(page.locator('#data-status')).toContainText('Fahrplandaten');
- await expect(page.locator('#detail h2')).toContainText('Zürich');
- await expect(page.locator('#ranked-list tr')).toHaveCount(0);
- await expect(page.locator('#detail')).not.toContainText('CHF');
+ await expect(page.getByTestId('release-status')).toContainText('Vorschau');
+ await expect(page.getByLabel('Arbeitsort',{exact:true})).toHaveValue('Aarau');
+ await expect(page.locator('#ranked-list tr[data-bfs="4210"]')).toContainText('Staufen');
+ await expect(page.locator('#summary')).toContainText('keine vollständige Erreichbarkeitsmenge');
  await page.getByLabel('Arbeitsort',{exact:true}).fill('bern');
  await page.getByLabel('Arbeitsort',{exact:true}).press('Enter');
  await expect(page.locator('#detail h2')).toContainText('Bern');
@@ -40,6 +40,7 @@ test('missing municipality data produces a readable error rather than a blank pa
 });
 test('profile controls show the loaded local selection without exposing an unverified tax amount',async({page})=>{
  await page.goto('./');await expect(page.locator('#profile-status')).toContainText('CHF 120');
+ await page.getByLabel('Arbeitsort',{exact:true}).fill('Bern');await page.getByLabel('Arbeitsort',{exact:true}).press('Enter');
  await page.getByLabel('Zivilstand',{exact:true}).selectOption('m');await page.getByLabel('Kinder',{exact:true}).selectOption('2');await page.getByLabel('Kirchensteuer',{exact:true}).selectOption('reformed');
  await expect(page.locator('#profile-status')).toContainText('Verheiratet');await expect(page.locator('#profile-status')).toContainText('2 Kinder');await expect(page.locator('#profile-status')).toContainText('Reformiert');
  await expect(page.locator('#detail')).not.toContainText('CHF');await expect(page.locator('#cheapest')).toBeEmpty();
