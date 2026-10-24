@@ -1,6 +1,7 @@
 import type { Church, CivilStatus, Gemeinde } from './tax';
 export interface AppState {workplace:number;maxTime:number;maxWalk:number;countWalk:boolean;income:number;civ:CivilStatus;kids:number;church:Church;selected:number|null}
-export const initialState: AppState={workplace:261,maxTime:25,maxWalk:10,countWalk:false,income:120000,civ:'s',kids:0,church:'none',selected:null};
+// Until all destinations have validated routes, open on the one usable pilot.
+export const initialState: AppState={workplace:4001,maxTime:25,maxWalk:10,countWalk:false,income:120000,civ:'s',kids:0,church:'none',selected:null};
 export function foldName(text:string):string {return text.normalize('NFD').replace(/\p{M}/gu,'').toLocaleLowerCase('de-CH').trim();}
 export function searchGemeinden(gemeinden:Record<string,Gemeinde>,query:string):number[] {
  const q=foldName(query);

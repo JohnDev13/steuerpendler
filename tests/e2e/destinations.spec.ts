@@ -42,7 +42,7 @@ test('workplaces are capitals while every municipality stays selectable as a res
  await workplace.fill('Winterthur');
  await expect(page.getByRole('option',{name:'Winterthur (ZH)',exact:true})).toHaveCount(0);
  await workplace.press('Tab');
- await expect(workplace).toHaveValue('Zürich');
+ await expect(workplace).toHaveValue('Aarau');
  await workplace.fill('Aarau');await workplace.press('Enter');
  await expect(page.locator('#map [data-bfs="4001"]')).toHaveClass(/workplace/);
  await page.locator('#max-time').evaluate((el:HTMLInputElement)=>{el.value='20';el.dispatchEvent(new Event('input',{bubbles:true}));});
