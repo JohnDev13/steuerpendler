@@ -51,3 +51,8 @@ test('a stale profile is rejected by its pinned served-byte digest',async({page}
  await page.goto('./');await expect(page.locator('#data-status')).toContainText('Datenversion stimmt nicht überein');
  await expect(page.locator('#ranked-list tr')).toHaveCount(0);
 });
+test('methodology discloses the historical failed ESTV comparison',async({page})=>{
+ await page.goto('pages/methode.html');
+ await expect(page.locator('#grenzen + p')).toContainText('9 von 29');
+ await expect(page.locator('#grenzen + p')).toContainText('20 von 29');
+});
