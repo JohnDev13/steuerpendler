@@ -19,7 +19,7 @@ test('live Aarau preview includes Staufen transfer by default and excludes it in
   await expect(page.locator('#summary')).toContainText('direkter Verbindung');
   await directOnly.uncheck();
   await expect(row).toBeVisible();
-  await row.click();
+  await row.locator('button').click();
   await expect(page.locator('#detail')).toContainText('Staufen');
   await expect(page.locator('#detail')).toContainText('18 Min.');
 });
