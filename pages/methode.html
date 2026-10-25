@@ -24,10 +24,10 @@
     <h1>Methode und Quellen – Entwurf</h1>
     <p class="notice"><strong>Entwicklung, keine freigegebenen Empfehlungen.</strong>
       Die Steuerformel ist im lokalen Code vorhanden; eine vollständige, offiziell geprüfte Datenfreigabe
-      ist damit nicht belegt. In diesem Projektstand liegen keine echten Reisedatensätze vor.
-      Die unten erklärte Reiseberechnung ist eine Anforderung an die künftige Pipeline, kein verfügbares
-      Fahrplanangebot. Betreiber-, Inhalts-, Rechte- und Produktivfreigabe sind ausstehend.</p>
-    <p><strong>Aktueller Umfang (Build Spec v1.2):</strong> Als Arbeitsorte sind 19 deutschsprachige Kantonshauptorte bzw. Regierungssitze wählbar. Als Wohnorte und Steuerkandidaten bleiben alle 2'110 Schweizer Gemeinden in allen 26 Kantonen erhalten, auch Nicht-Hauptorte und Nachbarkantone. Die Wohngemeindesuche ändert nicht den Arbeitsort. Beispiel Aarau: maximal 20 Minuten Fahrzeit und maximal 15 Minuten Fussweg zur Ausgangshaltestelle sind getrennte Grenzen, solange «Fussweg zur Fahrzeit zählen» ausgeschaltet ist. Die Reichweite folgt Verbindungen und Fusswegen, keinem geometrischen Kreis.</p>
+      ist damit nicht belegt. Der Testbetrieb zeigt quellengestützte, provisorische Reise-Positivfälle,
+      aber keine vollständige Erreichbarkeit und keine nachweislich global schnellsten Wege.
+      Betreiber-, Inhalts-, Rechte- und Produktivfreigabe sind ausstehend.</p>
+    <p><strong>Aktueller Umfang (Build Spec v1.4):</strong> Als Arbeitsorte sind 19 deutschsprachige Kantonshauptorte bzw. Regierungssitze wählbar. Als Wohnorte und Steuerkandidaten bleiben alle 2'110 Schweizer Gemeinden in allen 26 Kantonen erhalten, auch Nicht-Hauptorte und Nachbarkantone. Die Wohngemeindesuche ändert nicht den Arbeitsort. Fahrzeit und maximaler Fussweg zur Ausgangshaltestelle sind getrennte Grenzen, solange «Fussweg zur Fahrzeit zählen» ausgeschaltet ist.</p>
     <p>Die Karte lässt sich mit +/−, Mausrad oder zwei Fingern vergrössern und durch Ziehen verschieben. «Zurücksetzen» zeigt wieder die Schweiz; per Tastatur funktionieren +/− und 0 bzw. Home. Die gewählte Ansicht bleibt beim Auswählen einer Gemeinde erhalten. Diese Bedienfunktionen belegen keine bestandene Steuer- oder Fahrplanprüfung.</p>
     <nav aria-label="Inhaltsverzeichnis">
       <ul>
@@ -72,36 +72,29 @@ total = bund + kanton + gemeinde + kirche + personal</code></pre>
     <p>Nicht berücksichtigt werden insbesondere Miete, Krankenkassenprämien, Vermögenssteuer,
       individuelle Abzüge und zwei Erwerbseinkommen. Die persönliche Veranlagung kann erheblich abweichen.
       Schätzung, keine Steuerberatung; die Tabellen sind keine verbindliche ESTV-Veranlagung.</p>
-    <h2 id="reisen">Pendelzeiten: begrenzte Aarau-Live-Debug-Vorschau</h2>
-    <p>Für den Arbeitsort Aarau zeigt der Testbetrieb beobachtete <strong>direkte</strong> Fahrten
-      am 27. Oktober 2026. Der Einstieg lag an einer Haltestelle innerhalb des 2026-Gemeindepolygons;
-      Haltestellen nahe einer unsicheren Grenze (100&nbsp;m) sind ausgeschlossen. Ein Halt im Polygon
-      beweist nicht, dass jede Wohnung der Gemeinde diesen Halt erreicht. Alle nicht angezeigten
-      Gemeinden bleiben <strong>ungeprüft</strong>, nicht «unerreichbar». Von 59 beobachteten
-      Haltestellen-Gemeinden bis 30 Minuten liegen 36 bis einschliesslich 20 Minuten.</p>
-    <p>Ergänzt wird genau <strong>eine</strong> quellengestützte Umsteigeverbindung: Staufen,
-      Lindenplatz 06:47 → Lenzburg, Bahnhof 06:53 → Aarau 07:05, 18 Minuten ab erstem Einstieg.
-      Der gerichtete Umstieg erfordert mindestens 240 Sekunden bei 300 Sekunden verfügbarer Zeit.
-      Die Einstiegshaltestelle wurde der Gemeinde Staufen (BFS 4210) zugeordnet. Dies ist ein
-      nachgewiesener positiver Reiseweg, <strong>nicht</strong> der nachweislich schnellste Weg.
-      «Nur direkt» blendet diesen Nachweis aus und ist standardmässig ausgeschaltet.
-      Diese Ergänzung ist aus dem gepinnten GTFS und dem datierten Haltestellenindex abgeleitet;
-      unabhängige SBB-Verifikation steht aus.</p>
+    <h2 id="reisen">Pendelzeiten: provisorische Positivvorschau für 19 Arbeitsorte</h2>
+    <p>Für alle 19 Arbeitsorte zeigt der Testbetrieb beobachtete positive Fahrten am
+      <time datetime="2026-10-27">27. Oktober 2026</time>. Die normale Auswahl berücksichtigt direkte
+      Fahrten und Fahrten mit beliebig vielen Umstiegen; es gibt keine Umstiegsobergrenze.
+      «Nur direkt» verwendet eine unabhängig berechnete Teilmenge ohne Fahrzeugwechsel und ist
+      standardmässig ausgeschaltet. Ein Halt wurde vorläufig einer Gemeinde zugeordnet. Das beweist
+      weder Zugang von jeder Wohnung noch die global schnellste Route. Alle nicht angezeigten Gemeinden
+      bleiben <strong>unbekannt</strong>, nicht «unerreichbar».</p>
     <h3>Zeitraum, Fussweg und fehlende Routen</h3>
     <p>Erste Einstiege liegen im Fenster 06:30–08:30 Uhr (Europe/Zurich), beide Grenzen inklusive.
       Die Fahrzeit läuft vom ersten Einsteigen bis zur Ankunft; Wartezeit und zulässiger Umstieg
       sind enthalten, der Weg zum Einstiegspunkt wird nicht zusätzlich aufgeschlagen.
       Der Zeitfilter verwendet exakte Sekunden einschliesslich der Grenze, die
       Anzeige rundet danach auf volle Minuten auf. Die Vorschau deckt höchstens 30 Minuten ab,
-      nicht alle Reiseoptionen oder den nachweislich schnellsten Weg. Weitere Umsteigeverbindungen
-      und Alternativhaltestellen können zusätzliche oder schnellere positive Fälle ergeben.</p>
+      nicht alle Reiseoptionen oder den nachweislich schnellsten Weg. Umstiegsminima und Wartezeiten
+      innerhalb der Reise sind enthalten. Weitere Verbindungen und Alternativhaltestellen können
+      zusätzliche oder schnellere positive Fälle ergeben.</p>
     <p>Der externe Weg von der Wohnung zum Haltestelleneingang ist vorläufig mit null Sekunden
       <strong>angenommen, nicht gemessen</strong>. Der Fusswegregler bleibt separat, misst aber
       in dieser Vorschau keine Adresse oder Zugangsstrecke; es gibt keinen zusätzlichen
       Eingang-zu-Bahnsteig-Zuschlag. Damit ist die Liste keine wohnungsbezogene
-      Erreichbarkeits- oder Fahrplanempfehlung. Für die übrigen 18 Arbeitsorte stehen noch keine
-      angezeigten Fahrtergebnisse zur Verfügung. Die vollständige transferbewusste GTFS-/OSM-Pipeline
-      und unabhängige SBB-Prüfung sind weiterhin ausstehend.</p>
+      Erreichbarkeits- oder Fahrplanempfehlung. Die vollständige negative Abdeckung, gemessene
+      Wohnzugänge und unabhängige SBB-Prüfung sind weiterhin ausstehend.</p>
     <h2 id="grenzen">Daten in Prüfung und Grenzen</h2>
     <p>Die offiziellen Vergleiche sind ausstehend: alle 29 ESTV-Fälle zur direkt ausgelieferten
       Steuerberechnung und alle 30 SBB-Verbindungen mit denselben Stationen, Datum, Zeitfenster und
@@ -113,11 +106,10 @@ total = bund + kanton + gemeinde + kirche + personal</code></pre>
       Fehler. Auch die oberste Tarifstufe von Fribourg muss gesondert geprüft werden.
       Fehlgeschlagene Kantone müssen vollständig von Steuertotal, Aufschlüsselung, Rang, günstigster
       Gemeinde, Farbgruppe und Differenzen ausgeschlossen bleiben, nicht nur grau eingefärbt werden.</p>
-    <p>Der Betreiber lässt für die <strong>begrenzte Aarau-Vorschau</strong> indikative
+    <p>Der Betreiber lässt für die <strong>provisorische All-19-Positivvorschau</strong> indikative
       Steuerbeträge, Differenzen und eine Sortierung unter den positiven Beobachtungen zu.
       Sie sind keine amtlich abgeglichenen Steuerergebnisse oder geprüften Empfehlungen;
-      VS und bekannte Fehler bleiben gesperrt. Andere Arbeitsorte haben keine freigegebene
-      Reiseliste. Geografische Auswahl bedeutet nicht geprüfte Steuerdaten. «Ungeprüft»,
+      VS und bekannte Fehler bleiben gesperrt. Geografische Auswahl bedeutet nicht geprüfte Steuerdaten. «Ungeprüft»,
       «Daten in Prüfung» und technische Ladefehler sind unterschiedliche Zustände.</p>
     <p>Ein Tag und beobachtete Angebote im Morgenfenster sagen nichts über
       tägliche Zuverlässigkeit, Verspätungen, reale
@@ -197,17 +189,16 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</pre>
       sind die jeweils geltenden Bedingungen und Hinweise versionsgenau zu sichern; die Rechte- und Inhaltsfreigabe
       durch die verantwortliche Person und gegebenenfalls fachkundige Prüfung bleiben ausstehend.</p>
     <h2 id="stand">Versionen, Herkunft und Dokumentationsdrift</h2>
-    <p>Aktualisiert am <time datetime="2026-10-22">22. Oktober 2026 (UTC)</time> nach
-      <code>SPEC.md</code> v1.3 (§§6.5b, 8, 18–20) und
-      <code>docs/spec-amendments-v1.3.md</code>. Der eingefrorene v1.2-Wortlaut steht unter
-      <code>docs/source/SPEC-v1.2-2026-10-22.md</code>; v1.1 und die ursprünglich gelieferte v1
+    <p>Aktualisiert am <time datetime="2026-10-24">24. Oktober 2026 (UTC)</time> nach
+      <code>SPEC.md</code> v1.4 (§§6.5a, 8, 18–21) und
+      <code>docs/spec-amendments-v1.4.md</code>. Frühere eingefrorene Fassungen
       bleiben getrennt nachvollziehbar. Der ursprüngliche Implementierungsstand und Prototyp
       sind nicht wiederhergestellt.</p>
     <p>Steuer-, Gemeinde- und Kartenstand ist 2026. Der Vorschau-Fahrplantag
       <time datetime="2026-10-27">27. Oktober 2026</time> wurde vom Betreiber gewählt; dies ist
       weder ein vollständiger Ferienkalender-Abgleich noch unabhängige SBB- oder Steuerfreigabe.
-      Die abgeleiteten Aarau-Vorschaudaten sind an SHA-256
-      <code>311420191be00d7f8b6d96f81f1e8295f801a26e34deb6d49ad5ec2e7f78b988</code>
+      Die abgeleiteten All-19-Vorschaudaten sind an SHA-256
+      <code>426e71f1a361f9b645f4f16fd121854a6955f4b19dab0268b4bed6cf3befb2bb</code>
       und die Karten-/Gemeindequellen im Release-Manifest gebunden. Jede Datenänderung erfordert
       Abgleich von Seite, SPEC, Quellnachweis und Build.</p>
     <p>Der Kartenbericht <code>docs/map/README.md</code> beschreibt die gemeinsame LV95-Topologie
