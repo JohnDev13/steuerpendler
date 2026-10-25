@@ -5,7 +5,27 @@ import { reconstructPrecision } from './reconstruct';
 import { calculateTax, preciseBase, TaxRepository } from '../../src/tax';
 import { writeFile } from 'node:fs/promises';
 import { calculateTaxesIncomeAndFortune } from '../../vendor/swisstaxcalculator/lib/taxes/income';
+import { calculateTaxesPersonnel } from '../../vendor/swisstaxcalculator/lib/taxes/personnel';
+import { dineroToNumber } from '../../vendor/swisstaxcalculator/lib/utils/dinero';
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { compilePrecision } from './precision';
+
+test('Luzern married one-earner personal tax matches frozen 2026 ESTV capture', async () => {
+ const requestBytes=readFileSync(new URL('../../tests/reference/estv-2026/estv-2026-10-tax.request.json',import.meta.url));
+ const responseBytes=readFileSync(new URL('../../tests/reference/estv-2026/estv-2026-10-tax.response.json',import.meta.url));
+ const sha=(bytes:Buffer)=>createHash('sha256').update(bytes).digest('hex');
+ expect(sha(requestBytes)).toBe('25d3f2af6b661c82725b29a3b88f1fa456effaee4480d7cc6be2e8718c0e5802');
+ expect(sha(responseBytes)).toBe('4cf422800a890c2ed7fb7812fe118604da7afb4885670bae976f7757ef07f271');
+ const request=JSON.parse(requestBytes.toString());
+ const official=JSON.parse(responseBytes.toString()).response;
+ const sources=await loadSources();
+ const luzern=sources.locations.find(location=>location.BfsID===1061)!;
+ const input=makeInput(luzern,'m',1,120000,'catholic');
+ expect([request.TaxYear,request.TaxLocationID,request.Revenue1,request.Revenue2,request.Children.length])
+  .toEqual([input.year,luzern.TaxLocationID,input.persons[0].income,input.persons[1].income,input.children]);
+ expect(dineroToNumber(calculateTaxesPersonnel(input))).toBe(official.PersonalTax);
+});
 
 async function marriedSionInput() {
  const sources = await loadSources();
