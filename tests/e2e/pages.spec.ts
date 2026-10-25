@@ -16,7 +16,7 @@ test('public preview draws genuine geography, searches Gemeinden, and withholds 
  await page.locator('#map [data-bfs="1711"]').click();
  await expect(page.locator('#detail h2')).toContainText('Zug');
  await expect(page.locator('#detail')).not.toContainText('CHF');
- await expect(page.locator('#detail')).toContainText('Daten werden geprüft');
+ await expect(page.locator('#detail')).toContainText('Erreichbarkeit unbekannt');
  await page.getByLabel('Bruttoeinkommen in CHF',{exact:true}).fill('10000');
  await page.getByLabel('Bruttoeinkommen in CHF',{exact:true}).press('Tab');
  await expect(page.locator('#income')).toHaveValue('40000');await expect(page.locator('#clamp-note')).toBeVisible();
@@ -38,12 +38,13 @@ test('missing municipality data produces a readable error rather than a blank pa
  await page.goto('./');await expect(page.locator('#data-status')).toContainText('HTTP 404');
  await expect(page.getByRole('heading',{name:'Steuerpendler',exact:true})).toBeVisible();
 });
-test('profile controls show the loaded local selection without exposing an unverified tax amount',async({page})=>{
+test('profile controls show a clearly indicative amount for a positive Bern route',async({page})=>{
  await page.goto('./');await expect(page.locator('#profile-status')).toContainText('CHF 120');
  await page.getByLabel('Arbeitsort',{exact:true}).fill('Bern');await page.getByLabel('Arbeitsort',{exact:true}).press('Enter');
  await page.getByLabel('Zivilstand',{exact:true}).selectOption('m');await page.getByLabel('Kinder',{exact:true}).selectOption('2');await page.getByLabel('Kirchensteuer',{exact:true}).selectOption('reformed');
  await expect(page.locator('#profile-status')).toContainText('Verheiratet');await expect(page.locator('#profile-status')).toContainText('2 Kinder');await expect(page.locator('#profile-status')).toContainText('Reformiert');
- await expect(page.locator('#detail')).not.toContainText('CHF');await expect(page.locator('#cheapest')).toBeEmpty();
+ await expect(page.locator('#detail')).toContainText('CHF');await expect(page.locator('#detail')).toContainText('ungeprüfte Standardschätzungen');
+ await expect(page.locator('#cheapest')).toContainText('indikative Steuerschätzung');
 });
 test('a stale profile is rejected by its pinned served-byte digest',async({page})=>{
  await page.route('**/data/tax-2026-s-0.json?*',async route=>{const response=await route.fetch();await route.fulfill({response,body:(await response.text())+' '});});

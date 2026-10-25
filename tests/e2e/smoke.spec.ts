@@ -3,6 +3,7 @@ test('static scaffold shows the project and an honest preview status', async ({ 
  await page.goto('./');
  await expect(page.getByRole('heading', {name:'Steuerpendler',exact:true})).toBeVisible();
  await expect(page.getByTestId('release-status')).toContainText('Vorschau');
+ await expect(page.getByTestId('release-status')).not.toContainText('kein produktiver');
 });
 
 test('Aarau overview distinguishes unverified travel from zero reachable Gemeinden', async ({ page }) => {
