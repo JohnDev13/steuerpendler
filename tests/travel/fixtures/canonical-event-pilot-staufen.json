@@ -1,0 +1,28 @@
+{
+  "schema": "steuerpendler.canonical-event-pilot-fixture.v1",
+  "sourceKind": "authentic_source_pinned_excerpt",
+  "sourcePins": {
+    "gtfsSha256": "d5b312e1ff398b505f9a6efef60c365f3c864857f73c55e87b383960a6b3418e",
+    "boardStopIndexSha256": "53380d7c232074d6097148a7c29a08fe6e3f06213a2301b91a6fb281714f36bb",
+    "sourceWitnessSha256": "3dd58a1f9f89cbb8a86f654d09ca4c78cea9c8c5b4d385063593deb368a307c8",
+    "sourceDocument": "docs/travel/staufen-transfer-regression-20261022.md",
+    "serviceDate": "2026-10-27"
+  },
+  "cases": [
+    {
+      "id": "staufen_0647_aarau_0705",
+      "destinationBfs": 4001,
+      "destinationStopIds": ["ch:1:sloid:2113:3:4"],
+      "forcedFirstEventId": "bus",
+      "events": [
+        {"id":"bus","tripId":".ojp-92-390.1.TA.127.j26","tripInstanceId":".ojp-92-390.1.TA.127.j26@2026-10-27","routeId":"92-390-j26-1","serviceId":"TA+03w10","blockId":"","fromStopId":"ch:1:sloid:78699_gen:missingSLOID_pf:B","toStopId":"ch:1:sloid:78736:0:01","fromSequence":1,"toSequence":2,"departureSeconds":24420,"arrivalSeconds":24780,"pickupAllowed":true,"dropOffAllowed":true,"exact":true},
+        {"id":"train","tripId":".ojp-91-37-E.1.TA.582.j26","tripInstanceId":".ojp-91-37-E.1.TA.582.j26@2026-10-27","routeId":"91-37-E-j26-1","serviceId":"TA+5kv00","blockId":"","fromStopId":"ch:1:sloid:2119:3:3","toStopId":"ch:1:sloid:2113:3:4","fromSequence":1,"toSequence":2,"departureSeconds":25080,"arrivalSeconds":25500,"pickupAllowed":true,"dropOffAllowed":true,"exact":true}
+      ],
+      "continuations": [],
+      "transferRules": [
+        {"id":"transfers-row-94","fromStopId":"ch:1:sloid:78736:0:01","toStopId":"ch:1:sloid:2119:3:3","status":"minimum","minimumSeconds":240,"source":"transfers.txt row 94 (stop_pair, child_pair)"}
+      ],
+      "unresolvedReasons": ["bounded_authentic_excerpt_not_complete_search"]
+    }
+  ]
+}
