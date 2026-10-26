@@ -1,4 +1,42 @@
-# T3 travel diagnostics — BLOCKED, not a national generator
+# Travel data
+
+## Experimental pipeline: Gemeinde → workplace candidate positives
+
+`matrix.py` scans a GTFS feed for observed in-time candidate journeys at stops within Gemeinde
+polygons for 19 workplaces, with a separate no-change scan for direct-only journeys. Missing
+municipality/destination pairs remain **unknown**. The release gate stays closed until a real feed,
+origin coverage, transfer precedence and the positive paths have been independently audited. This
+algorithm does not replace the pinned first-boarding-event×19 file or establish global fastest routes.
+Its timetable comparisons use exact seconds and round up only for display; assumptions are in the
+module docstring and SPEC §6.5c.
+
+```sh
+python3 scripts/travel/run_matrix.py --gtfs GTFS_FP2026_<date>.zip --date 2026-10-27 --feed-url <url>
+python3 scripts/travel/compare_reference.py        # SBB pairs, SPEC 11.2, tolerance 3 min
+python3 -m unittest discover -s tests/travel
+```
+
+In GitHub: Actions → **Build travel matrix** → Run workflow, with the URL of a feed from
+https://data.opentransportdata.swiss/dataset/timetable-2026-gtfs2020. The workflow records the feed's
+SHA-256, writes `site/data/travel/matrix/`, runs the SBB comparison and opens a data PR.
+
+Populate `tests/travel/sbb-reference-2026.csv` from same-date SBB journeys to run a
+30-pair diagnostic; blank values remain pending. Passing that sample alone cannot clear the
+source-completeness or official release gates.
+
+Known model limits, recorded in `meta.json`: walking from home to the first stop is not measured (0 min);
+origins are stops inside the simplified Gemeinde polygon; route- or trip-specific `transfers.txt` rows
+other than stay-seated continuations are not modelled; walks between stops are straight-line × 1.3.
+
+## Earlier diagnostics
+
+The remaining modules in this directory are the earlier bounded probes and the observed-positive
+exporter that produced `site/data/travel/all19-observed-routes-20261027.json` (SPEC §6.5b). They are
+kept until the matrix has been generated from a real feed and reviewed; see the history below.
+
+## History
+
+### T3 travel diagnostics — BLOCKED, not a national generator
 
 Commands below run from the repository root. No accepted Swiss residential
 travel JSON is generated; the direct-ride screen writes provisional, outside-Git
