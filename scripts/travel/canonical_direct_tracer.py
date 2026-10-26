@@ -153,7 +153,7 @@ def _trip_metadata(feed_path, expected_hash, referenced_trips):
     selected = {}
     scanned = 0
     try:
-        scratch = os.environ.get("TMPDIR", "/home/hermes/.hermes/cache/scratch")
+        scratch = tempfile.gettempdir()
         with tempfile.TemporaryFile(dir=scratch) as snapshot, feed_path.open("rb") as feed:
             digest = hashlib.sha256()
             copied = 0

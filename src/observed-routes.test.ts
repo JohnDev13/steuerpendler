@@ -1,6 +1,4 @@
 import { describe, expect, it } from 'vitest';
-// The browser tsconfig intentionally excludes Node globals; Vitest executes this source-asset integrity test in Node.
-// @ts-expect-error Node types are available to the test runner but intentionally absent from the browser compilation surface.
 import { readFileSync } from 'node:fs';
 import { DESTINATIONS } from './destinations';
 import { ALL19_OBSERVED_FILE, adaptObservedRoutes, loadObservedRoutes, validateObservedRoutes } from './observed-routes';
