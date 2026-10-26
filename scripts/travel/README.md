@@ -1,4 +1,39 @@
-# T3 travel diagnostics — BLOCKED, not a national generator
+# Travel data
+
+## Current pipeline: Gemeinde → workplace matrix
+
+`matrix.py` computes, for every Gemeinde and each of the 19 workplaces, the shortest time from first
+boarding at a stop inside the Gemeinde to arrival at the workplace station complex, for first boardings
+06:30–08:30 on the reference Tuesday, with any number of changes, up to 30 minutes. It is a reverse
+profile Connection Scan in standard-library Python (about 3–4 s per destination for ~700k connections).
+The rules are in the module docstring and in SPEC §6.5c.
+
+```sh
+python3 scripts/travel/run_matrix.py --gtfs GTFS_FP2026_<date>.zip --date 2026-10-27 --feed-url <url>
+python3 scripts/travel/compare_reference.py        # SBB pairs, SPEC 11.2, tolerance 3 min
+python3 -m unittest discover -s tests/travel
+```
+
+In GitHub: Actions → **Build travel matrix** → Run workflow, with the URL of a feed from
+https://data.opentransportdata.swiss/dataset/timetable-2026-gtfs2020. The workflow records the feed's
+SHA-256, writes `site/data/travel/matrix/`, runs the SBB comparison and opens a data PR.
+
+Fill `tests/travel/sbb-reference-2026.csv` from sbb.ch (fastest journey, same date and window) so the
+comparison can pass; empty cells stay `pending`.
+
+Known model limits, recorded in `meta.json`: walking from home to the first stop is not measured (0 min);
+origins are stops inside the simplified Gemeinde polygon; route- or trip-specific `transfers.txt` rows
+other than stay-seated continuations are not modelled; walks between stops are straight-line × 1.3.
+
+## Earlier diagnostics
+
+The remaining modules in this directory are the earlier bounded probes and the observed-positive
+exporter that produced `site/data/travel/all19-observed-routes-20261027.json` (SPEC §6.5b). They are
+kept until the matrix has been generated from a real feed and reviewed; see the history below.
+
+## History
+
+### T3 travel diagnostics — BLOCKED, not a national generator
 
 Commands below run from the repository root. No accepted Swiss residential
 travel JSON is generated; the direct-ride screen writes provisional, outside-Git

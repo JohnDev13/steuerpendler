@@ -1,0 +1,80 @@
+{
+ "meta": {
+  "schema": "steuerpendler.travel-matrix.v1",
+  "serviceDate": "2026-10-27",
+  "firstBoardWindow": [
+   "06:30:00",
+   "08:30:00"
+  ],
+  "capSeconds": 1800,
+  "rowFormat": [
+   "homeBfs",
+   "transitSeconds",
+   "transfers",
+   "firstBoardStopName",
+   "firstBoardSeconds"
+  ],
+  "absence": "no_journey_within_cap_under_model",
+  "model": {
+   "access": "unmeasured_zero",
+   "origins": "every GTFS stop inside the Gemeinde polygon (simplified BFS 2026 boundaries)",
+   "changeSeconds": 120,
+   "walkRadiusMeters": 400.0,
+   "walkSpeedMetersPerSecond": 1.2,
+   "walkDetourFactor": 1.3,
+   "targetComplexRadiusMeters": 300.0,
+   "frequencyTripsIgnored": 0,
+   "routeOrTripSpecificTransferRowsIgnored": 0
+  },
+  "feed": {
+   "url": "fixture",
+   "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+   "bytes": 0
+  },
+  "codeRevision": "",
+  "connections": 4,
+  "workplaces": {
+   "261": {
+    "station": "Target",
+    "targetStops": 2,
+    "rows": 4
+   }
+  }
+ },
+ "to": {
+  "schema": "steuerpendler.travel-matrix.v1",
+  "to": 261,
+  "station": "Target",
+  "serviceDate": "2026-10-27",
+  "rows": [
+   [
+    261,
+    0,
+    0,
+    "",
+    0
+   ],
+   [
+    200,
+    420,
+    0,
+    "Xenon",
+    25500
+   ],
+   [
+    100,
+    720,
+    0,
+    "Alpha",
+    25200
+   ],
+   [
+    300,
+    900,
+    0,
+    "Ypsilon",
+    27900
+   ]
+  ]
+ }
+}
