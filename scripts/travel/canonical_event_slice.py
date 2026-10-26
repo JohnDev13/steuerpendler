@@ -103,9 +103,7 @@ def evaluate_events(
     direct_only = route_profile.build_profile(transfer_rules=(), **arguments)
     by_id = {ride.connection_id: ride for ride in rides}
     records = []
-    for connection_id in sorted(all_routes, key=lambda item: (
-            by_id[item].departure_seconds, by_id[item].from_stop_id,
-            by_id[item].trip_id, by_id[item].from_stop_sequence, item)):
+    for connection_id in sorted(all_routes):
         ride = by_id[connection_id]
         records.append({
             "event": {
@@ -162,7 +160,7 @@ def _generator_provenance(targets: Iterable[str]) -> dict:
     children = sorted(set(targets))
     if not children or not all(isinstance(stop, str) and stop for stop in children):
         raise EventSliceError('destination child stop inventory is empty/malformed')
-    return {'generatorVersion':'1.1',
+    return {'generatorVersion':'1.2',
             'generatorSha256':_sha256(pathlib.Path(__file__)),
             'destinationChildStopIds':children}
 
@@ -206,8 +204,9 @@ def _uncertainty_reasons(inventory: dict[str, int | str]) -> tuple[str, ...]:
 
 
 def export_slice(connections_path, transfer_scope_path, board_stop_path,
-                 target_registry_path, output_path, *, expected_transfer_scope_sha256):
-    """Write a deterministic, atomic gzip NDJSON Aarau slice."""
+                 target_registry_path, output_path, *, expected_transfer_scope_sha256,
+                 destination_bfs=DESTINATION_BFS):
+    """Write a deterministic, atomic gzip NDJSON one-destination slice."""
     started = time.monotonic()
     _validate_transfer_pin(expected_transfer_scope_sha256)
     connections_path = _checked(pathlib.Path(connections_path), CONNECTION_SHA256, "connections")
@@ -219,7 +218,7 @@ def export_slice(connections_path, transfer_scope_path, board_stop_path,
 
     connections, connection_metadata = route_profile._load_connections(connections_path)
     rules, transfer_metadata = route_profile._load_rules(transfer_scope_path)
-    targets, target_status = route_profile._target_children(target_registry_path, DESTINATION_BFS)
+    targets, target_status = route_profile._target_children(target_registry_path, destination_bfs)
     assignments, board_metadata = _board_assignments(board_stop_path)
     for label, metadata in (("connections", connection_metadata),
                             ("transfer scope", transfer_metadata),
@@ -246,7 +245,7 @@ def export_slice(connections_path, transfer_scope_path, board_stop_path,
     manifest = {
         "kind": "manifest",
         "schema": "steuerpendler.canonical-event-slice.v1",
-        "destinationBfs": DESTINATION_BFS,
+        "destinationBfs": destination_bfs,
         "serviceDate": connection_metadata.get("service_date"),
         "timezone": "Europe/Zurich",
         "firstBoardWindowSecondsInclusive": [FIRST_BOARD_START, FIRST_BOARD_END],
@@ -262,7 +261,7 @@ def export_slice(connections_path, transfer_scope_path, board_stop_path,
         **_generator_provenance(targets),
         "uncertaintyInventory": inventory,
         "unresolvedReasons": list(reasons),
-        "claims": "BOUNDED_AARAU_POSITIVES_AND_UNKNOWNS_NOT_GLOBAL_PROOF",
+        "claims": "BOUNDED_DESTINATION_POSITIVES_AND_UNKNOWNS_NOT_GLOBAL_PROOF",
     }
     summary = {
         "kind": "summary",
@@ -309,10 +308,12 @@ def main() -> None:
     parser.add_argument("--target-registry", required=True)
     parser.add_argument("--output", required=True)
     parser.add_argument("--expected-transfer-scope-sha256", required=True)
+    parser.add_argument("--destination-bfs", type=int, default=DESTINATION_BFS)
     args = parser.parse_args()
     manifest, summary, run_report = export_slice(
         args.connections, args.transfer_scope, args.board_stops, args.target_registry,
-        args.output, expected_transfer_scope_sha256=args.expected_transfer_scope_sha256)
+        args.output, expected_transfer_scope_sha256=args.expected_transfer_scope_sha256,
+        destination_bfs=args.destination_bfs)
     print(json.dumps({"manifest": manifest, "summary": summary, "run": run_report},
                      indent=2, sort_keys=True))
 
