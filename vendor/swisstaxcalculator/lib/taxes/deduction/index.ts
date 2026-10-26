@@ -109,7 +109,9 @@ export const taxDeductionDefinitions: TaxDeductionDefinition[] = [
   },
   {
     id: 'ZweitVerdiener_EK',
-    rule: (taxInput) => ['m', 'rp'].includes(taxInput.relationship),
+    rule: (taxInput) =>
+      ['m', 'rp'].includes(taxInput.relationship) &&
+      taxInput.persons.filter((person) => person.income > 0).length >= 2,
     input: (taxInput) =>
       sortArray(taxInput.persons, (p) => p.income)
         .filter((_, index) => index === 0)
@@ -134,6 +136,12 @@ export const taxDeductionDefinitions: TaxDeductionDefinition[] = [
     id: 'SozKind_EK',
     rule: (taxInput) => taxInput.children > 0,
     input: (taxInput) => [{ multiplier: taxInput.children }]
+  },
+  {
+    id: 'MaxAbzMiete_EK',
+    rule: (taxInput) =>
+      taxInput.cantonId === 25 && (taxInput.deductions?.rentExpenses ?? 0) > 0,
+    input: (taxInput) => [{ amount: (taxInput.deductions?.rentExpenses ?? 0) * 0.3 }]
   },
   {
     id: 'EigenBetr_EK',
@@ -352,6 +360,11 @@ export const calculateDeductionByFormat = (deduction: TaxDeductionTableItem, amo
       return dineroMin(amountDinero, dineroChf(deduction.maximum));
     case 'PERCENT':
       return dineroRound(multiplyDineroPercent(amountDinero, deduction.percent, 5));
+    case 'PERCENT,MAXIMUM':
+      return dineroMin(
+        dineroRound(multiplyDineroPercent(amountDinero, deduction.percent, 5)),
+        dineroChf(deduction.maximum)
+      );
     case 'PERCENT,MINIMUM,MAXIMUM':
       return dineroMin(
         dineroMax(

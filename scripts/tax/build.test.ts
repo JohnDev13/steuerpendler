@@ -2,8 +2,18 @@ import { expect, test } from 'vitest';
 import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { createHash } from 'node:crypto';
 import { calculateTaxesIncomeAndFortune, calculateTaxesBase, calculateTaxableAmount } from '../../vendor/swisstaxcalculator/lib/taxes/income';
 import { dineroToNumber } from '../../vendor/swisstaxcalculator/lib/utils/dinero';
+import { calculateBvg2026Age35 } from './bvg';
+
+interface OfficialTaxResponse {
+  IncomeTaxFed: number;
+  IncomeSimpleTaxCanton: number;
+  TaxableIncomeCanton: number;
+  TotalTax: number;
+  InfoCanton: { Entry: { ID: string }; Value: number }[];
+}
 
 test('profile rows use unrounded internal simple tax, actual federal credit and personnel tax', async () => {
   const { loadSources, makeInput, buildRow } = await import('./build');
@@ -12,6 +22,7 @@ test('profile rows use unrounded internal simple tax, actual federal credit and 
   const input = makeInput(loc, 'm', 2, 150000, 'reformed');
   expect(input.persons).toHaveLength(2);
   expect(input.persons.map(x => x.income)).toEqual([150000, 0]);
+  expect(input.persons.map(x => x.pkDeduction)).toEqual([calculateBvg2026Age35(150000), 0]);
   expect(input.persons.every(x => x.age === 35 && x.confession === 'protestant')).toBe(true);
   const taxable = await calculateTaxableAmount(input);
   const base = await calculateTaxesBase(input, taxable.taxableIncomeCanton, taxable.taxableFortuneCanton);
@@ -19,18 +30,50 @@ test('profile rows use unrounded internal simple tax, actual federal credit and 
   expect(await buildRow(input)).toEqual([engine.taxesIncomeBund, dineroToNumber(base.taxesIncomeBase), engine.taxesPersonnel]);
 });
 
+test('SZ generation applies the official Freienbach expense cap and exposes the two remaining table differences', async () => {
+  const { loadSources, makeInput, buildRow } = await import('./build');
+  const sources = await loadSources();
+  const loc = sources.locations.find(x => x.BfsID === 1322)!;
+  const official = (JSON.parse(await readFile(
+    join(process.cwd(), 'tests/reference/estv-2026/estv-2026-04-tax.response.json'),
+    'utf8',
+  )) as { response: OfficialTaxResponse }).response;
+  const input = makeInput(loc, 's', 0, 120000);
+  const taxable = await calculateTaxableAmount(input);
+  const row = await buildRow(input);
+  const engine = await calculateTaxesIncomeAndFortune(input);
+  const officialInfo = new Map(official.InfoCanton.map(item => [item.Entry.ID, Math.abs(item.Value)]));
+  const calculatedDeductions = new Map(engine.details.deductionsIncome.map(item => [item.id, item.amountCanton]));
+
+  expect(calculatedDeductions.get('HauptErw_EK')).toBe(6900);
+  expect(calculatedDeductions.get('HauptErw_EK')).toBe(officialInfo.get('TXT_30'));
+  const remaining = [
+    ['KKSparLedigMitBVGS3a_EK', 'TXT_49'],
+    ['SozLedig_EK', 'TXT_60'],
+  ] as const;
+  const gaps = remaining.map(([id, officialId]) => officialInfo.get(officialId)! - calculatedDeductions.get(id)!);
+  expect(gaps).toEqual([1000, 1000]);
+  expect(dineroToNumber(taxable.taxableIncomeCanton) - official.TaxableIncomeCanton).toBe(gaps.reduce((a, b) => a + b, 0));
+  expect(row[0]).toBe(official.IncomeTaxFed);
+  expect(row[1] - official.IncomeSimpleTaxCanton).toBeCloseTo(148.6, 10);
+  expect(engine.taxesTotal - official.TotalTax).toBe(259);
+});
+
 test('one profile contains all 26 cantons and 461 finite rows at the specified grid', async () => {
   const { loadSources, buildProfile, buildRow, makeInput } = await import('./build');
   const sources = await loadSources();
   const profile = await buildProfile(sources, 's', 0);
   expect(profile.meta.incomes).toEqual({ from: 40000, step: 1000, count: 461 });
+  expect(profile.meta.pensionDefault).toBe('ESTV2026Age35');
   expect(Object.keys(profile.cantons)).toHaveLength(26);
   for (const rows of Object.values(profile.cantons)) {
     expect(rows).toHaveLength(461);
     expect(rows.every(row => row.length === 3 && row.every(Number.isFinite))).toBe(true);
   }
   const zurich = sources.locations.find(x => x.BfsID === 261)!;
-  expect(profile.cantons.ZH[80]).toEqual(await buildRow(makeInput(zurich, 's', 0, 120000)));
+  const input = makeInput(zurich, 's', 0, 120000);
+  expect(input.persons[0].pkDeduction).toBe(calculateBvg2026Age35(120000));
+  expect(profile.cantons.ZH[80]).toEqual(await buildRow(input));
 });
 
 test('writer emits exactly eight minified profiles and a 2110-ID municipality file', async () => {
@@ -51,6 +94,19 @@ test('writer emits exactly eight minified profiles and a 2110-ID municipality fi
     }
     for (const civ of ['s', 'm']) for (let kids = 0; kids < 4; kids++) expect(files).toContain(`tax-2026-${civ}-${kids}.json`);
   } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+test('two genuine generations produce matching SHA-256 hashes for all nine tax artifacts', async () => {
+  const { generateTables } = await import('./build');
+  const hash = (value: string) => createHash('sha256').update(value).digest('hex');
+  const first = await generateTables();
+  const second = await generateTables();
+  expect(Object.keys(first).sort()).toEqual([
+    'gemeinden-2026.json',
+    ...['m', 's'].flatMap(civil => [0, 1, 2, 3].map(kids => `tax-2026-${civil}-${kids}.json`)),
+  ].sort());
+  expect(Object.fromEntries(Object.entries(first).map(([name, bytes]) => [name, hash(bytes)])))
+    .toEqual(Object.fromEntries(Object.entries(second).map(([name, bytes]) => [name, hash(bytes)])));
 });
 
 test('generator joins all 2110 authentic BFS IDs with original income-rate columns', async () => {

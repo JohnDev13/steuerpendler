@@ -117,6 +117,8 @@ All JSON is UTF-8 and minified. BFS ids are Gemeinde numbers as of 1 Jan 2026. O
 
 Row `i` is for gross income `from + i × step`. `bund` is the Bundessteuer in CHF, `base` the cantonal simple tax ("einfache Steuer", before Steuerfüsse), and `personal` the Personal-/Kopfsteuer in CHF.
 
+Schema v2 (current): `meta.schemaVersion: 2` adds a `precision` object with one declarative program per canton (deductions, tariff tables, splitting, personal tax). The complete contract is `docs/tax/schema-v2.md`. Grid rows stay authoritative at exact grid incomes; the program is evaluated between them.
+
 ### 6.2 Gemeinden: `site/data/gemeinden-2026.json` (reconstruct)
 
 ```json
@@ -164,24 +166,22 @@ Default release scheme: retain §6 filenames and request every runtime data asse
 
 **Mandatory hosting gate:** query keys must participate in browser and CDN caching. Verify actual Pages/CDN responses for old/new `?v=` values, cache hits, ETags and revalidation across two deployments and a browser retaining the old bundle. Stable physical filenames may no longer serve an old release: the client must detect a release mismatch, discard the entire mixed release and offer reload, never calculate with mixed files or retry unversioned. A fresh bundle must obtain its pinned coherent release. Query versioning is not proven safe by configuration: if CDN query handling/coherence fails, block launch and amend to content-addressed paths with equivalent tests. No backend is introduced.
 
-## 7. Tax rules (frontend must implement exactly this)
+## 7. Tax rules
 
-For workplace-independent tax profile `(civ, kids, income, church)` and Gemeinde `g`:
+Inputs: workplace-independent profile `(civ, kids, income, church)` and Gemeinde `g`. Income is clamped to CHF 40,000–500,000 with a visible note.
+
+**Evaluation (schema v2, `src/tax.ts`).** At an exact grid income the serialized row is used. Between grid incomes the canton's precision program is evaluated exactly: gross → net, deductions, taxable income floored to CHF 100 as the tariffs require, splitting, tariff table. Linear interpolation of tax amounts is **not** permitted: the CHF 100 floor makes tax a staircase in income (steps of CHF 13–57 about every CHF 105), and a line between CHF 1,000 rows misses it by up to CHF 47, which violates §7.1. Schema-v1 profiles keep the legacy interpolation only for backwards compatibility.
 
 ```
-x       = clamp((income − 40000) / 1000, 0, 460)
-i       = min(floor(x), 459);  t = x − i
-row     = cantons[g.canton][i] + (cantons[g.canton][i+1] − cantons[g.canton][i]) × t     (element-wise)
-rateCh  = church == reformed ? g.rateReformed : church == catholic ? g.rateCatholic : 0
-kanton  = row.base × g.rateCanton / 100
-gemeinde= row.base × g.rateGemeinde / 100
-kirche  = row.base × rateCh / 100
-total   = row.bund + kanton + gemeinde + kirche + row.personal
+kanton   = round_half_even(base × g.rateCanton / 100)
+gemeinde = round_half_even(base × g.rateGemeinde / 100)
+kirche   = round_half_even(base × rateCh / 100)        (rateCh per person for married, 2 dp, as the engine)
+total    = bund + kanton + gemeinde + kirche + personal
 ```
 
-Fixed assumptions, shown on the page: gross employment income, age 35, no wealth, standard deductions, and married couples have one income.
+Fixed assumptions, shown on the page: gross employment income, age 35, no wealth, married couples have one income, and ESTV's 2026 standard defaults (age-35 BVG pension deduction, standard household budget/estimated rent; evidence in `docs/tax/bvg-rule-evidence.md` and `docs/tax/estv-budget-defaults.md`). The page states: „Dies ist eine indikative Schätzung mit ESTV-Standardannahmen, keine individuelle oder verbindliche Steuerveranlagung und keine Steuerberatung.“
 
-Display totals rounded to CHF 10. Income input: CHF 40,000–500,000. Below or above that range, clamp the value and show a note.
+Display totals rounded to CHF 10; ranking and gates use unrounded values.
 
 ### 7.1 Numeric verification gates (inclusive; unrounded CHF)
 
