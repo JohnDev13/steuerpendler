@@ -56,3 +56,8 @@ test('methodology discloses the historical failed ESTV comparison',async({page})
  await expect(page.locator('#grenzen + p')).toContainText('9 von 29');
  await expect(page.locator('#grenzen + p')).toContainText('20 von 29');
 });
+test('methodology identifies the Jura tax quarantine separately from Wallis',async({page})=>{
+ await page.goto('pages/methode.html');
+ await expect(page.locator('main')).toContainText('Jura (JU)');
+ await expect(page.locator('main')).toContainText('Kirchgemeinde');
+});

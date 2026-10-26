@@ -25,6 +25,15 @@ it('excludes quarantined cantons and suppresses a quarantined workplace baseline
  expect(result.map(r=>r.id)).toEqual([2,1]);
  expect(result.every(r=>r.delta===null)).toBe(true);
 });
+it('withholds JU residential estimates and a JU workplace savings baseline',async()=>{
+ const {filterAndRank}=await import('./filter');
+ const gs={...gemeinden,'4':['Delta','JU',100,100,0,0] as const};
+ const acc={...access,'4':['four','Four',0] as const};
+ const result=filterAndRank(gs,acc,[[1,0],[2,1],[4,2]],
+  {maxTime:5,maxWalk:10,countWalk:false,workplace:4},{1:200,2:100,4:50},new Set(['VS','JU']));
+ expect(result.map(r=>r.id)).toEqual([2,1]);
+ expect(result.every(r=>r.delta===null)).toBe(true);
+});
 it('forms five equal-count groups including small and empty result sets',async()=>{
  const {filterAndRank}=await import('./filter');
  for(const n of [0,1,2,4,5,6,23]){
