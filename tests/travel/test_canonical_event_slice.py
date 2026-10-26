@@ -132,14 +132,41 @@ class CanonicalEventSliceTests(unittest.TestCase):
 
     def test_uncertainty_inventory_is_reason_coded_and_cannot_be_omitted(self):
         inventory = event_slice._uncertainty_inventory(
-            {"count.quarantined_frequency_pairs": "278"},
+            {"count.quarantined_frequency_pairs": "278",
+             "count.quarantined_non_exact_pairs":"17"},
             {"count.status.in_seat_candidate_unvalidated": "19170"},
             {"count.boundary_quarantined": "3565", "count.unassigned": "7841"},
             "PROVISIONAL_SOURCE_CANDIDATES")
         reasons = set(event_slice._uncertainty_reasons(inventory))
-        self.assertTrue({"frequency_source_quarantined", "in_seat_ambiguity",
+        self.assertTrue({"frequency_source_quarantined", "non_exact_source_quarantined",
+                         "in_seat_ambiguity",
                          "boundary_board_stops_quarantined", "unassigned_board_stops",
                          "provisional_target_group"}.issubset(reasons))
+        for missing in ('count.quarantined_frequency_pairs',
+                        'count.quarantined_non_exact_pairs'):
+            metadata={'count.quarantined_frequency_pairs':'0',
+                      'count.quarantined_non_exact_pairs':'0'}
+            del metadata[missing]
+            with self.assertRaisesRegex(event_slice.EventSliceError, 'inventory'):
+                event_slice._uncertainty_inventory(metadata,
+                    {'count.status.in_seat_candidate_unvalidated':'0'},
+                    {'count.boundary_quarantined':'0','count.unassigned':'0'},'PROVISIONAL')
+        with self.assertRaisesRegex(event_slice.EventSliceError, 'inventory'):
+            event_slice._uncertainty_inventory(
+                {'count.quarantined_frequency_pairs':'-1',
+                 'count.quarantined_non_exact_pairs':'0'},
+                {'count.status.in_seat_candidate_unvalidated':'0'},
+                {'count.boundary_quarantined':'0','count.unassigned':'0'},'PROVISIONAL')
+        with self.assertRaisesRegex(event_slice.EventSliceError, 'inventory'):
+            event_slice._uncertainty_inventory(
+                {'count.quarantined_frequency_pairs':'0',
+                 'count.quarantined_non_exact_pairs':'0'}, {},
+                {'count.boundary_quarantined':'0','count.unassigned':'0'},'PROVISIONAL')
+        provenance=event_slice._generator_provenance(['Z','A','Z'])
+        self.assertEqual(provenance['destinationChildStopIds'],['A','Z'])
+        self.assertEqual(len(provenance['generatorSha256']),64)
+        with self.assertRaisesRegex(event_slice.EventSliceError, 'destination'):
+            event_slice._generator_provenance([])
         with self.assertRaisesRegex(event_slice.EventSliceError, "nonempty"):
             event_slice.evaluate_events(
                 [ride(1, "T", "A", "Z", 23_400, 23_500)], (), {"Z"}, {"A": 1},

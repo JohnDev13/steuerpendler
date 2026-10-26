@@ -151,16 +151,35 @@ def _board_assignments(path: pathlib.Path) -> tuple[dict[str, int], dict[str, st
         database.close()
 
 
+def _required_inventory_count(metadata: dict[str, str], key: str) -> int:
+    raw = metadata.get(key, '')
+    if not raw.isdecimal():
+        raise EventSliceError(f'required inventory count missing/malformed: {key}')
+    return int(raw)
+
+
+def _generator_provenance(targets: Iterable[str]) -> dict:
+    children = sorted(set(targets))
+    if not children or not all(isinstance(stop, str) and stop for stop in children):
+        raise EventSliceError('destination child stop inventory is empty/malformed')
+    return {'generatorVersion':'1.1',
+            'generatorSha256':_sha256(pathlib.Path(__file__)),
+            'destinationChildStopIds':children}
+
+
 def _uncertainty_inventory(connection_metadata, transfer_metadata, board_metadata,
                            target_status) -> dict[str, int | str]:
     return {
-        "frequency_source_quarantined": int(
-            connection_metadata.get("count.quarantined_frequency_pairs", "0")),
-        "in_seat_continuations_unvalidated": int(
-            transfer_metadata.get("count.status.in_seat_candidate_unvalidated", "0")),
-        "board_stops_boundary_quarantined": int(
-            board_metadata.get("count.boundary_quarantined", "0")),
-        "board_stops_unassigned": int(board_metadata.get("count.unassigned", "0")),
+        "frequency_source_quarantined": _required_inventory_count(
+            connection_metadata, "count.quarantined_frequency_pairs"),
+        "non_exact_source_quarantined": _required_inventory_count(
+            connection_metadata, "count.quarantined_non_exact_pairs"),
+        "in_seat_continuations_unvalidated": _required_inventory_count(
+            transfer_metadata, "count.status.in_seat_candidate_unvalidated"),
+        "board_stops_boundary_quarantined": _required_inventory_count(
+            board_metadata, "count.boundary_quarantined"),
+        "board_stops_unassigned": _required_inventory_count(
+            board_metadata, "count.unassigned"),
         "target_group_status": target_status or "PROVISIONAL",
     }
 
@@ -173,6 +192,8 @@ def _uncertainty_reasons(inventory: dict[str, int | str]) -> tuple[str, ...]:
     }
     if inventory["frequency_source_quarantined"]:
         reasons.add("frequency_source_quarantined")
+    if inventory["non_exact_source_quarantined"]:
+        reasons.add("non_exact_source_quarantined")
     if inventory["in_seat_continuations_unvalidated"]:
         reasons.add("in_seat_ambiguity")
     if inventory["board_stops_boundary_quarantined"]:
@@ -238,6 +259,7 @@ def export_slice(connections_path, transfer_scope_path, board_stop_path,
         },
         "denominator": expected,
         "sourceCoverage": coverage,
+        **_generator_provenance(targets),
         "uncertaintyInventory": inventory,
         "unresolvedReasons": list(reasons),
         "claims": "BOUNDED_AARAU_POSITIVES_AND_UNKNOWNS_NOT_GLOBAL_PROOF",
