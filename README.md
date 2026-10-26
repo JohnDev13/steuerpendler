@@ -1,58 +1,65 @@
 # Steuerpendler
 
-**Non-production, non-commercial test preview. Not a finished tax/commute service.**
+**Non-production, non-commercial test preview. Estimates only, no tax advice.**
 
-- Preview address: https://johndev13.github.io/steuerpendler/ — verified live, not just built locally. [Latest scope, map and workflow verification](docs/deployment/Scope-Map-Update-2026-10-17.md); [original v0.1 deployment evidence](docs/deployment/Deployment-Report-v0.1.md).
-- Source specification: [`SPEC.md`](SPEC.md), with preserved supplied-v1 lineage and amendment register.
-- Original repository/prototype were not recovered. This is a reconstruction from real pinned upstream sources.
+Pick the town you work in (one of 19 German-speaking cantonal capitals) and how long you are willing to
+commute by public transport; get the Gemeinden within that commute ranked by total yearly income tax
+(Bund + Kanton + Gemeinde + Kirche), on a map and as a list. Static site, all calculations in the browser,
+no backend, cookies or analytics.
 
-## What you can test
+- Preview: https://johndev13.github.io/steuerpendler/
+- Current state, gates and open decisions: [`docs/STATUS.md`](docs/STATUS.md)
+- Requirements: [`SPEC.md`](SPEC.md)
 
-German labelled controls; a capital-only workplace selector (19 destinations); a separate accent-insensitive residential search across all 2,110 genuine 2026 Gemeinden in all 26 cantons; the actual Switzerland map with zoom, pan, touch pinch and reset; municipality selection, keyboard controls, responsive layout, light/dark themes and static content pages. Only destinations are narrowed: tax candidates and access origins remain all Gemeinden, including neighbouring cantons. See [scope clarification v1.2](docs/spec-amendments-v1.2.md). Tax-profile JSON loads on demand and validates its pinned served-byte hash. All calculations are client-side; no backend, accounts, cookies or analytics.
+## How the numbers are made
 
-**Tax totals, cheapest recommendations and commute rankings are intentionally withheld.** The on-grid tax gate passes, but 119/300 off-grid cases exceed CHF 10 (max error CHF 46.792). All 29 historical engine scenarios reproduce, which is not official ESTV verification. Exact r5py travel-metric conformance fails; no nationwide travel data or SBB verification is claimed. See `docs/tax/` and `docs/travel/` for actual reports. These gates were not relaxed.
+**Tax.** The vendored open-source engine [`swisstaxcalculator`](https://github.com/devbrains-com/swisstaxcalculator)
+with ESTV 2026 data and 19 recorded patches (`vendor/swisstaxcalculator/STEUERPENDLER-PATCHES.md`) generates
+one profile per civil status and number of children. The browser evaluates the tariffs exactly between the
+CHF 1,000 grid rows. Assumptions: gross employment income, age 35, no wealth, ESTV standard deductions,
+married couples with one income. Checked against 29 frozen cases from the official ESTV calculator:
+21 match within tolerance; cantons more than 5 % off are withheld (currently VS, VD, GE, JU).
+
+**Commute.** The site currently uses the hash-pinned observed-positive export; unlisted
+Gemeinden remain unknown. `scripts/travel/matrix.py` is an *experimental*, inactive candidate
+Connection Scan for an official GTFS feed. It has not been run and independently audited on a
+real national feed; frequency trips, transfer precedence and origin coverage remain unresolved.
+Direct-only journeys are scanned separately. Its presence cannot override the public preview
+while `availability.travel=false`, and it is not proof of globally fastest routes. External
+walking access to the first stop remains unmeasured (zero by owner interim assumption).
+
+**Map.** Bundesamt für Statistik (BFS), GEOSTAT — Generalisierte Grenzen G1, 01.01.2026, via
+`swiss-maps@4.7.0`; attributed non-commercial use (`docs/map/publication-assessment.md`).
 
 ## Run locally
 
-Use Node 22.23.2 or a compatible newer supported Node, and Python 3.11 for routing diagnostic unit tests.
+Node 22.23.2 or newer, Python 3.11 or newer.
 
 ```sh
 npm ci
-npm run dev
-npm test
-npm run map:test
-npm run release:test
-npm run build
-npm run preview
-```
-
-The eight genuine 2026 profiles, 2,110-ID Gemeinde file and simplified map are committed under `site/data/`. Raw Swiss GTFS/OSM inputs are not committed. Tax engine source/data and all reconstructed patches retain their upstream provenance and MIT notice.
-
-```sh
-npm run tax:build
-npm run tax:test       # CURRENTLY exits 1: off-grid accuracy gate genuinely fails
-npm run tax:reference  # Engine/table regression only; not official ESTV acceptance
-python3 -m unittest discover -s tests/travel -v
-node --test tests/content/*.test.mjs
-npx playwright install --with-deps chromium
-npm run test:e2e
-```
-
-On a locked-down Linux host, Playwright system libraries may require a separately approved local/system installation. The repo does not silently install system dependencies.
-
-## GitHub Pages project-path build
-
-```sh
+npm run dev                 # local site
+npm test                    # unit tests (includes tax regression vs engine and ESTV ratchet)
+npm run tax:test            # SPEC 7.1 numeric gates
+npm run tax:official        # 29 official ESTV cases
+python3 -m unittest discover -s tests/travel
+npx playwright install --with-deps chromium && npm run test:e2e
 PAGES_BASE=/steuerpendler/ npm run build
-PAGES_BASE=/steuerpendler/ npm run test:e2e
 ```
 
-`PAGES_BASE` defaults to `/` for the intended Cloudflare production host. JSON URLs and navigation respect the base. `dist/` is the static deliverable; `scripts/preview-server.mjs` is a local-only verification server, never a production backend. It returns actual 404s, not an HTML-200 SPA fallback for missing data.
+Regenerate data: `npm run tax:build` (tax tables), `npm run map:build` (map), and for travel
+`python3 scripts/travel/run_matrix.py --gtfs <feed.zip> --date 2026-10-27` or the **Build travel matrix**
+workflow. `npm run build` regenerates the release manifest (`site/data/release.json`), which CI checks is
+committed.
 
-The original preview credential lacked `workflow`; it was refreshed on 17 October 2026 and the effective login now has that scope. Historical rejection is recorded in the v0.1 report, not treated as a permanent restriction. A workflow upload or scope alone is not CI success: source-check run results and any still-failing numerical gates must be reported separately. The test deployment continues to use built files on `gh-pages` and branch-based Pages publishing. Source changes use task PRs, never direct main pushes. Cloudflare `_headers` files do not configure GitHub Pages; production cache/launch acceptance remains pending.
+## Contributing
 
-## Sources, rights and privacy
+One topic per branch, PRs against `main` only, squash merge. CI (`.github/workflows/ci.yml`) must be green.
+Keep data and its schema in sync with `SPEC.md`. Never invent ESTV or SBB reference values; add evidence as
+frozen captures with a test, not as prose.
 
-Map: **Bundesamt für Statistik (BFS), GEOSTAT — Generalisierte administrative Grenzen G1, 01.01.2026**, via pinned `swiss-maps@4.7.0`. Simplified jointly with shared topology, LV95/EPSG:2056. See `docs/map/publication-assessment.md`; current official sources agree on attributed non-commercial use, but differ on commercial permissions. The preview has no advertising, payments, monetization or lead generation. Commercial clearance is not claimed. Verbatim notices are served under `credits/`.
+## Sources and rights
 
-GitHub Pages logs visitor IP addresses for security purposes. Profile/workplace filenames can disclose a selected profile/place to the host; the numeric income is not sent for server-side calculation. See the draft Datenschutz page. Operator contact, legal/content approval, official ESTV/SBB fixtures, owner golden snapshot, real-phone testing and production launch all remain pending.
+Tax: ESTV via swisstaxcalculator (MIT). Timetable: opentransportdata.swiss. Footpaths: © OpenStreetMap
+contributors (ODbL). Boundaries: BFS GEOSTAT. Notices are served under `credits/`. GitHub Pages logs visitor
+IP addresses; see the draft Datenschutz page. Operator contact, legal review, commercial map rights and a
+production launch are pending.

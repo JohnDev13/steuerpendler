@@ -45,10 +45,10 @@ Environment: Node `v22.23.2`; Playwright Chromium `156.0.8078.4`, headless on th
 4. Combined evidence run:
 
    ```sh
-   node --test --test-reporter=tap --test-reporter-destination=docs/content-tests.tap tests/content/*.test.mjs
+   node --test tests/content/*.test.mjs
    ```
 
-   Actual retained output: [`content-tests.tap`](content-tests.tap) — **13 tests, 13 passed, 0 failed, 0 skipped**.
+   Run in CI (`ci.yml`, job `web`); results are in the run log, not committed.
 5. `npm test` → **4 test files passed, 9 tests passed** (existing Vitest regression suite). `git diff --check` → exit 0.
 
 `package.json`, `vite.config.ts`, `SPEC.md`, `src/` and other branches are intentionally untouched. The new node:test suites are explicit commands, not silently claimed to be covered by the existing Vitest include pattern. Production build/CI/remote/Pages verification is **not run or claimed** by this task; parent wiring and actual owner approval remain necessary for T7 acceptance.
