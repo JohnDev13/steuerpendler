@@ -1,0 +1,93 @@
+{
+  "schema": "steuerpendler.canonical-event-pilot-fixture.v1",
+  "sourceKind": "synthetic",
+  "cases": [
+    {
+      "id": "authorized_in_seat",
+      "destinationBfs": 4001,
+      "destinationStopIds": ["Z1", "Z2"],
+      "forcedFirstEventId": "c1",
+      "events": [
+        {"id":"c1","tripId":"T1","tripInstanceId":"T1@1","routeId":"R1","serviceId":"S","blockId":"BLOCK","fromStopId":"A","toStopId":"X","fromSequence":1,"toSequence":2,"departureSeconds":23400,"arrivalSeconds":23700,"pickupAllowed":true,"dropOffAllowed":true,"exact":true},
+        {"id":"c2","tripId":"T2","tripInstanceId":"T2@1","routeId":"R2","serviceId":"S","blockId":"BLOCK","fromStopId":"X","toStopId":"Z1","fromSequence":1,"toSequence":2,"departureSeconds":23710,"arrivalSeconds":24000,"pickupAllowed":true,"dropOffAllowed":true,"exact":true}
+      ],
+      "continuations": [{"fromEventId":"c1","toEventId":"c2","status":"authorized","source":"pinned type-4 row"}],
+      "transferRules": []
+    },
+    {
+      "id": "block_id_insufficient",
+      "destinationBfs": 4001,
+      "destinationStopIds": ["Z"],
+      "forcedFirstEventId": "b1",
+      "events": [
+        {"id":"b1","tripId":"B1","tripInstanceId":"B1@1","routeId":"RB1","serviceId":"S","blockId":"SAME","fromStopId":"A","toStopId":"X","fromSequence":1,"toSequence":2,"departureSeconds":23400,"arrivalSeconds":23500,"pickupAllowed":true,"dropOffAllowed":true,"exact":true},
+        {"id":"b2","tripId":"B2","tripInstanceId":"B2@1","routeId":"RB2","serviceId":"S","blockId":"SAME","fromStopId":"X","toStopId":"Z","fromSequence":1,"toSequence":2,"departureSeconds":23510,"arrivalSeconds":23700,"pickupAllowed":true,"dropOffAllowed":true,"exact":true}
+      ],
+      "continuations": [],
+      "transferRules": []
+    },
+    {
+      "id": "specific_forbidden_over_generic",
+      "destinationBfs": 4001,
+      "destinationStopIds": ["Z"],
+      "forcedFirstEventId": "f1",
+      "events": [
+        {"id":"f1","tripId":"IN","tripInstanceId":"IN@1","routeId":"RI","serviceId":"S","blockId":"","fromStopId":"A","toStopId":"X","fromSequence":1,"toSequence":2,"departureSeconds":23400,"arrivalSeconds":23500,"pickupAllowed":true,"dropOffAllowed":true,"exact":true},
+        {"id":"f2","tripId":"OUT","tripInstanceId":"OUT@1","routeId":"RO","serviceId":"S","blockId":"","fromStopId":"Y","toStopId":"Z","fromSequence":1,"toSequence":2,"departureSeconds":23800,"arrivalSeconds":24000,"pickupAllowed":true,"dropOffAllowed":true,"exact":true}
+      ],
+      "continuations": [],
+      "transferRules": [
+        {"id":"generic","fromStopId":"X","toStopId":"Y","status":"minimum","minimumSeconds":120,"source":"generic source row"},
+        {"id":"specific","fromStopId":"X","toStopId":"Y","fromTripId":"IN","toTripId":"OUT","status":"forbidden","source":"specific source row"}
+      ]
+    },
+    {
+      "id": "destination_group_no_free_transfer",
+      "destinationBfs": 4001,
+      "destinationStopIds": ["Z1", "Z2"],
+      "forcedFirstEventId": "d1",
+      "events": [
+        {"id":"d1","tripId":"D1","tripInstanceId":"D1@1","routeId":"RD1","serviceId":"S","blockId":"","fromStopId":"A","toStopId":"Z1","fromSequence":1,"toSequence":2,"departureSeconds":23400,"arrivalSeconds":23900,"pickupAllowed":true,"dropOffAllowed":true,"exact":true},
+        {"id":"d2","tripId":"D2","tripInstanceId":"D2@1","routeId":"RD2","serviceId":"S","blockId":"","fromStopId":"Z2","toStopId":"Q","fromSequence":1,"toSequence":2,"departureSeconds":23901,"arrivalSeconds":24000,"pickupAllowed":true,"dropOffAllowed":true,"exact":true}
+      ],
+      "continuations": [],
+      "transferRules": []
+    },
+    {
+      "id": "uncertain_frequency",
+      "destinationBfs": 4001,
+      "destinationStopIds": ["Z"],
+      "forcedFirstEventId": "u1",
+      "events": [
+        {"id":"u1","tripId":"U1","tripInstanceId":"U1@1","routeId":"RU1","serviceId":"S","blockId":"","fromStopId":"A","toStopId":"Z","fromSequence":1,"toSequence":2,"departureSeconds":23400,"arrivalSeconds":24000,"pickupAllowed":true,"dropOffAllowed":true,"exact":true}
+      ],
+      "continuations": [],
+      "transferRules": [],
+      "unresolvedReasons": ["non_exact_frequency_may_improve"]
+    },
+    {
+      "id": "tie_break_stable_ids",
+      "destinationBfs": 4001,
+      "destinationStopIds": ["Z"],
+      "forcedFirstEventId": "t0",
+      "events": [
+        {"id":"t0","tripId":"FIRST","tripInstanceId":"FIRST@1","routeId":"RF","serviceId":"S","blockId":"","fromStopId":"A","toStopId":"X","fromSequence":1,"toSequence":2,"departureSeconds":23400,"arrivalSeconds":23500,"pickupAllowed":true,"dropOffAllowed":true,"exact":true},
+        {"id":"tB","tripId":"B","tripInstanceId":"B@1","routeId":"RB","serviceId":"S","blockId":"","fromStopId":"X","toStopId":"Z","fromSequence":1,"toSequence":2,"departureSeconds":23620,"arrivalSeconds":24000,"pickupAllowed":true,"dropOffAllowed":true,"exact":true},
+        {"id":"tA","tripId":"A","tripInstanceId":"A@1","routeId":"RA","serviceId":"S","blockId":"","fromStopId":"X","toStopId":"Z","fromSequence":1,"toSequence":2,"departureSeconds":23620,"arrivalSeconds":24000,"pickupAllowed":true,"dropOffAllowed":true,"exact":true}
+      ],
+      "continuations": [],
+      "transferRules": [{"id":"same-stop","fromStopId":"X","toStopId":"X","status":"minimum","minimumSeconds":120,"source":"pinned minimum"}]
+    },
+    {
+      "id": "elapsed_cap_inclusive",
+      "destinationBfs": 4001,
+      "destinationStopIds": ["Z"],
+      "forcedFirstEventId": "e1",
+      "events": [
+        {"id":"e1","tripId":"EDGE","tripInstanceId":"EDGE@1","routeId":"RE","serviceId":"S","blockId":"","fromStopId":"A","toStopId":"Z","fromSequence":1,"toSequence":2,"departureSeconds":30600,"arrivalSeconds":32400,"pickupAllowed":true,"dropOffAllowed":true,"exact":true}
+      ],
+      "continuations": [],
+      "transferRules": []
+    }
+  ]
+}
