@@ -8,11 +8,15 @@ it('does not report zero reachable Gemeinden when Aarau travel has not been veri
 
 it('reports an actual zero only after travel becomes available', () => {
   expect(strings.reachabilityOverview(true, 0, 'Aarau', 20, 15, 2110))
-    .toBe(strings.reachable(0));
+    .toBe('0 vergleichbare Gemeinden in Reichweite');
 });
 
 it('does not turn zero observed preview rows into a negative reachability claim', () => {
-  expect(strings.previewOverview(0, 20)).toContain('keine vollständige Erreichbarkeitsmenge');
-  expect(strings.previewOverview(0, 20)).not.toContain('Keine Gemeinde in Reichweite');
+  expect(strings.observedWarning).toContain('keine vollständige Erreichbarkeitsmenge');
+  expect(strings.observedEmpty).toContain('unbekannt');
   expect(strings.previewUnknown).toContain('unbekannt');
+});
+
+it('states absence in the complete matrix as no journey within the limit, not as unknown', () => {
+  expect(strings.matrixNoRoute(20)).toBe('Keine Verbindung bis 20 Min. gefunden');
 });

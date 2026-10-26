@@ -176,7 +176,7 @@ class CanonicalEventPilotTests(unittest.TestCase):
         fixture = load("canonical-event-pilot-staufen.json")
         self.assertEqual(fixture["sourcePins"]["gtfsSha256"],
                          "d5b312e1ff398b505f9a6efef60c365f3c864857f73c55e87b383960a6b3418e")
-        witness = json.loads((ROOT / "site/data/travel/aarau-transfer-witness-20261027.json")
+        witness = json.loads((ROOT / "tests/travel/fixtures/aarau-transfer-witness-20261027.json")
                              .read_text(encoding="utf-8"))
         self.assertEqual(fixture["sourcePins"]["sourceWitnessSha256"],
                          witness["sourceWitnessSha256"])
