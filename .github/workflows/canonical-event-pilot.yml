@@ -25,6 +25,8 @@ jobs:
     timeout-minutes: 20
     env:
       PAGES_BASE: /steuerpendler/
+      # Travel snapshot tests require an existing private temporary directory.
+      TMPDIR: ${{ runner.temp }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
