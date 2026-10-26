@@ -46,7 +46,7 @@ jobs:
       - name: Release manifest is committed and current
         run: git diff --exit-code -- site/data/manifest.json site/data/release.json
       - name: Install Chromium
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install chromium
       - name: Content page tests
         run: node --test tests/content/*.test.mjs
       - name: End-to-end tests
