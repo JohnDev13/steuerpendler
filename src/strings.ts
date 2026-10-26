@@ -2,8 +2,7 @@ export const strings = {
  coverage:(residences:number,workplaces:number)=>`${residences.toLocaleString('de-CH')} Gemeinden als Wohnorte · ${workplaces} deutschsprachige Hauptorte als Arbeitsorte · auch kantonsübergreifend`,
  residenceSearch:'Wohngemeinde suchen',residenceHint:'Alle Schweizer Gemeinden durchsuchen und auf der Karte auswählen; der Arbeitsort bleibt unverändert.',
  reachabilityOverview:(travelReady:boolean,count:number,workplace:string,maxTime:number,maxWalk:number,residences:number)=>travelReady?`${count} vergleichbare Gemeinden in Reichweite`:`${workplace}: Erreichbarkeit für ${residences.toLocaleString('de-CH')} Wohngemeinden bei max. ${maxTime} Min. Fahrzeit und ${maxWalk} Min. Fussweg noch ungeprüft. Keine Gemeinde als erreichbar oder ausgeschlossen bestätigt.`,
- 
- 
+
  observedOverview:(count:number,workplace:string,maxTime:number)=>`${count} Gemeinden mit beobachteter Verbindung nach ${workplace} bis ${maxTime} Min.`,
  directObservedOverview:(count:number,workplace:string,maxTime:number)=>`${count} Gemeinden mit unabhängig beobachteter direkter Verbindung nach ${workplace} bis ${maxTime} Min.`,
  observedEmpty:'Keine qualifizierende beobachtete positive Verbindung in der Auswahl. Nicht aufgeführte Gemeinden bleiben unbekannt, nicht nachweislich unerreichbar.',

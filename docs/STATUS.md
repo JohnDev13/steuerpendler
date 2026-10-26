@@ -7,10 +7,12 @@ keep it short and update it in the same PR that changes what it describes.
 
 - All 19 workplaces, all 2,110 Gemeinden as homes. Tax-first ranking of Gemeinden with a public-transport
   connection to the workplace, with indicative tax totals and the difference to the workplace.
-- Travel: until a matrix built from a real feed is merged, the page uses the observed-positive export
-  (`site/data/travel/all19-observed-routes-20261027.json`, 806 of 40,090 pairs). Gemeinden not listed are
-  *unknown*. Once `site/data/travel/matrix/` exists, the page uses it instead and a missing Gemeinde means
-  *no journey within 30 minutes* (SPEC §6.5c).
+- Travel: the site still uses the observed-positive export
+  (`site/data/travel/all19-observed-routes-20261027.json`, 806 of 40,090 pairs). Gemeinden not listed
+  are *unknown*. The experimental GTFS matrix has not been run on a real feed and is gated off by
+  `availability.travel=false`; adding its files alone cannot replace the observed-positive preview.
+  Its independently scanned direct-only rows remain experimental. The separate pinned first-event×19
+  file is provisional and not deployed as a certified fastest-route authority.
 - Walking from home to the first stop is not measured (0 min); the walk controls are disabled and say so.
 - Withheld cantons ("Daten in Prüfung"): VS, VD, GE, JU (`src/config.ts`).
 
@@ -25,6 +27,11 @@ keep it short and update it in the same PR that changes what it describes.
 | Travel vs SBB, 30 pairs, ± 3 min | pending: reference minutes not yet entered | `python3 scripts/travel/compare_reference.py` |
 | Unit, release, map, content, e2e | pass | see CI |
 
+The green `tax-accuracy` job checks engine parity, not the independently failing ESTV gate;
+`npm run tax:official` still exits 1 (8/29 cases fail). Official approvals and
+`availability.travel` remain false. None of the experimental travel code changes the public
+route-file hash or makes missing origins unreachable.
+
 Remaining ESTV differences: tariff-level differences in SZ, AG (married), NW and SO (0.2–1.5 %), a TG child
 tax credit the engine has no concept of, and VS, VD, GE (withheld). Details:
 `vendor/swisstaxcalculator/STEUERPENDLER-PATCHES.md`.
@@ -37,10 +44,12 @@ tax credit the engine has no concept of, and VS, VD, GE (withheld). Details:
 - `.github/workflows/deploy-pages.yml` (manual): builds with `PAGES_BASE=/steuerpendler/` and deploys to
   GitHub Pages. Requires Settings → Pages → Source = "GitHub Actions"; the `gh-pages` branch is then unused.
 
-## Open owner decisions
+## Open evidence and release tasks
 
-- Fill `tests/travel/sbb-reference-2026.csv` from sbb.ch (30 pairs).
-- Run "Build travel matrix" with a feed URL from https://data.opentransportdata.swiss/dataset/timetable-2026-gtfs2020.
+- Collect and pin 30 same-date SBB journeys as diagnostics; complete event-source and origin-stop
+  coverage audits separately. Neither a ±3-minute sample nor a draft matrix PR proves fastest routes.
+- Run the manual **Build travel matrix** workflow only with an official feed URL *and pinned SHA-256*;
+  its output is a draft candidate, not public authority. Preserve the approved 2026-10-27 reference day.
 - Refresh the vendored 2026 ESTV data (`importdata 2026 --download` upstream) and re-check
   `vendor/swisstaxcalculator/data/corrections/2026.json`.
 - Production host (Cloudflare per SPEC §3), Impressum details (O5), commercial map rights.

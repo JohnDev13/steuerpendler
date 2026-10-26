@@ -17,6 +17,6 @@ it('does not turn zero observed preview rows into a negative reachability claim'
   expect(strings.previewUnknown).toContain('unbekannt');
 });
 
-it('states absence in the complete matrix as no journey within the limit, not as unknown', () => {
-  expect(strings.matrixNoRoute(20)).toBe('Keine Verbindung bis 20 Min. gefunden');
+it('keeps absent experimental matrix rows unknown, never unreachable', () => {
+  expect(strings.matrixNoRoute(20)).toContain('unbekannt');
 });

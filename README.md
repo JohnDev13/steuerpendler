@@ -20,11 +20,13 @@ CHF 1,000 grid rows. Assumptions: gross employment income, age 35, no wealth, ES
 married couples with one income. Checked against 29 frozen cases from the official ESTV calculator:
 21 match within tolerance; cantons more than 5 % off are withheld (currently VS, VD, GE, JU).
 
-**Commute.** `scripts/travel/matrix.py` scans the official Swiss GTFS timetable
-([opentransportdata.swiss](https://opentransportdata.swiss)) for the reference Tuesday: shortest time from
-first boarding at a stop in the Gemeinde (06:30–08:30) to arrival at the workplace station, any number of
-changes, up to 30 minutes. Walking to the first stop is not measured yet. Until a matrix from a real feed is
-merged, the preview uses the earlier observed-positive export, where unlisted Gemeinden are unknown.
+**Commute.** The site currently uses the hash-pinned observed-positive export; unlisted
+Gemeinden remain unknown. `scripts/travel/matrix.py` is an *experimental*, inactive candidate
+Connection Scan for an official GTFS feed. It has not been run and independently audited on a
+real national feed; frequency trips, transfer precedence and origin coverage remain unresolved.
+Direct-only journeys are scanned separately. Its presence cannot override the public preview
+while `availability.travel=false`, and it is not proof of globally fastest routes. External
+walking access to the first stop remains unmeasured (zero by owner interim assumption).
 
 **Map.** Bundesamt für Statistik (BFS), GEOSTAT — Generalisierte Grenzen G1, 01.01.2026, via
 `swiss-maps@4.7.0`; attributed non-commercial use (`docs/map/publication-assessment.md`).
