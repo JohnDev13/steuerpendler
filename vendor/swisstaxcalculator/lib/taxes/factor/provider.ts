@@ -3,6 +3,7 @@ import path from 'path';
 import { TaxFactors } from './types';
 import { dataParsedBasePath } from '../constants';
 import { TaxInput } from '../typesClient';
+import { correctFactors } from '../corrections';
 
 const taxFactorsByYearCantonAndCity = new Map<number, Map<number, Map<number, TaxFactors>>>();
 
@@ -13,8 +14,10 @@ const loadFactorsIfRequired = async (cantonId: number, year: number) => {
 
   // Load factors from file
   const resolvedPath = path.resolve(`${dataParsedBasePath}${year}/factors/${cantonId}.json`);
-  const factors: TaxFactors[] = JSON.parse(
-    (await readFile(new URL(resolvedPath, import.meta.url))).toString()
+  const factors: TaxFactors[] = correctFactors(
+    year,
+    cantonId,
+    JSON.parse((await readFile(new URL(resolvedPath, import.meta.url))).toString())
   );
 
   // Create collections

@@ -88,7 +88,6 @@ export function validateAarauPreview(data: unknown, release: PreviewReleaseInven
     || data.routeSha256 !== AARAU_PREVIEW_SOURCE.routeSha256 || data.gtfsSha256 !== AARAU_PREVIEW_SOURCE.gtfsSha256
     || data.mapSha256 !== AARAU_PREVIEW_SOURCE.mapSha256 || data.gemeindenSha256 !== AARAU_PREVIEW_SOURCE.gemeindenSha256
     || release.files['map/switzerland-2026.json']?.sha256 !== data.mapSha256
-    || release.files['gemeinden-2026.json']?.sha256 !== data.gemeindenSha256
     || rawRows.length !== EXPECTED_COUNTS.assignedMunicipalities) invalid();
 
   const rows: AarauPreviewRow[] = [];

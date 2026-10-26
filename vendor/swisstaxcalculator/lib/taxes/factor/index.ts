@@ -16,6 +16,17 @@ export const getChurchIncomeFactor = (confession: TaxConfession, factors: TaxFac
   }
 };
 
+// Steuerpendler patch 15: church-tax base differs by canton. The engine applies every church rate to the
+// simple tax. ESTV applies JU rates to the cantonal tax (estv-2026-25: 6.4% x 5,809 = 372) and UR rates per
+// 1% of taxable income on top of UR's 7.1% flat tariff (estv-2026-29: 0.82% x 48,349 = 396). Express both as
+// an equivalent rate on the simple tax so every consumer keeps the single formula base x rate / 100.
+export const UR_FLAT_TAX_PERCENT = 7.1;
+export const churchIncomeRateOnSimpleTax = (cantonId: number, rate: number, factors: TaxFactors) => {
+  if (cantonId === 11) return Math.round(rate * factors.IncomeRateCanton * 1e4) / 1e6;
+  if (cantonId === 22) return Math.round((rate / UR_FLAT_TAX_PERCENT) * 1e6) / 1e6;
+  return rate;
+};
+
 export const getChurchFortuneFactor = (confession: TaxConfession, factors: TaxFactors) => {
   switch (confession) {
     case 'christ':
@@ -49,7 +60,8 @@ export const calculateTaxesCantonAndCity = async (
       ...taxInput.persons.map((person) =>
         multiplyDineroPercent(
           taxesIncomeBaseChurch,
-          getChurchIncomeFactor(person.confession, factor) / taxInput.persons.length,
+          churchIncomeRateOnSimpleTax(taxInput.cantonId, getChurchIncomeFactor(person.confession, factor), factor) /
+            taxInput.persons.length,
           2
         )
       )

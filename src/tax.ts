@@ -5,13 +5,15 @@ export type PensionDefault = 'ESTV2026Age35';
 export type BudgetDefault = 'ESTV2026Age35';
 export type Church = 'none' | 'reformed' | 'catholic';
 export type Gemeinde = readonly [name:string,canton:string,rateCanton:number,rateGemeinde:number,rateReformed:number,rateCatholic:number];
-export type DeductionFormat = 'ZERO'|'STANDARDIZED'|'MAXIMUM'|'PERCENT'|'PERCENT,MAXIMUM'|'PERCENT,MINIMUM,MAXIMUM';
+export type DeductionFormat = 'ZERO'|'STANDARDIZED'|'MAXIMUM'|'PERCENT'|'PERCENT,MAXIMUM'|'PERCENT,MINIMUM,MAXIMUM'|'STANDARDIZED,PERCENT,MAXIMUM';
 export interface DeductionOp {source:'net'|'constant'|'rent30';value:number;format:DeductionFormat;amount:number;percent:number;minimum:number;maximum:number;multiplier:number}
 export type TariffType = 'BUND'|'ZUERICH'|'FORMEL'|'FREIBURG'|'FLATTAX';
 export interface PreciseTariff {type:TariffType;split:number;table:{amount:number;percent:number;taxes:number;formula:string}[]}
 export interface PreciseCanton {bund:{deductions:DeductionOp[];tariff:PreciseTariff};canton:{deductions:DeductionOp[];tariff:PreciseTariff};personal:number;kids:number;persons:number}
 export interface TaxProfile {meta:{year:number;incomes:{from:number;step:number;count:number};pensionDefault?:PensionDefault;budgetDefault?:BudgetDefault;[key:string]:unknown};cantons:Record<string,number[][]>;precision?:Record<string,PreciseCanton>}
 // Integer ties-to-even, matching the engine's monetary rounding, not display rounding.
+// ESTV rounds percentage deductions down to whole francs.
+const floorChf=(x:number)=>Math.floor(x+1e-9);
 export function halfEven(x:number):number {const f=Math.floor(x),d=x-f;return Math.abs(d-.5)<1e-8?(f%2===0?f:f+1):Math.round(x);}
 function formulaValue(formula:string,wert:number):number {
  const compact=formula.replace(/\s/g,'');
@@ -22,7 +24,7 @@ function formulaValue(formula:string,wert:number):number {
  function expr():number {let v=term();while(tokens[i]==='+'||tokens[i]==='-'){const op=tokens[i++],r=term();v=op==='+'?v+r:v-r;}return v;}
  if(!formula.trim())return 0;const v=expr();if(i!==tokens.length||!Number.isFinite(v))throw Error('Ungültige Steuerformel.');return Math.max(0,Math.round(v*100)/100);
 }
-const deductionFormats = new Set<DeductionFormat>(['ZERO','STANDARDIZED','MAXIMUM','PERCENT','PERCENT,MAXIMUM','PERCENT,MINIMUM,MAXIMUM']);
+const deductionFormats = new Set<DeductionFormat>(['ZERO','STANDARDIZED','MAXIMUM','PERCENT','PERCENT,MAXIMUM','PERCENT,MINIMUM,MAXIMUM','STANDARDIZED,PERCENT,MAXIMUM']);
 const tariffTypes = new Set<TariffType>(['BUND','ZUERICH','FORMEL','FREIBURG','FLATTAX']);
 function validatePrecision(value:unknown):value is PreciseCanton {
  if(!value||typeof value!=='object')return false;
@@ -50,9 +52,10 @@ export function preciseBase(p:PreciseCanton,income:number,pensionDefault?:Pensio
    if(op.format==='ZERO')d=0;
    else if(op.format==='STANDARDIZED')d=op.amount;
    else if(op.format==='MAXIMUM')d=Math.min(v,op.maximum);
-   else if(op.format==='PERCENT')d=halfEven(v*op.percent/100);
-   else if(op.format==='PERCENT,MAXIMUM')d=Math.min(op.maximum,halfEven(v*op.percent/100));
-   else if(op.format==='PERCENT,MINIMUM,MAXIMUM')d=Math.min(op.maximum,Math.max(op.minimum,halfEven(v*op.percent/100)));
+   else if(op.format==='PERCENT')d=floorChf(v*op.percent/100);
+   else if(op.format==='PERCENT,MAXIMUM')d=Math.min(op.maximum,floorChf(v*op.percent/100));
+   else if(op.format==='PERCENT,MINIMUM,MAXIMUM')d=Math.min(op.maximum,Math.max(op.minimum,floorChf(v*op.percent/100)));
+   else if(op.format==='STANDARDIZED,PERCENT,MAXIMUM')d=Math.min(op.maximum,op.amount+floorChf(v*op.percent/100));
    deductions+=d*op.multiplier;
   }
   const tariff=part.tariff,split=tariff.split;

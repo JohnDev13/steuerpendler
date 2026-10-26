@@ -1,0 +1,16 @@
+{
+  "note": "Steuerpendler patch 19: values in the vendored 2026 ESTV snapshot that differ from the live ESTV calculator. Each entry cites the frozen ESTV capture that shows the current value. Applied at load time; upstream data bytes are unchanged. Re-check after every data refresh and delete entries the refreshed data already contains.",
+  "factors": [
+    { "bfs": 4021, "field": "IncomeRateCity", "from": 92, "to": 89, "evidence": "estv-2026-05 Baden: IncomeTaxCity 2806 / IncomeSimpleTaxCity 3153" },
+    { "bfs": 4566, "field": "IncomeRateCity", "from": 144, "to": 142, "evidence": "estv-2026-20 Frauenfeld: IncomeTaxCity 2586 / IncomeSimpleTaxCity 1821" },
+    { "bfs": 2601, "field": "IncomeRateCity", "from": 107, "to": 112, "evidence": "estv-2026-28 Solothurn: IncomeTaxCity 5781 / IncomeSimpleTaxCity 5161" },
+    { "bfs": 2701, "field": "IncomeRateCanton", "from": 100, "to": 50, "evidence": "estv-2026-08 Basel: canton and city each 9786 on simple tax 19572 (total unchanged)" },
+    { "bfs": 2701, "field": "IncomeRateCity", "from": 0, "to": 50, "evidence": "estv-2026-08 Basel" },
+    { "canton": 23, "field": "IncomeRateCanton", "from": 155, "to": 147.25, "evidence": "estv-2026-12 Lausanne: IncomeTaxCanton 9742 / IncomeSimpleTaxCanton 6616 = 147.25% = 155% x 0.95" }
+  ],
+  "deductions": [
+    { "canton": 19, "id": "SozLedig_EK", "field": "amount", "from": 3200, "to": 4200, "evidence": "estv-2026-04 Freienbach: 'Abzug ledige Personen' -4200" },
+    { "canton": 19, "id": "KKSparLedigMitBVGS3a_EK", "field": "maximum", "from": 3200, "to": 4200, "evidence": "estv-2026-04 Freienbach: 'Abzug private Versicherungen / Sparzinsen' -4200 (premiums 4560)" },
+    { "canton": 21, "id": "HauptErw_EK", "field": "maximum", "from": 3000, "to": 3500, "evidence": "estv-2026-14 Lugano: 'Übrige Berufsauslagen Haupterwerb' -3500" }
+  ]
+}

@@ -59,7 +59,10 @@ export function validateObservedRoutes(data: unknown, release: ObservedReleaseIn
     || data.schema !== 'steuerpendler.dated-observed-route-export.v1' || data.schemaVersion !== 1 || data.serviceDate !== '2026-10-27'
     || !record(source) || !exactKeys(source, Object.keys(SOURCE_SHA))
     || Object.entries(SOURCE_SHA).some(([key, expected]) => source[key] !== expected)
-    || release.files['gemeinden-2026.json']?.sha256 !== SOURCE_SHA.gemeinden || !record(data.destinations)) invalid();
+    || !record(data.destinations)) invalid();
+  // The route export records which Gemeinde file it was derived from (sourceSha256.gemeinden) as provenance.
+  // It must not be pinned to the current file: tax-rate corrections change those bytes but not the 2,110 IDs,
+  // and the ID set is checked exactly below.
   const municipalityKeys = Object.keys(gemeinden).sort((a,b) => Number(a)-Number(b));
   if (municipalityKeys.length !== 2110) invalid();
   const destinationKeys = DESTINATIONS.map(({ bfs }) => String(bfs)).sort((a,b) => Number(a)-Number(b));

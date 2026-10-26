@@ -13,7 +13,8 @@ export interface TaxDeductionDefinition {
   rule: (taxInput: TaxInput, taxType: TaxType) => boolean;
   input: (
     taxInput: TaxInput,
-    grossDeductions: TaxGrossNetDetail[]
+    grossDeductions: TaxGrossNetDetail[],
+    table?: TaxDeductionTableExtended
   ) => TaxDeductionDefinitionInput[];
   applyAlways?: boolean;
   name?: string;
@@ -52,6 +53,7 @@ export type TaxDeductionTableItemFormat =
   | 'STANDARDIZED'
   | 'MAXIMUM'
   | 'PERCENT,MINIMUM,MAXIMUM'
+  | 'STANDARDIZED,PERCENT,MAXIMUM'
   | '';
 
 export interface TaxDeductionTableRaw {

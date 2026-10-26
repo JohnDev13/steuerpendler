@@ -28,6 +28,9 @@ export const transformNumber = ({ value }: { value: string; currency: Currency<n
 export const dineroRound = (input: Dinero<number>, scale = 0) =>
   transformScale(input, scale, halfEven);
 
+// Steuerpendler patch 17: whole francs, rounded down (ESTV percentage deductions, e.g. 3% x 89,662 = 2,689).
+export const dineroRoundDown = (input: Dinero<number>) => transformScale(input, 0, down);
+
 export const dineroRound100Down = (input: Dinero<number>) =>
   transformScale(transformScale(input, -2, down), 0, down);
 
