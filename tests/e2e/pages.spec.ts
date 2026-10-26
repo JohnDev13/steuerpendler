@@ -8,7 +8,7 @@ test('public preview draws genuine geography, searches Gemeinden, and withholds 
  await expect(page.getByTestId('release-status')).toContainText('Vorschau');
  await expect(page.getByLabel('Arbeitsort',{exact:true})).toHaveValue('Aarau');
  await expect(page.locator('#ranked-list tr[data-bfs="4210"]')).toContainText('Staufen');
- await expect(page.locator('#summary')).toContainText('keine vollständige Erreichbarkeitsmenge');
+ await expect(page.locator('#result-notice')).toContainText('keine vollständige Erreichbarkeitsmenge');
  await page.getByLabel('Arbeitsort',{exact:true}).fill('bern');
  await page.getByLabel('Arbeitsort',{exact:true}).press('Enter');
  await expect(page.locator('#detail h2')).toContainText('Bern');
@@ -43,7 +43,7 @@ test('profile controls show a clearly indicative amount for a positive Bern rout
  await page.getByLabel('Arbeitsort',{exact:true}).fill('Bern');await page.getByLabel('Arbeitsort',{exact:true}).press('Enter');
  await page.getByLabel('Zivilstand',{exact:true}).selectOption('m');await page.getByLabel('Kinder',{exact:true}).selectOption('2');await page.getByLabel('Kirchensteuer',{exact:true}).selectOption('reformed');
  await expect(page.locator('#profile-status')).toContainText('Verheiratet');await expect(page.locator('#profile-status')).toContainText('2 Kinder');await expect(page.locator('#profile-status')).toContainText('Reformiert');
- await expect(page.locator('#detail')).toContainText('CHF');await expect(page.locator('#detail')).toContainText('ungeprüfte Standardschätzungen');
+ await expect(page.locator('#detail')).toContainText('CHF');await expect(page.locator('#detail')).toContainText('Schätzung mit Standardannahmen');
  await expect(page.locator('#cheapest')).toContainText('indikative Steuerschätzung');
 });
 test('a stale profile is rejected by its pinned served-byte digest',async({page})=>{

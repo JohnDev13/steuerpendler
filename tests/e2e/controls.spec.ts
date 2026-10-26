@@ -9,7 +9,7 @@ test('caps the public-transport control at 30 minutes for Aarau while keeping wa
  await page.getByRole('option',{name:'Aarau (AG)'}).click();
  await time.evaluate((input:HTMLInputElement)=>{input.value='30';input.dispatchEvent(new Event('input',{bubbles:true}));});
  await expect(page.locator('#summary')).toContainText('106 Gemeinden mit beobachteter Verbindung nach Aarau bis 30 Min.');
- await expect(page.locator('#summary')).toContainText('keine vollständige Erreichbarkeitsmenge');
+ await expect(page.locator('#result-notice')).toContainText('keine vollständige Erreichbarkeitsmenge');
  await expect(page.locator('#result-notice')).toContainText('Externer Zugang zur Einstiegshaltestelle ist ungemessen');
 });
 
@@ -28,4 +28,27 @@ test('offers German labelled controls and remains usable at 400px',async({page})
  await page.getByLabel('Maximale Fahrzeit',{exact:true}).focus();
  await page.keyboard.press('ArrowRight');
  await expect(page.getByLabel('Maximale Fahrzeit',{exact:true})).toHaveValue('26');
+});
+
+test('long result lists are paged and can be sorted by travel time',async({page})=>{
+ await page.goto('./');
+ const time=page.getByLabel('Maximale Fahrzeit',{exact:true});
+ await time.evaluate((input:HTMLInputElement)=>{input.value='30';input.dispatchEvent(new Event('input',{bubbles:true}));});
+ await expect(page.locator('#summary')).toContainText('106 Gemeinden');
+ await expect(page.locator('#ranked-list tr')).toHaveCount(25);
+ await page.getByRole('button',{name:'Alle 106 Gemeinden anzeigen'}).click();
+ await expect(page.locator('#ranked-list tr')).toHaveCount(106);
+ await page.getByLabel('Sortieren nach',{exact:true}).selectOption('time');
+ const minutes=await page.locator('#ranked-list tr td:nth-child(4)').allTextContents();
+ const values=minutes.map(text=>Number.parseInt(text,10));
+ expect(values).toEqual([...values].sort((a,b)=>a-b));
+});
+
+test('differences use a real sign before the currency and the workplace label names its canton once',async({page})=>{
+ await page.goto('./');
+ await expect(page.locator('#ranked-list tr').first()).toBeVisible();
+ const deltas=await page.locator('#ranked-list tr td:nth-child(7)').allTextContents();
+ expect(deltas.every(text=>/^(\+CHF|−CHF|CHF 0|—)/.test(text))).toBe(true);
+ await page.getByRole('combobox',{name:'Arbeitsort'}).fill('Altdorf');
+ await expect(page.getByRole('option',{name:'Altdorf (UR)',exact:true})).toBeVisible();
 });

@@ -11,6 +11,6 @@ test('Aarau overview distinguishes unverified travel from zero reachable Gemeind
  await page.getByRole('combobox', {name:'Arbeitsort'}).fill('Aarau');
  await page.getByRole('option', {name:'Aarau (AG)'}).click();
  await expect(page.locator('#summary')).toContainText('Gemeinden mit beobachteter Verbindung nach Aarau');
- await expect(page.locator('#summary')).toContainText('keine vollständige Erreichbarkeitsmenge');
+ await expect(page.locator('#result-notice')).toContainText('keine vollständige Erreichbarkeitsmenge');
  await expect(page.locator('#result-notice')).toContainText('Nicht aufgeführte Gemeinden bleiben unbekannt');
 });

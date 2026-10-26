@@ -17,19 +17,19 @@ import { adaptObservedAarau, loadTransferWitness, type TransferWitness } from '.
 import { adaptObservedRoutes, loadObservedRoutes, type ObservedRoutes } from './observed-routes';
 import { adaptMatrix, createMatrixLoader, loadMatrixMeta, transfersFor, type MatrixDestination, type MatrixMeta } from './matrix-routes';
 const app=document.querySelector<HTMLDivElement>('#app')!;
-app.innerHTML=`<header class="site-header"><a class="brand" href="${sitePath('')}">↗ ${s.appName}</a><button id="theme" type="button" aria-label="${s.theme}">◐</button></header>
+app.innerHTML=`<header class="site-header"><a class="brand" href="${sitePath('')}">↗ ${s.appName}</a><button id="theme" type="button" aria-label="${s.theme}" aria-pressed="false">◐</button></header>
 <section class="hero"><p class="eyebrow">${s.eyebrow}</p><h1>${s.appName}</h1><p class="hero-copy">${s.intro}</p><p class="release-status" data-testid="release-status">${s.preview}</p></section>
 <main class="workspace"><aside class="controls panel"><h2>${s.filters}</h2>
 <div class="field search-field"><label for="workplace">${s.workplace}</label><input id="workplace" value="Aarau" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="workplace-options" autocomplete="off"><div id="workplace-options" role="listbox" hidden></div><small>${s.workplaceHint}</small></div>
 <div class="field"><div class="label-row"><label for="max-time">${s.maxTime}</label><output id="time-value">25 ${s.minutes}</output></div><input id="max-time" type="range" min="5" max="30" step="1" value="25"></div>
 <div class="field"><div class="label-row"><label for="max-walk">${s.maxWalk}</label><output id="walk-value">10 ${s.minutes}</output></div><input id="max-walk" type="range" min="0" max="15" step="1" value="10"></div>
-<label class="toggle"><input id="count-walk" type="checkbox"><span>${s.countWalk}</span></label><label class="toggle"><input id="direct-only" type="checkbox"><span>${s.directOnly}</span></label><hr>
+<label class="toggle"><input id="count-walk" type="checkbox"><span>${s.countWalk}</span></label><small id="walk-hint" class="field-hint" hidden>${s.walkUnmeasured}</small><label class="toggle"><input id="direct-only" type="checkbox"><span>${s.directOnly}</span></label><hr>
 <div class="field"><label for="income">${s.income}</label><input id="income" type="number" inputmode="numeric" min="40000" max="500000" step="1000" value="120000"><input id="income-slider" type="range" aria-label="${s.incomeSlider}" min="40000" max="500000" step="1000" value="120000"><small id="clamp-note" hidden>${s.clamped}</small></div>
 <div class="field"><label for="civil">${s.civil}</label><select id="civil"><option value="s">${s.single}</option><option value="m">${s.married}</option></select></div>
 <div class="paired"><div class="field"><label for="kids">${s.children}</label><select id="kids"><option>0</option><option>1</option><option>2</option><option value="3">3+</option></select></div><div class="field"><label for="church">${s.church}</label><select id="church"><option value="none">${s.none}</option><option value="reformed">${s.reformed}</option><option value="catholic">${s.catholic}</option></select></div></div></aside>
-<section class="results"><div class="summary"><p class="eyebrow">${s.results}</p><h2 id="summary">${s.loading}</h2><p id="cheapest"></p></div><p class="assumptions">${s.assumptions} <strong>${s.disclaimer}</strong></p><p id="result-notice" class="notice">${s.unverified}</p><p id="profile-status" class="assumptions" aria-live="polite"></p><p id="data-status" class="data-status" role="status" aria-live="polite"></p>
+<section class="results"><div class="summary"><p class="eyebrow">${s.results}</p><h2 id="summary" aria-live="polite">${s.loading}</h2><p id="cheapest"></p></div><p class="assumptions">${s.assumptions} <strong>${s.disclaimer}</strong></p><p id="result-notice" class="notice">${s.unverified}</p><p id="profile-status" class="assumptions" aria-live="polite"></p><p id="data-status" class="data-status" role="status" aria-live="polite"></p>
 <section class="map-panel panel" aria-label="${s.map}"><div class="field search-field"><label for="residence">${s.residenceSearch}</label><input id="residence" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="residence-options" autocomplete="off"><div id="residence-options" role="listbox" hidden></div><small>${s.residenceHint}</small></div><div id="map"><p>${s.mapPending}</p></div><div class="legend"><span>${s.cheap}</span>${COLOURS.map(c=>`<i style="background:${c}"></i>`).join('')}<span>${s.expensive}</span><span class="legend-muted">◻ ${s.noData}</span></div><small>${s.mapHelp}</small></section>
-<section class="list-panel panel" aria-label="${s.results}"><table><thead><tr>${[s.rank,s.municipality,s.canton,s.travel,s.walk,s.tax,s.difference].map(label=>`<th scope="col">${label}</th>`).join('')}</tr></thead><tbody id="ranked-list"></tbody></table><p id="empty-state" hidden>${s.empty}</p></section>
+<section class="list-panel panel" aria-label="${s.results}"><div class="list-tools"><label for="sort">${s.sortBy}</label><select id="sort"><option value="tax">${s.sortTax}</option><option value="time">${s.sortTime}</option></select></div><table><thead><tr>${[s.rank,s.municipality,s.canton,s.travel,s.walk,s.tax,s.difference].map(label=>`<th scope="col">${label}</th>`).join('')}</tr></thead><tbody id="ranked-list"></tbody></table><button id="show-all" type="button" class="show-all" hidden></button><p id="empty-state" hidden>${s.empty}</p></section>
 <section id="detail" class="detail-panel panel" aria-label="${s.detail}" tabindex="-1"><p>${s.selectDetail}</p></section></section></main>
 <footer><p>${s.credits}</p><p>${s.mapSource} — <a href="https://data.geo.admin.ch/api/stac/v0.9/collections/ch.bfs.historisierte-administrative_grenzen_g1">${s.mapSourceTitle}</a>; ${s.mapAdaptation} <a href="https://opendata.swiss/en/terms-of-use#terms_by_ask">${s.mapTerms}</a> · <a href="${sitePath('credits/NOTICE.txt')}">${s.notices}</a></p><p>${s.licencePending}</p><nav><a href="${sitePath('')}pages/impressum.html">${s.impressum}</a><a href="${sitePath('')}pages/datenschutz.html">${s.privacy}</a><a href="${sitePath('')}pages/methode.html">${s.method}</a></nav></footer>`;
 const $=<T extends HTMLElement=HTMLElement>(id:string)=>document.getElementById(id) as T;
@@ -42,6 +42,14 @@ let matrixMeta:MatrixMeta|null=null,matrixLoad:((workplace:number)=>Promise<Matr
 let workplaces:Record<string,Gemeinde>={};
 let reviewCantons:ReadonlySet<string>=QUARANTINED_CANTONS;
 const travelCache=new Map<number,Promise<TravelRows>>();
+let sortBy:'tax'|'time'='tax',showAll=false;
+const LIST_LIMIT=25;
+function presentList(){
+ const ordered=sortBy==='time'?[...results].sort((a,b)=>a.minutes-b.minutes||a.total-b.total||a.id-b.id):results;
+ const visible=showAll?ordered:ordered.slice(0,LIST_LIMIT);
+ renderList($<HTMLTableSectionElement>('ranked-list'),visible,state.selected,selectGemeinde);
+ const more=$('show-all');more.hidden=showAll||ordered.length<=LIST_LIMIT;more.textContent=s.showAll(ordered.length);
+}
 function clearPresentedResults(){
  rows=[];results=[];breakdowns={};access={};
  renderList($<HTMLTableSectionElement>('ranked-list'),[],null,selectGemeinde);
@@ -56,7 +64,7 @@ function selectGemeinde(id:number){
  state.selected=id;
  $<HTMLInputElement>('residence').value=gemeinden[id][0];
  const indicative=!!matrixMeta||!!observedRoutes||preview?.destinationBfs===state.workplace,activeReview=indicative?QUARANTINED_CANTONS:reviewCantons,witnessed=!!rows.find(row=>row[0]===id);
- const notice=matrixMeta?s.matrixNotice(matrixMeta.serviceDate.split('-').reverse().join('.'),matrixCurrent?.station??''):observedRoutes?(directOnly?s.observedDirectWarning:s.observedWarning):(directOnly?s.indicativeDirectWarning:s.indicativeWarning);
+ const notice=matrixMeta?s.detailMatrix:observedRoutes?(directOnly?s.observedDirectWarning:s.detailObserved):(directOnly?s.indicativeDirectWarning:s.indicativeWarning);
  renderDetail($('detail'),gemeinden[id],id,witnessed||!indicative||matrixMeta?breakdowns[id]??null:null,access[id],results.find(r=>r.id===id),rows.find(r=>r[0]===id)?.[1],travelReady,activeReview.has(gemeinden[id][1]),indicative,notice,matrixMeta?{maxTime:state.maxTime,transfers:transfersFor(matrixCurrent,id,directOnly)}:undefined);
  map?.update(results,state.workplace,state.selected,activeReview);
  for(const row of $('ranked-list').querySelectorAll('tr'))row.classList.toggle('selected',row.getAttribute('data-bfs')===String(id));
@@ -76,6 +84,8 @@ async function update(){
  const matrix=!!matrixMeta,all19=!matrix&&!!observedRoutes,legacyAarau=!matrix&&!all19&&preview?.destinationBfs===snapshot.workplace;
  const indicative=matrix||all19||legacyAarau,available=travelReady||indicative,activeReview=indicative?QUARANTINED_CANTONS:reviewCantons;
  $('time-value').textContent=`${state.maxTime} ${s.minutes}`;$('walk-value').textContent=`${state.maxWalk} ${s.minutes}`;
+ // Walking access is not measured in the indicative modes, so its controls cannot have an effect.
+ $<HTMLInputElement>('max-walk').disabled=indicative;$<HTMLInputElement>('count-walk').disabled=indicative;$('walk-hint').hidden=!indicative;
  if(!DATA_RELEASE.availability.tax){$('summary').textContent=s.taxPending;$('data-status').textContent=s.pending;return;}
  try{
   $('profile-status').textContent=s.loading;
@@ -90,25 +100,28 @@ async function update(){
   for(const [id,g] of Object.entries(gemeinden)){if(activeReview.has(g[1]))continue;const tax=calculateTax(profile,g,snapshot.income,snapshot.church);breakdowns[id]=tax;totals[id]=tax.total;}
   access=adapted?adapted.access:verifiedAccess;results=filterAndRank(gemeinden,access,rows,snapshot,totals,activeReview);
   const workplaceName=workplaces[snapshot.workplace]?.[0]??s.workplace;
-  $('summary').textContent=matrix?s.matrixOverview(results.length,workplaceName,snapshot.maxTime,directOnly):all19?(directOnly?s.directObservedOverview:s.observedOverview)(results.length,workplaceName,snapshot.maxTime):legacyAarau?(directOnly?s.directPreviewOverview:s.previewOverview)(results.length,snapshot.maxTime):s.reachabilityOverview(available,results.length,workplaceName,snapshot.maxTime,snapshot.maxWalk,Object.keys(gemeinden).length);$('cheapest').textContent=results[0]?(indicative?s.cheapestPreview:s.cheapest)(results[0].name,formatCHF(results[0].total)):'';
+  const withheld=rows.filter(([id,minutes])=>gemeinden[id]&&activeReview.has(gemeinden[id][1])&&minutes<=snapshot.maxTime).length;
+  $('summary').textContent=(matrix?s.matrixOverview(results.length,workplaceName,snapshot.maxTime,directOnly):all19?(directOnly?s.directObservedOverview:s.observedOverview)(results.length,workplaceName,snapshot.maxTime):legacyAarau?(directOnly?s.directPreviewOverview:s.previewOverview)(results.length,snapshot.maxTime):s.reachabilityOverview(available,results.length,workplaceName,snapshot.maxTime,snapshot.maxWalk,Object.keys(gemeinden).length))+(indicative&&withheld?s.withheld(withheld):'');$('cheapest').textContent=results[0]?(indicative?s.cheapestPreview:s.cheapest)(results[0].name,formatCHF(results[0].total)):'';
   $('result-notice').textContent=matrix?s.matrixNotice(matrixMeta!.serviceDate.split('-').reverse().join('.'),destination?.station??workplaceName):all19?(directOnly?s.observedDirectWarning:s.observedWarning):legacyAarau?(directOnly?s.indicativeDirectWarning:s.indicativeWarning):s.unverified;
   $('data-status').classList.remove('error');$('data-status').textContent=!available?s.travelPending:!indicative&&access[snapshot.workplace]==null?s.noStop:'';
   $('empty-state').textContent=matrix?s.matrixEmpty:indicative?s.observedEmpty:s.empty;$('empty-state').hidden=!available||results.length>0;
-  renderList($<HTMLTableSectionElement>('ranked-list'),results,state.selected,selectGemeinde);
+  presentList();
   map?.update(results,state.workplace,state.selected,activeReview);
   if(state.selected!==null)selectGemeinde(state.selected);
  }catch(error){if(current===revision){clearPresentedResults();showError(error);}}
 }
-function chooseWorkplace(id:number){if(!workplaces[id])return;state.workplace=id;state.selected=id;clearPresentedResults();void update();}
+function chooseWorkplace(id:number){if(!workplaces[id])return;state.workplace=id;state.selected=id;showAll=false;clearPresentedResults();void update();}
 installMunicipalitySearch($<HTMLInputElement>('workplace'),$('workplace-options'),()=>workplaces,()=>workplaces[state.workplace]?.[0]??'',chooseWorkplace);
 installMunicipalitySearch($<HTMLInputElement>('residence'),$('residence-options'),()=>gemeinden,()=>gemeinden[state.selected??state.workplace]?.[0]??'',selectGemeinde);
 for(const [id,key] of [['max-time','maxTime'],['max-walk','maxWalk']] as const)$<HTMLInputElement>(id).addEventListener('input',e=>{state[key]=Number((e.target as HTMLInputElement).value);void update();});
+$<HTMLSelectElement>('sort').addEventListener('change',e=>{sortBy=(e.target as HTMLSelectElement).value as 'tax'|'time';presentList();});
+$('show-all').addEventListener('click',()=>{showAll=true;presentList();});
 $('count-walk').addEventListener('change',e=>{state.countWalk=(e.target as HTMLInputElement).checked;void update();});
 $<HTMLInputElement>('direct-only').addEventListener('change',e=>{directOnly=(e.target as HTMLInputElement).checked;if(!matrixMeta&&!observedRoutes&&preview&&transferWitness)previewData=adaptObservedAarau(preview,transferWitness,directOnly);void update();});
 function setIncome(raw:number){if(!Number.isFinite(raw)){showError(new Error(s.invalidIncome));return;}const income=Math.min(500000,Math.max(40000,raw));state.income=income;$<HTMLInputElement>('income').value=String(income);$<HTMLInputElement>('income-slider').value=String(income);$('clamp-note').hidden=income===raw;void update();}
 $('income').addEventListener('change',e=>setIncome(Number((e.target as HTMLInputElement).value)));$('income-slider').addEventListener('input',e=>setIncome(Number((e.target as HTMLInputElement).value)));
 $('civil').addEventListener('change',e=>{state.civ=(e.target as HTMLSelectElement).value as 's'|'m';void update();});$('kids').addEventListener('change',e=>{state.kids=Number((e.target as HTMLSelectElement).value);void update();});$('church').addEventListener('change',e=>{state.church=(e.target as HTMLSelectElement).value as typeof state.church;void update();});
-$('theme').onclick=()=>{const dark=document.documentElement.dataset.theme==='dark'||(!document.documentElement.dataset.theme&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.dataset.theme=dark?'light':'dark';};
+$('theme').onclick=()=>{const dark=document.documentElement.dataset.theme==='dark'||(!document.documentElement.dataset.theme&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.dataset.theme=dark?'light':'dark';$('theme').setAttribute('aria-pressed',String(!dark));};
 async function init(){
  if(!DATA_RELEASE.availability.tax){void update();return;}
  try{
