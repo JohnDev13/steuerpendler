@@ -1,12 +1,12 @@
 # Deploys the preview to GitHub Pages from main.
-# One-time setup: Settings -> Pages -> Source = "GitHub Actions". The gh-pages branch is then unused.
+# Pages uses GitHub Actions; the former gh-pages branch is not a deployment source.
+# All three CI jobs are required on main before a PR can merge.
 name: Deploy preview to GitHub Pages
 
 on:
   workflow_dispatch:
-  # Enable once CI is a required check on main:
-  # push:
-  #   branches: [main]
+  push:
+    branches: [main]
 
 permissions:
   contents: read
