@@ -273,8 +273,11 @@ def _validate_result(value: object, event: dict, label: str) -> str:
                 or not isinstance(transfers, int) or isinstance(transfers, bool)
                 or transfers < 0 or not legs
                 or arrival - event["boardSeconds"] != elapsed
-                or transfers != len(legs) - 1):
+                or transfers != len(legs) - 1
+                or len(rules) != transfers):
             raise All19ExportError(f"{label} positive result is malformed")
+        if label == "directOnly" and (transfers != 0 or len(legs) != 1):
+            raise All19ExportError("direct-only positive path cannot contain a transfer")
         leg_keys = {"trip_id", "route_id", "service_id", "board_stop_id",
                     "alight_stop_id", "board_seconds", "alight_seconds",
                     "connection_ids"}

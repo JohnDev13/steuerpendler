@@ -250,6 +250,37 @@ class CanonicalAll19ExportTests(unittest.TestCase):
             all19._validate_child_memory({'peakRssKiB':'unknown'},100)
         all19._validate_child_memory({'peakRssKiB':1_080_000},100)
 
+    def test_direct_only_transfer_path_is_rejected_without_replacing_output(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = pathlib.Path(tmp)
+            registry = directory/'targets.json'
+            write_registry(registry,[(100,['A']),(200,['B'])])
+            slices={}
+            for bfs,children in ((100,['A']),(200,['B'])):
+                path=directory/f'{bfs}.gz'
+                write_slice(path,bfs,children,target_registry_sha=sha256(registry))
+                slices[bfs]=path
+            def forge(rows):
+                direct=rows[1]['directOnly']
+                first=direct['legs'][0]
+                first['alight_stop_id']='X'
+                first['alight_seconds']=first['board_seconds']+200
+                second={**first,'trip_id':'T-TRANSFER','board_stop_id':'X',
+                        'board_seconds':first['board_seconds']+240,
+                        'alight_stop_id':'Z','alight_seconds':direct['arrivalSeconds'],
+                        'connection_ids':[999]}
+                direct['legs'].append(second)
+                direct['transferCount']=1
+                direct['transferRuleIds']=[123]
+            rewrite_slice(slices[100],forge)
+            output=directory/'matrix.gz'
+            output.write_bytes(b'PRIOR')
+            with self.settings(registry,2):
+                with self.assertRaisesRegex(all19.All19ExportError,'direct-only'):
+                    all19.aggregate_slices(slices,registry,output,
+                        expected_transfer_scope_sha256='b'*64)
+            self.assertEqual(output.read_bytes(),b'PRIOR')
+
     def test_direct_only_cannot_be_positive_if_all_routes_is_unknown(self):
         with tempfile.TemporaryDirectory() as tmp:
             directory = pathlib.Path(tmp)
