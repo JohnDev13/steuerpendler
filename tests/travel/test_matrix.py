@@ -263,9 +263,10 @@ class ReferenceComparison(unittest.TestCase):
             reference.write_text("pair,from,from_bfs,to,to_bfs,sbb_minutes,sbb_departure,retrieved,note\n"
                                  "1,Uster,198,Zürich,261,17,,,\n2,Winterthur,230,Zürich,261,,,,\n"
                                  "3,Zug,1711,Zürich,261,25,,,\n4,Baden,4021,Zürich,261,12,,,\n"
-                                 "5,Morges,5642,Lausanne,5586,10,,,\n6,Uster,198,Zürich,261,19,,,\n")
+                                 "5,Morges,5642,Lausanne,5586,10,,,\n6,Uster,198,Zürich,261,19,,,\n"
+                                 "7,Freienbach,1322,Zürich,261,35,,,\n")
             statuses = [r["status"] for r in compare_reference.compare(root, reference)]
-        self.assertEqual(statuses, ["passed", "pending", "failed_missing", "failed_missing", "not_a_computed_workplace", "failed"])
+        self.assertEqual(statuses, ["passed", "pending", "failed_missing", "failed_missing", "not_a_computed_workplace", "failed", "unknown_unobserved"])
 
     def test_committed_reference_keeps_all_30_spec_pairs(self):
         with (Path(__file__).resolve().parent / "sbb-reference-2026.csv").open(encoding="utf-8") as handle:

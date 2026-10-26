@@ -39,7 +39,7 @@ def compare(matrix_dir: Path, reference: Path) -> list[dict]:
             elif sbb is None:
                 status = "pending"
             elif ours is None:
-                status = "failed_missing" if sbb <= 30 else "passed_beyond_cap"
+                status = "failed_missing" if sbb <= 30 else "unknown_unobserved"
             else:
                 status = "passed" if abs(ours - sbb) <= TOLERANCE_MINUTES else "failed"
             results.append({"pair": int(row["pair"]), "from": row["from"], "to": row["to"], "sbb": sbb, "ours": ours, "status": status})
@@ -58,7 +58,7 @@ def main(argv=None) -> int:
     for r in results:
         counts[r["status"]] = counts.get(r["status"], 0) + 1
     print(json.dumps(counts, sort_keys=True))
-    return 1 if any(r["status"].startswith("failed") for r in results) else 0
+    return 1 if any(r["status"].startswith("failed") or r["status"] == "unknown_unobserved" for r in results) else 0
 
 
 if __name__ == "__main__":
