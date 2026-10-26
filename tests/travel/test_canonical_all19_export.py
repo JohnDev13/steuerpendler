@@ -56,8 +56,8 @@ def write_slice(path: pathlib.Path, bfs: int, children: list[str], *,
                 target_registry_sha="d" * 64,
                 identities=((1, "T1", "S1", 1, 23_400, 100),
                             (2, "T2", "S2", 2, 23_500, 200)),
-                statuses=(("best_found_unproven", "unknown"),
-                          ("unknown", "best_found_unproven")),
+                statuses=(("best_found_unproven", "best_found_unproven"),
+                          ("unknown", "unknown")),
                 include_summary=True) -> None:
     source = {
         "connections": "a" * 64, "transferScope": "b" * 64,
@@ -237,6 +237,38 @@ class CanonicalAll19ExportTests(unittest.TestCase):
                         slices, registry, output,
                         expected_transfer_scope_sha256="b" * 64)
             self.assertEqual(outputs[0].read_bytes(), outputs[1].read_bytes())
+
+    def test_child_memory_is_capped_and_over_budget_report_fails_closed(self):
+        with mock.patch.object(all19.resource,'setrlimit') as set_limit:
+            all19._bound_child_address_space()
+        set_limit.assert_called_once_with(
+            all19.resource.RLIMIT_AS,
+            (all19.CHILD_VIRTUAL_LIMIT_BYTES,all19.CHILD_VIRTUAL_LIMIT_BYTES))
+        with self.assertRaisesRegex(all19.All19ExportError,'memory'):
+            all19._validate_child_memory({'peakRssKiB':1_600_000},100)
+        with self.assertRaisesRegex(all19.All19ExportError,'memory'):
+            all19._validate_child_memory({'peakRssKiB':'unknown'},100)
+        all19._validate_child_memory({'peakRssKiB':1_080_000},100)
+
+    def test_direct_only_cannot_be_positive_if_all_routes_is_unknown(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = pathlib.Path(tmp)
+            registry = directory / 'targets.json'
+            write_registry(registry, [(100,['A']),(200,['B'])])
+            slices = {}
+            for bfs,children in ((100,['A']),(200,['B'])):
+                path = directory / f'{bfs}.gz'
+                write_slice(path,bfs,children,target_registry_sha=sha256(registry))
+                slices[bfs]=path
+            rewrite_slice(slices[100],lambda rows: rows[1].update(
+                allRoutes=result('unknown',(1,'T1','S1',1,23_400,100))))
+            output = directory/'matrix.gz'
+            output.write_bytes(b'PRIOR')
+            with self.settings(registry,2):
+                with self.assertRaisesRegex(all19.All19ExportError,'direct-only'):
+                    all19.aggregate_slices(slices,registry,output,
+                        expected_transfer_scope_sha256='b'*64)
+            self.assertEqual(output.read_bytes(),b'PRIOR')
 
     def test_malformed_result_and_forged_generator_provenance_fail_closed(self):
         with tempfile.TemporaryDirectory() as tmp:

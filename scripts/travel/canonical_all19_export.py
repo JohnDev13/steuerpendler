@@ -20,6 +20,19 @@ import dated_route_export as route_export
 
 DESTINATION_COUNT = 19
 CHILD_TIMEOUT_SECONDS = 600
+CHILD_VIRTUAL_LIMIT_BYTES = 2 * 1024**3
+CHILD_RSS_LIMIT_KIB = 1536 * 1024
+
+
+def _bound_child_address_space() -> None:
+    resource.setrlimit(resource.RLIMIT_AS,
+                       (CHILD_VIRTUAL_LIMIT_BYTES, CHILD_VIRTUAL_LIMIT_BYTES))
+
+
+def _validate_child_memory(report: dict, bfs: int) -> None:
+    peak = report.get('peakRssKiB')
+    if type(peak) is not int or peak < 0 or peak > CHILD_RSS_LIMIT_KIB:
+        raise All19ExportError(f'destination {bfs} memory budget exceeded or unmeasured')
 COPY_CHUNK_BYTES = 1024 * 1024
 MAX_INPUT_BYTES = {
     "connections": 8 * 1024**3,
@@ -469,8 +482,14 @@ def aggregate_slices(slice_paths: dict[int, pathlib.Path], target_registry_path,
                                 if identity_reader.readline() != identity_bytes:
                                     raise All19ExportError(
                                         f"destination {bfs} first-event identity/order mismatch")
-                            for mode in ("allRoutes", "directOnly"):
-                                statuses[mode][_validate_result(payload[mode], event, mode)] += 1
+                            validated = {mode: _validate_result(payload[mode], event, mode)
+                                         for mode in ("allRoutes", "directOnly")}
+                            if (validated["directOnly"] == "best_found_unproven"
+                                    and validated["allRoutes"] != "best_found_unproven"):
+                                raise All19ExportError(
+                                    f"destination {bfs} direct-only path lacks an all-routes path")
+                            for mode, status in validated.items():
+                                statuses[mode][status] += 1
                             payload["destinationBfs"] = bfs
                             compressed.write(_json_bytes(payload))
                             count += 1
@@ -596,7 +615,9 @@ def export_all19(connections_path, transfer_scope_path, board_stop_path,
             try:
                 process = subprocess.run(command, stdin=subprocess.DEVNULL,
                                          capture_output=True, text=True,
-                                         timeout=CHILD_TIMEOUT_SECONDS, check=False)
+                                         timeout=CHILD_TIMEOUT_SECONDS,
+                                         preexec_fn=_bound_child_address_space,
+                                         check=False)
             except subprocess.TimeoutExpired as error:
                 raise All19ExportError(
                     f"destination {bfs} child exceeded {CHILD_TIMEOUT_SECONDS}s") from error
@@ -614,6 +635,7 @@ def export_all19(connections_path, transfer_scope_path, board_stop_path,
             except (OSError, UnicodeError, json.JSONDecodeError) as error:
                 raise All19ExportError(
                     f"destination {bfs} child run report is malformed") from error
+            _validate_child_memory(report, bfs)
             child_reports.append({"destinationBfs": bfs, **report})
             slices[bfs] = child_output
         manifest, summary, aggregate_report = aggregate_slices(
