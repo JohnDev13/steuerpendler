@@ -39,10 +39,11 @@ tax credit the engine has no concept of, and VS, VD, GE (withheld). Details:
 ## CI and deployment
 
 - `.github/workflows/ci.yml` on every PR and push to main: `web` (types, unit, release, map, build, manifest
-  current, content, e2e), `travel` (Python), `tax-accuracy` (SPEC 7.1 gates). Make all three required on main.
+  current, content, e2e), `travel` (Python), `tax-accuracy` (engine parity only). All three are required on
+  `main` with strict checks and admin enforcement; this does not make `tax:official` green.
 - `.github/workflows/build-travel.yml` (manual): builds the travel matrix from a GTFS URL and opens a data PR.
-- `.github/workflows/deploy-pages.yml` (manual): builds with `PAGES_BASE=/steuerpendler/` and deploys to
-  GitHub Pages. Requires Settings → Pages → Source = "GitHub Actions"; the `gh-pages` branch is then unused.
+- `.github/workflows/deploy-pages.yml` builds with `PAGES_BASE=/steuerpendler/` and deploys on each main push
+  (or manually). Pages Source is GitHub Actions; the preserved `gh-pages` branch is not the deployment source.
 
 ## Open evidence and release tasks
 
