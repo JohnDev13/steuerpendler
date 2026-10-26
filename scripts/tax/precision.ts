@@ -23,12 +23,12 @@ export async function compilePrecision(input:TaxInput):Promise<PreciseCanton> {
     if(def.id==='ZweitVerdiener_EK')ops.push({source:'constant',value:0,format:'ZERO',amount:row.amount,percent:row.percent,minimum:row.minimum,maximum:row.maximum,multiplier:1});
     continue;
    }
-   const ia=def.input(a,ga),ib=def.input(b,gb);
+   const ia=def.input(a,ga,deductions),ib=def.input(b,gb,deductions);
    for(let i=0;i<ia.length;i++){
     const x=ia[i],y=ib[i];
     const net=x.amount!==y.amount;
     if(net&&(x.amount!==ga[0].netIncome||y.amount!==gb[0].netIncome))throw Error(`Unrepresentable deduction ${def.id}`);
-    const implemented = ['STANDARDIZED','MAXIMUM','PERCENT','PERCENT,MAXIMUM','PERCENT,MINIMUM,MAXIMUM'].includes(row.format);
+    const implemented = ['STANDARDIZED','MAXIMUM','PERCENT','PERCENT,MAXIMUM','PERCENT,MINIMUM,MAXIMUM','STANDARDIZED,PERCENT,MAXIMUM'].includes(row.format);
     // Upstream's default branch contributes zero for other authentic formats.
     // Serialize that explicitly so unknown browser payload formats are rejected.
     const source = def.id === 'MaxAbzMiete_EK' ? 'rent30' : net ? 'net' : 'constant';

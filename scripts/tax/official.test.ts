@@ -44,7 +44,7 @@ test('component comparison records amounts, absolute errors, and neutral mismatc
 
 // Ratchet: the official comparison is not yet green. The count of failing ESTV cases
 // may only go down; lower this constant in the same PR that fixes a case.
-const MAX_OFFICIAL_FAILURES = 19;
+const MAX_OFFICIAL_FAILURES = 8;
 
 test('29-case ESTV catalogue is complete, evidence-bound and does not regress', async () => {
   const report = await runOfficialComparison(ROOT);
@@ -78,4 +78,12 @@ test('Methode page states the current ESTV comparison result, not a stale one', 
   const passed = report.coverage.compared - report.numericFailureCount;
   expect(html).toContain(`<strong>${passed} von 29</strong>`);
   expect(html).toContain(`<strong>${report.numericFailureCount} von 29</strong>`);
+});
+
+test('every canton more than 5% off its ESTV reference case is quarantined', async () => {
+  const report = await runOfficialComparison(ROOT);
+  const source = await readFile(resolve(ROOT, 'src/config.ts'), 'utf8');
+  const listed = new Set([...source.matchAll(/QUARANTINED_CANTONS[^=]*= new Set\(\[([^\]]*)\]/g)][0][1].match(/[A-Z]{2}/g));
+  const badlyOff = report.results.filter((r: { error: number; official: number }) => r.error > 0.05 * Math.abs(r.official)).map((r: { canton: string }) => r.canton);
+  for (const canton of badlyOff) expect(listed.has(canton), `${canton} deviates >5% from ESTV but is not quarantined`).toBe(true);
 });

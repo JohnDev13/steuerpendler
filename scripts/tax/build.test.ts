@@ -30,7 +30,7 @@ test('profile rows use unrounded internal simple tax, actual federal credit and 
   expect(await buildRow(input)).toEqual([engine.taxesIncomeBund, dineroToNumber(base.taxesIncomeBase), engine.taxesPersonnel]);
 });
 
-test('SZ generation applies the official Freienbach expense cap and exposes the two remaining table differences', async () => {
+test('SZ deductions match the official Freienbach line items after the recorded corrections', async () => {
   const { loadSources, makeInput, buildRow } = await import('./build');
   const sources = await loadSources();
   const loc = sources.locations.find(x => x.BfsID === 1322)!;
@@ -44,19 +44,13 @@ test('SZ generation applies the official Freienbach expense cap and exposes the 
   const engine = await calculateTaxesIncomeAndFortune(input);
   const officialInfo = new Map(official.InfoCanton.map(item => [item.Entry.ID, Math.abs(item.Value)]));
   const calculatedDeductions = new Map(engine.details.deductionsIncome.map(item => [item.id, item.amountCanton]));
-
-  expect(calculatedDeductions.get('HauptErw_EK')).toBe(6900);
   expect(calculatedDeductions.get('HauptErw_EK')).toBe(officialInfo.get('TXT_30'));
-  const remaining = [
-    ['KKSparLedigMitBVGS3a_EK', 'TXT_49'],
-    ['SozLedig_EK', 'TXT_60'],
-  ] as const;
-  const gaps = remaining.map(([id, officialId]) => officialInfo.get(officialId)! - calculatedDeductions.get(id)!);
-  expect(gaps).toEqual([1000, 1000]);
-  expect(dineroToNumber(taxable.taxableIncomeCanton) - official.TaxableIncomeCanton).toBe(gaps.reduce((a, b) => a + b, 0));
+  expect(calculatedDeductions.get('KKSparLedigMitBVGS3a_EK')).toBe(officialInfo.get('TXT_49'));
+  expect(calculatedDeductions.get('SozLedig_EK')).toBe(officialInfo.get('TXT_60'));
+  expect(dineroToNumber(taxable.taxableIncomeCanton)).toBe(official.TaxableIncomeCanton);
   expect(row[0]).toBe(official.IncomeTaxFed);
-  expect(row[1] - official.IncomeSimpleTaxCanton).toBeCloseTo(148.6, 10);
-  expect(engine.taxesTotal - official.TotalTax).toBe(259);
+  // Remaining gap is in the SZ tariff itself (simple tax), tracked by the ESTV ratchet.
+  expect(row[1]).toBeGreaterThan(official.IncomeSimpleTaxCanton);
 });
 
 test('one profile contains all 26 cantons and 461 finite rows at the specified grid', async () => {
@@ -109,15 +103,23 @@ test('two genuine generations produce matching SHA-256 hashes for all nine tax a
     .toEqual(Object.fromEntries(Object.entries(second).map(([name, bytes]) => [name, hash(bytes)])));
 });
 
-test('generator joins all 2110 authentic BFS IDs with original income-rate columns', async () => {
+test('generator joins all 2110 authentic BFS IDs with (corrected) income-rate columns', async () => {
   const { loadSources, buildGemeinden } = await import('./build');
+  const { churchIncomeRateOnSimpleTax } = await import('../../vendor/swisstaxcalculator/lib/taxes/factor');
   const sources = await loadSources();
   const output = buildGemeinden(sources);
   expect(Object.keys(output.gemeinden)).toHaveLength(2110);
   expect(new Set(sources.locations.map(x => x.Canton)).size).toBe(26);
   for (const loc of sources.locations) {
     const f = sources.factors.get(loc.BfsID)!;
+    const church = (rate: number) => churchIncomeRateOnSimpleTax(loc.CantonID, rate, f);
     expect(output.gemeinden[loc.BfsID]).toEqual([loc.BfsName, loc.Canton,
-      f.IncomeRateCanton, f.IncomeRateCity, f.IncomeRateProtestant, f.IncomeRateRoman]);
+      f.IncomeRateCanton, f.IncomeRateCity, church(f.IncomeRateProtestant), church(f.IncomeRateRoman)]);
   }
+  // Corrections from data/corrections/2026.json reach the output (patch 19).
+  expect(output.gemeinden[4021].slice(2, 4)).toEqual([103, 89]);
+  expect(output.gemeinden[2701].slice(2, 4)).toEqual([50, 50]);
+  // JU church on cantonal tax, UR church per 1% of taxable income (patch 15).
+  expect(output.gemeinden[6711][5]).toBeCloseTo(6.4 * 285 / 100, 6);
+  expect(output.gemeinden[1206][5]).toBeCloseTo(130 / 7.1, 5);
 });

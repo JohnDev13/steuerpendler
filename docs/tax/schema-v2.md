@@ -21,7 +21,7 @@ precision: Record<CantonCode, PreciseCanton>
 
 type DeductionFormat =
   | 'ZERO' | 'STANDARDIZED' | 'MAXIMUM' | 'PERCENT' | 'PERCENT,MAXIMUM'
-  | 'PERCENT,MINIMUM,MAXIMUM'
+  | 'PERCENT,MINIMUM,MAXIMUM' | 'STANDARDIZED,PERCENT,MAXIMUM'
 type TariffType = 'BUND' | 'ZUERICH' | 'FORMEL' | 'FREIBURG' | 'FLATTAX'
 
 interface PreciseCanton {

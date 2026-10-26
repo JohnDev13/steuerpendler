@@ -8,6 +8,8 @@ import type { TaxLocation, TaxInput, TaxConfession } from '../../vendor/swisstax
 import type { TaxFactors } from '../../vendor/swisstaxcalculator/lib/taxes/factor/types';
 import { calculateBvg2026Age35 } from './bvg';
 import { calculateGrossNetDetails } from '../../vendor/swisstaxcalculator/lib/taxes/deduction';
+import { churchIncomeRateOnSimpleTax } from '../../vendor/swisstaxcalculator/lib/taxes/factor';
+import { correctFactors } from '../../vendor/swisstaxcalculator/lib/taxes/corrections';
 import { estimateAnnualRent2026FixedProfile } from './estv-budget';
 
 export const ROOT = fileURLToPath(new URL('../../', import.meta.url));
@@ -50,7 +52,7 @@ export async function loadSources(): Promise<Sources> {
   if (locations.length !== 2110 || new Set(locations.map(x => x.BfsID)).size !== 2110) throw new Error('Expected 2110 unique 2026 BFS IDs');
   const factors = new Map<number, TaxFactors>();
   for (const id of [...new Set(locations.map(x => x.CantonID))].sort((a, b) => a - b)) {
-    const rows: TaxFactors[] = JSON.parse(await readFile(`${base}factors/${id}.json`, 'utf8'));
+    const rows: TaxFactors[] = correctFactors(2026, id, JSON.parse(await readFile(`${base}factors/${id}.json`, 'utf8')));
     for (const row of rows) {
       if (factors.has(row.Location.BfsID)) throw new Error(`Duplicate factor: ${row.Location.BfsID}`);
       factors.set(row.Location.BfsID, row);
@@ -80,7 +82,8 @@ export function buildGemeinden(sources: Sources) {
   for (const loc of sources.locations) {
     const f = sources.factors.get(loc.BfsID);
     if (!f) throw new Error(`Missing factor for ${loc.BfsID}`);
-    const rates = [f.IncomeRateCanton, f.IncomeRateCity, f.IncomeRateProtestant, f.IncomeRateRoman];
+    const church = (rate: number) => churchIncomeRateOnSimpleTax(loc.CantonID, rate, f);
+    const rates = [f.IncomeRateCanton, f.IncomeRateCity, church(f.IncomeRateProtestant), church(f.IncomeRateRoman)];
     if (!rates.every(Number.isFinite)) throw new Error(`Invalid rate for ${loc.BfsID}`);
     gemeinden[loc.BfsID] = [loc.BfsName, loc.Canton, ...rates] as Gemeinde;
   }

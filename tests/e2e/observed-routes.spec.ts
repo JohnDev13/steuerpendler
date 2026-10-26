@@ -35,8 +35,8 @@ test('direct-only uses its independent subset and unknown origins never become u
   expect(directCount).toBeLessThanOrEqual(allCount);
 
   const residence = page.getByRole('combobox', { name: 'Wohngemeinde suchen' });
-  await residence.fill('Genève');
-  await page.getByRole('option', { name: 'Genève (GE)', exact: true }).click();
+  await residence.fill('Neuchâtel');
+  await page.getByRole('option', { name: 'Neuchâtel (NE)', exact: true }).click();
   await expect(page.locator('#detail')).not.toContainText('Ausser Reichweite');
   await expect(page.locator('#detail')).toContainText(/Erreichbarkeit unbekannt|Rang/);
 });

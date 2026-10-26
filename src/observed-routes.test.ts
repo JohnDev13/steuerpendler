@@ -41,7 +41,9 @@ describe('all-19 observed-positive routes', () => {
   it('accepts the pinned source-scale asset and preserves its reviewed positive counts', () => {
     const actualGemeinden = JSON.parse(readFileSync(new URL('../site/data/gemeinden-2026.json', import.meta.url), 'utf8')).gemeinden;
     const actual = JSON.parse(readFileSync(new URL('../site/data/travel/all19-observed-routes-20261027.json', import.meta.url), 'utf8'));
-    const validated = validateObservedRoutes(actual, release, actualGemeinden);
+    // Validate against the real release manifest, not a fixture, so coupling to other data files is caught.
+    const actualRelease = JSON.parse(readFileSync(new URL('../site/data/release.json', import.meta.url), 'utf8'));
+    const validated = validateObservedRoutes(actual, actualRelease, actualGemeinden);
     const allCount = Object.values(validated.destinations).reduce((sum, destination) => sum + Object.values(destination.statuses).filter(route => route.status === 'best_found_unproven').length, 0);
     const directCount = Object.values(validated.destinations).reduce((sum, destination) => sum + Object.keys(destination.directOnly).length, 0);
     expect([allCount, directCount]).toEqual([806, 451]);

@@ -1,7 +1,7 @@
 // A separate serialized-program interpreter for table validation. Does not call
 // the full engine, taxable-income calculator or the browser implementation.
 import { add,subtract } from 'dinero.js';
-import { dineroChf,dineroToNumber,dineroRound,dineroRoundMin0,dineroRound100Down,multiplyDineroPercent,multiplyDineroFactor,dineroMin,dineroMax } from '../../vendor/swisstaxcalculator/lib/utils/dinero';
+import { dineroChf,dineroToNumber,dineroRound,dineroRoundMin0,dineroRound100Down,dineroRoundDown,multiplyDineroPercent,multiplyDineroFactor,dineroMin,dineroMax } from '../../vendor/swisstaxcalculator/lib/utils/dinero';
 import { calculateTaxesAmount } from '../../vendor/swisstaxcalculator/lib/taxes/tarif';
 import type { BudgetDefault, PensionDefault, PreciseCanton } from '../../src/tax';
 import { calculateBvg2026Age35 } from './bvg';
@@ -18,9 +18,10 @@ export function reconstructPrecision(p:PreciseCanton,income:number,rates:number[
     case 'ZERO':break;
     case 'STANDARDIZED':d=dineroChf(op.amount);break;
     case 'MAXIMUM':d=dineroMin(value,dineroChf(op.maximum));break;
-    case 'PERCENT':d=dineroRound(multiplyDineroPercent(value,op.percent,5));break;
-    case 'PERCENT,MAXIMUM':d=dineroMin(dineroRound(multiplyDineroPercent(value,op.percent,5)),dineroChf(op.maximum));break;
-    case 'PERCENT,MINIMUM,MAXIMUM':d=dineroMin(dineroMax(dineroRound(multiplyDineroPercent(value,op.percent,5)),dineroChf(op.minimum)),dineroChf(op.maximum));break;
+    case 'PERCENT':d=dineroRoundDown(multiplyDineroPercent(value,op.percent,5));break;
+    case 'PERCENT,MAXIMUM':d=dineroMin(dineroRoundDown(multiplyDineroPercent(value,op.percent,5)),dineroChf(op.maximum));break;
+    case 'PERCENT,MINIMUM,MAXIMUM':d=dineroMin(dineroMax(dineroRoundDown(multiplyDineroPercent(value,op.percent,5)),dineroChf(op.minimum)),dineroChf(op.maximum));break;
+    case 'STANDARDIZED,PERCENT,MAXIMUM':d=dineroMin(add(dineroChf(op.amount),dineroRoundDown(multiplyDineroPercent(value,op.percent,5))),dineroChf(op.maximum));break;
    }
    deductions=add(deductions,multiplyDineroFactor(d,op.multiplier,1));
   }

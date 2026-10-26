@@ -3,6 +3,7 @@ import path from 'path';
 import { TaxDeductionTableExtended, TaxDeductionTable } from './types';
 import { dataParsedBasePath } from '../constants';
 import { TaxType } from '../types';
+import { correctDeductions } from '../corrections';
 
 const taxDeductionsByYearAndCanton = new Map<
   number,
@@ -13,8 +14,10 @@ const loadDeductionsIfRequired = async (cantonId: number, year: number) => {
   if (taxDeductionsByYearAndCanton.get(year)?.has(cantonId)) return;
 
   const resolvedPath = path.resolve(`${dataParsedBasePath}${year}/deductions/${cantonId}.json`);
-  const deductionsRaw: TaxDeductionTable[] = JSON.parse(
-    (await readFile(new URL(resolvedPath, import.meta.url))).toString()
+  const deductionsRaw: TaxDeductionTable[] = correctDeductions(
+    year,
+    cantonId,
+    JSON.parse((await readFile(new URL(resolvedPath, import.meta.url))).toString())
   );
 
   let taxDeductionsByCanton = taxDeductionsByYearAndCanton.get(year);
