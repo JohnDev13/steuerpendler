@@ -17,8 +17,13 @@ def load(name):
 
 
 def _specificity(rule):
-    return sum(bool(rule.get(key)) for key in
-               ("fromTripId", "toTripId", "fromRouteId", "toRouteId"))
+    trip_sides = sum(bool(rule.get(f"{side}TripId")) for side in ("from", "to"))
+    route_only_sides = sum(not rule.get(f"{side}TripId") and
+                           bool(rule.get(f"{side}RouteId"))
+                           for side in ("from", "to"))
+    ranks = {(2, 0): 6, (1, 1): 5, (1, 0): 4,
+             (0, 2): 3, (0, 1): 2, (0, 0): 1}
+    return ranks[(trip_sides, route_only_sides)]
 
 
 def _rule_matches(rule, left, right):
@@ -124,6 +129,37 @@ class CanonicalEventPilotTests(unittest.TestCase):
         edge = pilot.evaluate_case(cases["elapsed_cap_inclusive"])
         self.assertEqual(edge.route["itinerary"]["elapsedSeconds"], 1800)
         self.assertEqual(edge.route["origin"]["boardSeconds"], 30600)
+
+    def test_one_trip_selector_outranks_both_routes_in_both_status_directions(self):
+        base = copy.deepcopy(next(item for item in
+                                  load("canonical-event-pilot-synthetic.json")["cases"]
+                                  if item["id"] == "specific_forbidden_over_generic"))
+        one_trip = {"id": "one-trip", "fromStopId": "X", "toStopId": "Y",
+                    "fromTripId": "IN", "source": "one-trip source row"}
+        both_routes = {"id": "both-routes", "fromStopId": "X", "toStopId": "Y",
+                       "fromRouteId": "RI", "toRouteId": "RO",
+                       "source": "both-routes source row"}
+        cases = (
+            (dict(one_trip, status="forbidden"),
+             dict(both_routes, status="minimum", minimumSeconds=120), "unknown"),
+            (dict(one_trip, status="minimum", minimumSeconds=120),
+             dict(both_routes, status="forbidden"), "best_found_unproven"),
+        )
+        for trip_rule, route_rule, expected_status in cases:
+            with self.subTest(expected_status=expected_status):
+                case = copy.deepcopy(base)
+                case["transferRules"] = [trip_rule, route_rule]
+                expected = exhaustive_oracle(case)
+                self.assertEqual(expected is None, expected_status == "unknown")
+                self.assertEqual(pilot.evaluate_case(case).route["status"], expected_status)
+
+        ambiguous = copy.deepcopy(base)
+        ambiguous["transferRules"] = [
+            dict(one_trip, status="forbidden"),
+            dict(one_trip, id="one-trip-minimum", status="minimum", minimumSeconds=120),
+        ]
+        self.assertIsNone(exhaustive_oracle(ambiguous))
+        self.assertEqual(pilot.evaluate_case(ambiguous).route["status"], "unknown")
 
     def test_disembark_and_zero_duration_are_fail_closed(self):
         cases = {item["id"]: item for item in

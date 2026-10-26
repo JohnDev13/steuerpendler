@@ -99,8 +99,22 @@ def _validate_case(case: dict[str, Any]) -> dict[str, dict[str, Any]]:
 
 
 def _specificity(rule: dict[str, Any]) -> int:
-    return sum(bool(rule.get(key)) for key in
-               ("fromTripId", "toTripId", "fromRouteId", "toRouteId"))
+    from_kind = ("trip" if rule.get("fromTripId") else
+                 "route" if rule.get("fromRouteId") else None)
+    to_kind = ("trip" if rule.get("toTripId") else
+               "route" if rule.get("toRouteId") else None)
+    kinds = (from_kind, to_kind)
+    if kinds == ("trip", "trip"):
+        return 6
+    if set(kinds) == {"trip", "route"}:
+        return 5
+    if "trip" in kinds:
+        return 4
+    if kinds == ("route", "route"):
+        return 3
+    if "route" in kinds:
+        return 2
+    return 1
 
 
 def _rule_matches(rule: dict[str, Any], left: dict[str, Any],
