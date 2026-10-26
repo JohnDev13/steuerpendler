@@ -13,6 +13,6 @@ export function renderDetail(container:HTMLElement,g:Gemeinde,id:number,tax:TaxB
  }
  const info=document.createElement('p');info.className='detail-meta';info.textContent=`${s.rate}: ${g[3]}% · BFS ${id}`;container.append(info);
  if(stop&&matrix){const p=document.createElement('p');p.textContent=`${s.matrixBoarding}: ${stop[1]}${minutes===undefined?'':` · ${s.travel}: ${minutes} ${s.minutes}`}${matrix.transfers===undefined?'':` · ${s.matrixTransfers(matrix.transfers)}`}`;container.append(p);}
- else if(stop){const p=document.createElement('p');p.textContent=indicativePreview?`${s.boardingStop}: ${stop[1]} · ${s.unmeasuredAccess}${minutes===undefined?'':` · ${s.travel}: ${minutes} ${s.minutes}`}`:`${s.stop}: ${stop[1]} · ${s.walk}: ${stop[2]} ${s.minutes}${minutes===undefined?'':` · ${s.travel}: ${minutes} ${s.minutes}`}`;container.append(p);}
- const note=document.createElement('p');note.className='muted';note.textContent=indicativePreview?`${indicativeNotice} ${s.disclaimer}`:s.disclaimer;container.append(note);
+ else if(stop){const p=document.createElement('p');p.textContent=indicativePreview?`${stop[1].startsWith('ch:')?s.boardingStopInGemeinde:`${s.boardingStop}: ${stop[1]}`} · ${s.unmeasuredAccess}${minutes===undefined?'':` · ${s.travel}: ${minutes} ${s.minutes}`}`:`${s.stop}: ${stop[1]} · ${s.walk}: ${stop[2]} ${s.minutes}${minutes===undefined?'':` · ${s.travel}: ${minutes} ${s.minutes}`}`;container.append(p);}
+ const note=document.createElement('p');note.className='muted';note.textContent=indicativePreview?s.detailNote(indicativeNotice):s.disclaimer;container.append(note);
 }

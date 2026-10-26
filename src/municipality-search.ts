@@ -1,5 +1,7 @@
 import { searchGemeinden } from './state';
 import type { Gemeinde } from './tax';
+/** "Altdorf (UR)" already names its canton; do not append it twice. */
+export const optionLabel=(g:Gemeinde)=>g[0].endsWith(`(${g[1]})`)?g[0]:`${g[0]} (${g[1]})`;
 /** Separate candidate sources prevent the workplace subset from restricting homes. */
 export function installMunicipalitySearch(input:HTMLInputElement,list:HTMLElement,candidates:()=>Readonly<Record<string,Gemeinde>>,selectedName:()=>string,onSelect:(id:number)=>void){
  let ids:number[]=[],active=-1;
@@ -10,7 +12,7 @@ export function installMunicipalitySearch(input:HTMLInputElement,list:HTMLElemen
   ids=searchGemeinden(candidates(),input.value);active=-1;input.removeAttribute('aria-activedescendant');list.replaceChildren();
   for(const id of ids){
    const option=document.createElement('div');option.id=`${input.id}-option-${id}`;option.setAttribute('role','option');option.setAttribute('aria-selected','false');
-   const g=candidates()[id];option.textContent=`${g[0]} (${g[1]})`;
+   const g=candidates()[id];option.textContent=optionLabel(g);
    option.onpointerdown=e=>{if(e.pointerType==='mouse')e.preventDefault();};option.onmousedown=e=>e.preventDefault();option.onclick=()=>choose(id);list.append(option);
   }
   list.hidden=ids.length===0;input.setAttribute('aria-expanded',String(!list.hidden));

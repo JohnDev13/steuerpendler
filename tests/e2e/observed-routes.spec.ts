@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 const workplaces = [
-  'Zürich (ZH)', 'Bern (BE)', 'Luzern (LU)', 'Altdorf (UR) (UR)', 'Schwyz (SZ)',
+  'Zürich (ZH)', 'Bern (BE)', 'Luzern (LU)', 'Altdorf (UR)', 'Schwyz (SZ)',
   'Sarnen (OW)', 'Stans (NW)', 'Glarus (GL)', 'Zug (ZG)', 'Solothurn (SO)',
   'Basel (BS)', 'Liestal (BL)', 'Schaffhausen (SH)', 'Herisau (AR)', 'Appenzell (AI)',
   'St. Gallen (SG)', 'Chur (GR)', 'Aarau (AG)', 'Frauenfeld (TG)',
@@ -17,7 +17,7 @@ test('all 19 workplaces expose source-backed provisional positives with all rout
     await workplace.fill(label.replace(/ \([A-Z]{2}\)$/, ''));
     await page.getByRole('option', { name: label, exact: true }).click();
     await expect(page.locator('#summary')).toContainText('beobachteter Verbindung');
-    await expect(page.locator('#summary')).toContainText('keine vollständige Erreichbarkeitsmenge');
+    await expect(page.locator('#result-notice')).toContainText('keine vollständige Erreichbarkeitsmenge');
     await expect(page.locator('#ranked-list tr')).not.toHaveCount(0);
   }
   await expect(page.locator('#ranked-list tr td:nth-child(3)', { hasText: 'VS' })).toHaveCount(0);
@@ -44,7 +44,7 @@ test('direct-only uses its independent subset and unknown origins never become u
 test('all-19 detail uses all-19 provenance, not the old Aarau-only witness copy', async ({ page }) => {
   await page.goto('./');
   await page.locator('#ranked-list tr[data-bfs="4210"] button').click();
-  await expect(page.locator('#detail')).toContainText('All-19-Vorschau');
+  await expect(page.locator('#detail')).toContainText('Beobachtete Verbindung');
   await expect(page.locator('#detail')).not.toContainText('Aarau-Live-Debug');
 });
 

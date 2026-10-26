@@ -46,9 +46,11 @@ test('workplaces are capitals while every municipality stays selectable as a res
  await workplace.fill('Aarau');await workplace.press('Enter');
  await expect(page.locator('#map [data-bfs="4001"]')).toHaveClass(/workplace/);
  await page.locator('#max-time').evaluate((el:HTMLInputElement)=>{el.value='20';el.dispatchEvent(new Event('input',{bubbles:true}));});
- await page.locator('#max-walk').evaluate((el:HTMLInputElement)=>{el.value='15';el.dispatchEvent(new Event('input',{bubbles:true}));});
  await expect(page.locator('#time-value')).toHaveText('20 Min.');
- await expect(page.locator('#walk-value')).toHaveText('15 Min.');
+ // Walking access is unmeasured in the preview, so the walk controls are disabled and explained.
+ await expect(page.locator('#max-walk')).toBeDisabled();
+ await expect(page.locator('#count-walk')).toBeDisabled();
+ await expect(page.locator('#walk-hint')).toBeVisible();
  await expect(page.locator('#count-walk')).not.toBeChecked();
  await page.locator('#map [data-bfs="230"]').focus();await page.keyboard.press('Enter');
  await expect(page.locator('#detail h2')).toContainText('Winterthur');
