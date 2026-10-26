@@ -48,6 +48,7 @@ export type TaxDeductionTableType = 'EINKOMMENSSTEUER' | 'VERMOEGENSSTEUER';
 export type TaxDeductionTableTarget = 'BUND' | 'KANTON' | 'GEMEINDE';
 export type TaxDeductionTableItemFormat =
   | 'PERCENT'
+  | 'PERCENT,MAXIMUM'
   | 'STANDARDIZED'
   | 'MAXIMUM'
   | 'PERCENT,MINIMUM,MAXIMUM'

@@ -1,0 +1,26 @@
+{
+  "purpose": "Targeted anonymous ESTV check of the Zug renter-deduction cap",
+  "retrieved_utc": "2026-10-17T22:17:16.756Z",
+  "authentication": "none",
+  "outgoing_cookies": false,
+  "request": {
+    "body": {"SimKey": null, "TaxYear": 2026, "TaxLocationID": 630000000, "Relationship": 1, "Confession1": 4, "Children": [], "Age1": 35, "RevenueType1": 1, "Revenue1": 200000, "Fortune": 0, "Confession2": 0, "Age2": 0, "RevenueType2": 0, "Revenue2": 0, "Budget": [], "Language": 1},
+    "sha256": "a57167389cd3ea406870db70716fe0d7fbf968a7addf6fe1c790b2581fbbc476"
+  },
+  "budget": {
+    "url": "https://swisstaxcalculator.estv.admin.ch/delegate/ost-integration/v1/lg-proxy/operation/c3b67379_ESTV/API_calculateTaxBudget",
+    "response_sha256": "286aa5f5c8ed947bd505cc75b6ba30273f5dbdaa9a00cf134277946733964716",
+    "extracted": {"NETTOLOHN_P1": 180139, "MIETAUSGABEN": 45030}
+  },
+  "tax": {
+    "url": "https://swisstaxcalculator.estv.admin.ch/delegate/ost-integration/v1/lg-proxy/operation/c3b67379_ESTV/API_calculateDetailedTaxes",
+    "response_sha256": "7f1202673f897604ec80a01b634ff38500b7283194b9a4ac2b55125ed6bfe2f6",
+    "extracted_info_canton": {"entry_id": "TXT_59", "entry_de": "Mieterabzug", "value": -10800}
+  },
+  "parsed_vendor_limit": {
+    "path": "vendor/swisstaxcalculator/data/parsed/2026/deductions/25.json",
+    "id": "MaxAbzMiete_EK",
+    "format": "MAXIMUM",
+    "maximum": 10800
+  }
+}

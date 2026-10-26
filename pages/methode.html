@@ -67,24 +67,26 @@
       </ul>
     </nav>
     <h2 id="steuern">So wird die Einkommenssteuer geschätzt</h2>
-    <p>Die Rechnung in <code>src/tax.ts</code> folgt §7 der Build Spec v1.1. Ziel ist das Steuerjahr 2026.
+    <p>Die Rechnung in <code>src/tax.ts</code> folgt §7 der Build Spec (Schema v2). Ziel ist das Steuerjahr 2026.
       Für jedes Profil stehen pro Kanton 461 Tabellenzeilen für Bruttojahreseinkommen von CHF 40'000 bis
       CHF 500'000 in Schritten von CHF 1'000. Jede Zeile enthält Bundessteuer (<code>bund</code>),
       einfache kantonale Steuer vor Steuerfüssen (<code>base</code>) und Personal-/Kopfsteuer
-      (<code>personal</code>). Zwischen zwei Zeilen werden alle drei Komponenten linear interpoliert.</p>
-    <p>Einkommen ausserhalb des Bereichs werden auf die nächste Grenze begrenzt; die Oberfläche muss
-      dies sichtbar mitteilen. In der Formel bedeutet <code>clamp</code> diese Begrenzung,
-      <code>floor</code> Abrunden auf eine ganze Zahl und <code>t</code> den Anteil zwischen zwei Zeilen.
-      Auch am oberen Endpunkt bleibt die letzte gültige Zeilenpaarung erhalten:</p>
-    <pre><code>x = clamp((income − 40000) / 1000, 0, 460)
-i = min(floor(x), 459); t = x − i
-row = row[i] + (row[i+1] − row[i]) × t
-bund, base, personal = Komponenten der interpolierten row
+      (<code>personal</code>).</p>
+    <p>Zwischen zwei Zeilen wird <strong>nicht</strong> linear interpoliert. Die Tarife werden auf das
+      steuerbare Einkommen, abgerundet auf CHF 100, angewendet; die Steuer steigt deshalb in kleinen Stufen.
+      Für jeden Kanton liegt ein kompaktes Rechenprogramm bei (Abzüge, Tarif, Splitting), das im Browser
+      exakt ausgewertet wird. Einkommen ausserhalb des Bereichs werden auf die nächste Grenze begrenzt;
+      die Oberfläche teilt dies sichtbar mit.</p>
+    <pre><code>netto    = brutto − AHV/IV/EO − ALV − NBU − BVG (Standard, Alter 35)
+steuerbar = netto − Abzüge des Kantons bzw. Bundes, abgerundet auf CHF 100
+bund, base = Tarif(steuerbar), mit Splitting für Verheiratete
 rateCh = reformierter oder katholischer Gemeindesatz; ohne Kirche 0
 kanton = base × rateCanton / 100
 gemeinde = base × rateGemeinde / 100
 kirche = base × rateCh / 100
 total = bund + kanton + gemeinde + kirche + personal</code></pre>
+    <p>Die Rechnung im Browser wird bei jeder Änderung gegen die vollständige Steuer-Engine geprüft:
+      500 Fälle auf und 300 zwischen den Tabellenzeilen, Abweichung höchstens CHF 10 (aktuell CHF 0).</p>
     <p>Die Gemeinde liefert die kantonalen, kommunalen und kirchlichen Steuerfüsse in Prozent der
       einfachen Steuer. Die Personalsteuer wird einmal addiert, nicht nochmals mit einem Steuerfuss
       multipliziert. Für die Anzeige werden Beträge auf CHF 10 gerundet
@@ -92,7 +94,7 @@ total = bund + kanton + gemeinde + kirche + personal</code></pre>
       verwenden die ungerundeten Beträge. Eine gleich gerundete Anzeige beweist daher keinen Gleichstand.</p>
     <h3>Feste Annahmen</h3>
     <ul>
-      <li>Bruttoerwerbseinkommen aus Anstellung, Alter 35 Jahre, kein Vermögen und Standardabzüge.</li>
+      <li>Bruttoerwerbseinkommen aus Anstellung, Alter 35 Jahre, kein Vermögen und Standardabzüge, einschliesslich des ESTV-Standards für die berufliche Vorsorge (BVG) und das Haushaltsbudget.</li>
       <li>Ledig oder verheiratet; bei Verheirateten nur ein Einkommen, Partnereinkommen 0 (O1).</li>
       <li>Kinderkategorien 0, 1, 2 oder 3+; 3+ verwendet das Profil für 3 Kinder, keine individuelle Grossfamilienrechnung.</li>
       <li>Kirche: keine, reformiert oder katholisch. Andere Konstellationen sind nicht modelliert.</li>
@@ -124,14 +126,13 @@ total = bund + kanton + gemeinde + kirche + personal</code></pre>
       Erreichbarkeits- oder Fahrplanempfehlung. Die vollständige negative Abdeckung, gemessene
       Wohnzugänge und unabhängige SBB-Prüfung sind weiterhin ausstehend.</p>
     <h2 id="grenzen">Daten in Prüfung und Grenzen</h2>
-    <p>Ein früherer direkter 29-Fälle-Vergleich der ausgelieferten Steuerberechnung bestand
-      <strong>9 von 29</strong> Fällen; <strong>20 von 29</strong> verfehlten die Zielgenauigkeit.
-      Diese Schätzungen sind daher nicht numerisch freigegeben. Eine unabhängige Wiederholungsprüfung
-      gegen die offiziellen ESTV-Ergebnisse sowie 30 SBB-Verbindungen mit denselben Stationen, Datum,
-      Zeitfenster und Rundung steht weiterhin aus. Historische gerundete Enginewerte oder bestandene
-      lokale Tests ersetzen diese Belege nicht. Der direkte ESTV-Grenzwert beträgt pro Fall maximal
-      CHF 5 oder 0,1 % des offiziellen Betrags, je nachdem, was grösser ist; bei SBB beträgt die
-      zulässige Abweichung höchstens 3 Minuten.</p>
+    <p>Direkter Vergleich mit dem offiziellen ESTV-Steuerrechner (29 eingefrorene Fälle, alle 26 Kantone):
+      die ausgelieferte Berechnung besteht <strong>10 von 29</strong> Fällen; <strong>19 von 29</strong>
+      verfehlen die Zielgenauigkeit, vor allem wegen kantonaler Kinderabzüge und Kirchensteuer-Grundlagen.
+      Die Bundessteuer stimmt in allen 29 Fällen auf CHF 4 genau. Diese Schätzungen sind daher nicht
+      numerisch freigegeben. Der direkte ESTV-Grenzwert beträgt pro Fall maximal CHF 5 oder 0,1 % des
+      offiziellen Betrags, je nachdem, was grösser ist. Eine Prüfung von 30 SBB-Verbindungen (zulässige
+      Abweichung höchstens 3 Minuten) steht aus.</p>
     <p>VS (Wallis) ist vorsorglich mit «Daten in Prüfung» gekennzeichnet und im lokalen Code
       von Steuerempfehlungen ausgeschlossen. Das ist ein Verdacht, nicht ein offiziell bestätigter
       Fehler. Auch die oberste Tarifstufe von Fribourg muss gesondert geprüft werden.

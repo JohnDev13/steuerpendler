@@ -1,0 +1,13 @@
+{
+  "url": "https://swisstaxcalculator.estv.admin.ch/",
+  "final_url": "https://swisstaxcalculator.estv.admin.ch/",
+  "retrieved_utc": "2026-10-17T10:58:06.257085+00:00",
+  "status": 200,
+  "content_type": "text/html",
+  "method": "GET",
+  "request_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "response_sha256": "dd48dc7688cacc9f329da8078b14e01e61542d3ca4e7ba77a07f33939c8efc68",
+  "authentication": "none",
+  "outgoing_cookies": false,
+  "attempts": 1
+}

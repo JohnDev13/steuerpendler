@@ -1,0 +1,13 @@
+{
+  "url": "https://swisstaxcalculator.estv.admin.ch/delegate/ost-integration/v1/lg-proxy/operation/c3b67379_ESTV/API_calculateTaxBudget",
+  "final_url": "https://swisstaxcalculator.estv.admin.ch/delegate/ost-integration/v1/lg-proxy/operation/c3b67379_ESTV/API_calculateTaxBudget",
+  "retrieved_utc": "2026-10-17T10:58:25.228175+00:00",
+  "status": 200,
+  "content_type": "application/json;charset=UTF-8",
+  "method": "POST",
+  "request_sha256": "8c6095233fdbd0380da63fd34c2168559f873dd56a73f51d97fb0b52a88e765f",
+  "response_sha256": "2812c2a8d1a6c8d7911fec5acc16a1525b07cf15dffd1884ea44a4061d6cc8e2",
+  "authentication": "none",
+  "outgoing_cookies": false,
+  "attempts": 1
+}

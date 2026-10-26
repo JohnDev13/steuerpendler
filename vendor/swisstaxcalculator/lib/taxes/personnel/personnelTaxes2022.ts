@@ -3,7 +3,7 @@ import { PersonnelTaxItem } from './types';
 export const personnelTaxes: Record<number, PersonnelTaxItem> = {
   26: { amount: 24, marriedBoth: true }, // Zürich
   4: { amount: 0, marriedBoth: true }, // Bern
-  12: { amount: 50, marriedBoth: true }, // Luzern
+  12: { amount: 50, marriedBoth: false }, // Luzern
   22: { amount: 70, marriedBoth: true }, // Uri
   19: { amount: 0, marriedBoth: true }, // Schwyz
   15: { amount: 0, marriedBoth: true }, // Obwalden

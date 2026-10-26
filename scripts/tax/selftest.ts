@@ -4,9 +4,11 @@ import { pathToFileURL } from 'node:url';
 import { createHash } from 'node:crypto';
 import type { TaxLocation } from '../../vendor/swisstaxcalculator/lib/taxes/typesClient';
 import { calculateTaxesIncomeAndFortune } from '../../vendor/swisstaxcalculator/lib/taxes/income';
+import { reconstructPrecision } from './reconstruct';
+import type { BudgetDefault, PensionDefault, PreciseCanton } from '../../src/tax';
 import { ROOT, SOURCE, INCOMES, loadSources, makeInput, type Gemeinde, type TaxRow, type Sources, type Civil, type Church } from './build';
 
-export interface Profile { meta: { year: number; incomes: typeof INCOMES }; cantons: Record<string, TaxRow[]> }
+export interface Profile { meta: { year: number; incomes: typeof INCOMES; pensionDefault?: PensionDefault; budgetDefault?: BudgetDefault }; cantons: Record<string, TaxRow[]>; precision?:Record<string,PreciseCanton> }
 export interface Artifacts { profiles: Record<string, Profile>; gemeinden: Record<string, Gemeinde>; sha256: Record<string, string> }
 
 export async function loadArtifacts(directory = `${ROOT}site/data`): Promise<Artifacts> {
@@ -24,8 +26,13 @@ export async function loadArtifacts(directory = `${ROOT}site/data`): Promise<Art
   const profiles: Record<string, Profile> = {};
   for (const civil of ['s', 'm']) for (let kids = 0; kids <= 3; kids++) {
     const profile: Profile = await read(`tax-2026-${civil}-${kids}.json`);
+    if (profile.meta?.pensionDefault !== undefined && profile.meta.pensionDefault !== 'ESTV2026Age35') throw new Error('Invalid pensionDefault marker');
+    if (profile.meta?.budgetDefault !== undefined && profile.meta.budgetDefault !== 'ESTV2026Age35') throw new Error('Invalid budgetDefault marker');
+    if (profile.meta?.budgetDefault !== undefined && profile.meta.pensionDefault !== 'ESTV2026Age35') throw new Error('budgetDefault requires matching pensionDefault');
     if (profile.meta?.year !== 2026 || profile.meta.incomes?.from !== 40000 || profile.meta.incomes.step !== 1000 || profile.meta.incomes.count !== 461 || Object.keys(profile.cantons ?? {}).length !== 26) throw new Error('Invalid profile metadata/cantons');
     for (const rows of Object.values(profile.cantons)) if (!Array.isArray(rows) || rows.length !== 461 || rows.some(row => !Array.isArray(row) || row.length !== 3 || !row.every(Number.isFinite))) throw new Error('Invalid profile rows');
+    const hasRent30=Object.values(profile.precision??{}).some(p=>[p.bund,p.canton].some(part=>part.deductions.some(op=>op.source==='rent30')));
+    if(hasRent30&&profile.meta.budgetDefault!=='ESTV2026Age35')throw new Error('rent30 requires matching budgetDefault');
     profiles[`${civil}-${kids}`] = profile;
   }
   return { profiles, gemeinden, sha256 };
@@ -41,7 +48,13 @@ export function reconstruct(artifacts: Artifacts, sample: Sample): number {
   if (!rows?.[i] || !rows[i + 1]) throw new Error(`Missing profile ${sample.civil}-${sample.kids}/${g[1]}`);
   const row = rows[i].map((v, k) => v + (rows[i + 1][k] - v) * t);
   const rateChurch = sample.church === 'reformed' ? g[4] : sample.church === 'catholic' ? g[5] : 0;
-  const total = row[0] + row[1] * g[2] / 100 + row[1] * g[3] / 100 + row[1] * rateChurch / 100 + row[2];
+  const precise=artifacts.profiles[`${sample.civil}-${sample.kids}`].precision?.[g[1]];
+  if(precise&&t!==0&&t!==1){const meta=artifacts.profiles[`${sample.civil}-${sample.kids}`].meta;return reconstructPrecision(precise,sample.income,[g[2],g[3],rateChurch],meta.pensionDefault,meta.budgetDefault);}
+  // Separate monetary rounding at each final component, ties to even.
+  const round=(v:number)=>{const f=Math.floor(v);return Math.abs(v-f-.5)<1e-8?(f%2===0?f:f+1):Math.round(v);};
+  const r=precise?round:(v:number)=>v;
+  const churchRate=precise?Math.round(rateChurch/precise.persons*100)/100*precise.persons:rateChurch;
+  const total = row[0] + r(row[1] * g[2] / 100) + r(row[1] * g[3] / 100) + r(row[1] * churchRate / 100) + row[2];
   if (!Number.isFinite(total)) throw new Error('Nonfinite reconstructed total');
   return total;
 }
@@ -52,6 +65,7 @@ export async function runSelftest(directory = `${ROOT}site/data`) {
   const artifacts = await loadArtifacts(directory);
   const samples = sampleCases(sources);
   const evaluate = async (cases: Sample[], offGrid: boolean) => {
+    const results: Comparison[] = [];
     const failures: Comparison[] = [];
     let worst: Comparison | null = null;
     for (const sample of cases) {
@@ -61,10 +75,11 @@ export async function runSelftest(directory = `${ROOT}site/data`) {
       const error = Math.abs(actual - expected);
       const tolerance = offGrid ? 10 : Math.max(2, Math.abs(expected) * 0.0001);
       const result: Comparison = { bfs: sample.loc.BfsID, canton: sample.loc.Canton, civil: sample.civil, kids: sample.kids, income: sample.income, church: sample.church, expected, actual, error, tolerance };
+      results.push(result);
       if (!worst || error > worst.error) worst = result;
       if (error > tolerance) failures.push(result);
     }
-    return { count: cases.length, failureCount: failures.length, maxAbsoluteError: worst?.error ?? 0, worst, failures };
+    return { count: cases.length, failureCount: failures.length, maxAbsoluteError: worst?.error ?? 0, worst, failures, results };
   };
   const onGrid = await evaluate(samples.onGrid, false), offGrid = await evaluate(samples.offGrid, true);
   const passed = onGrid.failureCount === 0 && offGrid.failureCount === 0;
