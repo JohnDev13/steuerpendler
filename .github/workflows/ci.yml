@@ -1,0 +1,95 @@
+# Required checks on main: CI / web and CI / travel.
+# CI / tax-accuracy runs the SPEC 7.1 numeric gates; it becomes required once it is green on main.
+
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  # pull_request.number is empty on push events; fall back to the ref so pushes do not cancel each other.
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  web:
+    name: web
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      PAGES_BASE: /steuerpendler/
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22.23.2
+          cache: npm
+      - run: npm ci
+      - name: Type-check sources and tests
+        run: npx tsc --noEmit -p tsconfig.test.json
+      - name: Unit tests
+        run: npm test
+      - name: Release inventory tests
+        run: npm run release:test
+      - name: Map rebuild and geometry checks
+        run: npm run map:test
+      - name: Production build (project-path base)
+        run: npm run build
+      - name: Release manifest is committed and current
+        run: git diff --exit-code -- site/data/manifest.json site/data/release.json
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Content page tests
+        run: node --test tests/content/*.test.mjs
+      - name: End-to-end tests
+        run: npm run test:e2e
+      - if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: playwright-results
+          path: test-results
+          retention-days: 7
+
+  travel:
+    name: travel
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: 3.11.15
+      # Deliberately NOT setting TMPDIR: the suite must pass on a default runner.
+      - name: Travel unit tests
+        run: python3 -m unittest discover -s tests/travel -v
+
+  tax-accuracy:
+    name: tax-accuracy
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22.23.2
+          cache: npm
+      - run: npm ci
+      - name: On-grid / off-grid regression vs engine (SPEC 7.1)
+        run: npm run tax:test
+      - name: Historical engine scenarios
+        run: npm run tax:reference
+      # Add once the ESTV captures + comparator from PR #14 are salvaged onto main:
+      # - name: ESTV end-to-end comparison (29 frozen captures)
+      #   run: npm run tax:official
