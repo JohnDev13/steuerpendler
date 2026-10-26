@@ -1,12 +1,14 @@
 # Travel data
 
-## Current pipeline: Gemeinde → workplace matrix
+## Experimental pipeline: Gemeinde → workplace candidate positives
 
-`matrix.py` computes, for every Gemeinde and each of the 19 workplaces, the shortest time from first
-boarding at a stop inside the Gemeinde to arrival at the workplace station complex, for first boardings
-06:30–08:30 on the reference Tuesday, with any number of changes, up to 30 minutes. It is a reverse
-profile Connection Scan in standard-library Python (about 3–4 s per destination for ~700k connections).
-The rules are in the module docstring and in SPEC §6.5c.
+`matrix.py` scans a GTFS feed for observed in-time candidate journeys at stops within Gemeinde
+polygons for 19 workplaces, with a separate no-change scan for direct-only journeys. Missing
+municipality/destination pairs remain **unknown**. The release gate stays closed until a real feed,
+origin coverage, transfer precedence and the positive paths have been independently audited. This
+algorithm does not replace the pinned first-boarding-event×19 file or establish global fastest routes.
+Its timetable comparisons use exact seconds and round up only for display; assumptions are in the
+module docstring and SPEC §6.5c.
 
 ```sh
 python3 scripts/travel/run_matrix.py --gtfs GTFS_FP2026_<date>.zip --date 2026-10-27 --feed-url <url>
@@ -18,8 +20,9 @@ In GitHub: Actions → **Build travel matrix** → Run workflow, with the URL of
 https://data.opentransportdata.swiss/dataset/timetable-2026-gtfs2020. The workflow records the feed's
 SHA-256, writes `site/data/travel/matrix/`, runs the SBB comparison and opens a data PR.
 
-Fill `tests/travel/sbb-reference-2026.csv` from sbb.ch (fastest journey, same date and window) so the
-comparison can pass; empty cells stay `pending`.
+Populate `tests/travel/sbb-reference-2026.csv` from same-date SBB journeys to run a
+30-pair diagnostic; blank values remain pending. Passing that sample alone cannot clear the
+source-completeness or official release gates.
 
 Known model limits, recorded in `meta.json`: walking from home to the first stop is not measured (0 min);
 origins are stops inside the simplified Gemeinde polygon; route- or trip-specific `transfers.txt` rows

@@ -57,7 +57,7 @@ function selectGemeinde(id:number){
  $<HTMLInputElement>('residence').value=gemeinden[id][0];
  const indicative=!!matrixMeta||!!observedRoutes||preview?.destinationBfs===state.workplace,activeReview=indicative?QUARANTINED_CANTONS:reviewCantons,witnessed=!!rows.find(row=>row[0]===id);
  const notice=matrixMeta?s.matrixNotice(matrixMeta.serviceDate.split('-').reverse().join('.'),matrixCurrent?.station??''):observedRoutes?(directOnly?s.observedDirectWarning:s.observedWarning):(directOnly?s.indicativeDirectWarning:s.indicativeWarning);
- renderDetail($('detail'),gemeinden[id],id,witnessed||!indicative||matrixMeta?breakdowns[id]??null:null,access[id],results.find(r=>r.id===id),rows.find(r=>r[0]===id)?.[1],travelReady,activeReview.has(gemeinden[id][1]),indicative,notice,matrixMeta?{maxTime:state.maxTime,transfers:transfersFor(matrixCurrent,id)}:undefined);
+ renderDetail($('detail'),gemeinden[id],id,witnessed||!indicative||matrixMeta?breakdowns[id]??null:null,access[id],results.find(r=>r.id===id),rows.find(r=>r[0]===id)?.[1],travelReady,activeReview.has(gemeinden[id][1]),indicative,notice,matrixMeta?{maxTime:state.maxTime,transfers:transfersFor(matrixCurrent,id,directOnly)}:undefined);
  map?.update(results,state.workplace,state.selected,activeReview);
  for(const row of $('ranked-list').querySelectorAll('tr'))row.classList.toggle('selected',row.getAttribute('data-bfs')===String(id));
 }
@@ -117,7 +117,7 @@ async function init(){
   const coverage=document.createElement('p');coverage.dataset.testid='candidate-coverage';coverage.className='assumptions';coverage.textContent=s.coverage(Object.keys(gemeinden).length,Object.keys(workplaces).length);coverage.dataset.residences=String(Object.keys(gemeinden).length);coverage.dataset.workplaces=String(Object.keys(workplaces).length);$('profile-status').after(coverage);
   reviewCantons=withheldCantons(Object.values(gemeinden).map(g=>g[1]),!!DATA_RELEASE.approvals.estv,QUARANTINED_CANTONS);
   if(DATA_RELEASE.availability.map){const topology=await repository.json<any>('map/switzerland-2026.json');map=createMap($('map'),topology,gemeinden,selectGemeinde);}
-  matrixMeta=await loadMatrixMeta(repository,DATA_RELEASE.files);
+  matrixMeta=await loadMatrixMeta(repository,DATA_RELEASE.files,DATA_RELEASE.availability.travel);
   if(matrixMeta)matrixLoad=createMatrixLoader(repository,DATA_RELEASE.files,matrixMeta,gemeinden);
   else observedRoutes=await loadObservedRoutes(repository,DATA_RELEASE,gemeinden);
   if(!observedRoutes){preview=await loadAarauPreview(repository,DATA_RELEASE,gemeinden);if(preview){transferWitness=await loadTransferWitness(repository,DATA_RELEASE,gemeinden);previewData=adaptObservedAarau(preview,transferWitness,directOnly);}}

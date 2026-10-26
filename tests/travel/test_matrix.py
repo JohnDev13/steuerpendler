@@ -188,9 +188,28 @@ class MatrixBuild(unittest.TestCase):
         self.assertEqual(by_bfs[300][1:4], [900, 0, "Ypsilon"])  # bus to a stop of the station complex
         self.assertNotIn(500, by_bfs)
         self.assertEqual([row[1] for row in rows], sorted(row[1] for row in rows))
-        self.assertEqual(meta["absence"], "no_journey_within_cap_under_model")
+        self.assertEqual(meta["absence"], "unknown_unobserved")
         self.assertEqual(meta["workplaces"]["400"]["rows"], 4)
         json.dumps(meta)
+
+    def test_independent_direct_rows_keep_slower_direct_when_transfer_is_faster(self):
+        trips = {
+            "incoming": (2, [("A", "07:00:00", "07:00:00"), ("X", "07:05:00", "07:05:00")]),
+            "connection": (2, [("X", "07:07:00", "07:07:00"), ("T", "07:10:00", "07:10:00")]),
+            "direct": (2, [("A", "07:00:00", "07:00:00"), ("T", "07:20:00", "07:20:00")]),
+        }
+        projected = {sid: matrix.wgs84_to_lv95(lon, lat) for sid, _, lat, lon, _ in STOPS}
+        squares = {100: square(*projected["A"], 300), 200: square(*projected["X"], 300),
+                   400: square(*projected["T"], 300)}
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "feed.zip"
+            write_feed(path, STOPS, trips)
+            _, files = matrix.build(path, topology_for(squares), [400], {100, 200, 400}, DAY)
+        all_rows = {row[0]: row for row in files[400]["rows"]}
+        direct_rows = {row[0]: row for row in files[400]["directRows"]}
+        self.assertEqual(all_rows[100][1:3], [600, 1])
+        self.assertEqual(direct_rows[100][1:3], [1200, 0])
+        self.assertEqual(direct_rows[400][1:3], [0, 0])
 
     def test_point_in_polygon_respects_holes(self):
         topology = topology_for({1: square(1000, 1000, 500)})
@@ -249,5 +268,6 @@ class ReferenceComparison(unittest.TestCase):
         self.assertEqual(statuses, ["passed", "pending", "failed_missing", "failed_missing", "not_a_computed_workplace", "failed"])
 
     def test_committed_reference_keeps_all_30_spec_pairs(self):
-        rows = list(csv.DictReader((Path(__file__).resolve().parent / "sbb-reference-2026.csv").open(encoding="utf-8")))
+        with (Path(__file__).resolve().parent / "sbb-reference-2026.csv").open(encoding="utf-8") as handle:
+            rows = list(csv.DictReader(handle))
         self.assertEqual([int(r["pair"]) for r in rows], list(range(1, 31)))

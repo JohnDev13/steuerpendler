@@ -19,8 +19,8 @@ Changes between vehicles:
 - transfers.txt type 4 trip-pair rows are stay-seated continuations (no change counted).
 Route- or trip-specific type 0-3 rows are not modelled; this is recorded in the output metadata.
 
-Because every connection in the window is scanned, a Gemeinde missing from a workplace file means
-"no journey of at most 30 minutes from a stop inside the Gemeinde under this model", not "unknown".
+A missing Gemeinde/destination result remains **unknown** until feed completeness, origin-stop coverage
+and transfer rules have been independently checked. The scan emits bounded positives only.
 """
 from __future__ import annotations
 
@@ -476,16 +476,24 @@ def build(gtfs: Path, topology: dict, workplaces: list[int], municipalities: set
             continue
         results = scan(feed, targets, paths, ordered)
         rows = municipality_rows(feed, assignment, results, workplace, municipalities)
+        # A separate no-change scan retains direct rides even when a transfer wins all-routes.
+        direct_results = scan(feed, targets, {}, ordered)
+        direct_rows = municipality_rows(feed, assignment, direct_results, workplace, municipalities)
+        all_by_bfs = {row[0]: row for row in rows}
+        if any(row[2] != 0 or row[0] not in all_by_bfs or row[1] < all_by_bfs[row[0]][1]
+               for row in direct_rows):
+            raise MatrixError(f"direct-only route is inconsistent with all-routes for {workplace}")
         files[workplace] = {"schema": SCHEMA, "to": workplace, "station": name, "serviceDate": day.isoformat(),
-                            "rows": rows}
-        summary[str(workplace)] = {"station": name, "targetStops": len(targets), "rows": len(rows)}
+                            "rows": rows, "directRows": direct_rows}
+        summary[str(workplace)] = {"station": name, "targetStops": len(targets), "rows": len(rows),
+                                    "directRows": len(direct_rows)}
     meta = {
         "schema": SCHEMA,
         "serviceDate": day.isoformat(),
         "firstBoardWindow": ["06:30:00", "08:30:00"],
         "capSeconds": CAP_SECONDS,
         "rowFormat": ["homeBfs", "transitSeconds", "transfers", "firstBoardStopName", "firstBoardSeconds"],
-        "absence": "no_journey_within_cap_under_model",
+        "absence": "unknown_unobserved",
         "model": {
             "access": "unmeasured_zero",
             "origins": "every GTFS stop inside the Gemeinde polygon (simplified BFS 2026 boundaries)",

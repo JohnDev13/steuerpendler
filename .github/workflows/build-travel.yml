@@ -11,9 +11,8 @@ on:
         description: GTFS zip URL (Timetable 2026 GTFS2020 resource)
         required: true
       gtfs_sha256:
-        description: Expected SHA-256 of the zip (optional; the actual hash is recorded either way)
-        required: false
-        default: ''
+        description: Expected pinned SHA-256 of the GTFS zip (64 lowercase hex digits)
+        required: true
       service_date:
         description: Reference Tuesday (YYYY-MM-DD)
         required: true
@@ -46,10 +45,13 @@ jobs:
           python-version: 3.11.15
       - name: Download feed
         run: |
+          if [[ ! "$GTFS_SHA256" =~ ^[0-9a-f]{64}$ ]]; then
+            echo "::error::A pinned 64-character lowercase GTFS SHA-256 is required"; exit 1
+          fi
           curl -fsSL --retry 3 -o "$RUNNER_TEMP/gtfs.zip" "$GTFS_URL"
           actual=$(sha256sum "$RUNNER_TEMP/gtfs.zip" | cut -d' ' -f1)
           echo "GTFS sha256 $actual ($(stat -c %s "$RUNNER_TEMP/gtfs.zip") bytes)"
-          if [ -n "$GTFS_SHA256" ] && [ "$GTFS_SHA256" != "$actual" ]; then
+          if [ "$GTFS_SHA256" != "$actual" ]; then
             echo "::error::GTFS hash mismatch: expected $GTFS_SHA256, got $actual"; exit 1
           fi
       - name: Unit tests
@@ -98,6 +100,9 @@ jobs:
             echo 'SBB reference pairs (SPEC 11.2):'
             echo '```'; cat "$RUNNER_TEMP/reference.log"; echo '```'
             echo
+            echo 'Experimental observed-positive matrix; absent Gemeinde/destination pairs remain unknown.'
+            echo 'Do not merge or enable availability.travel without source-completeness, direct-route and reference audits.'
+            echo
             echo 'Close and reopen this PR to run CI.'
           } > "$RUNNER_TEMP/body.md"
-          gh pr create --base main --head "$branch" --title "data(travel): Gemeinde matrix for ${SERVICE_DATE}" --body-file "$RUNNER_TEMP/body.md"
+          gh pr create --draft --base main --head "$branch" --title "data(travel): provisional Gemeinde candidates for ${SERVICE_DATE}" --body-file "$RUNNER_TEMP/body.md"

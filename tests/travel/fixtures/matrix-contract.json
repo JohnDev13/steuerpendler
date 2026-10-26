@@ -14,7 +14,7 @@
    "firstBoardStopName",
    "firstBoardSeconds"
   ],
-  "absence": "no_journey_within_cap_under_model",
+  "absence": "unknown_unobserved",
   "model": {
    "access": "unmeasured_zero",
    "origins": "every GTFS stop inside the Gemeinde polygon (simplified BFS 2026 boundaries)",
@@ -37,7 +37,8 @@
    "261": {
     "station": "Target",
     "targetStops": 2,
-    "rows": 4
+    "rows": 4,
+    "directRows": 4
    }
   }
  },
@@ -47,6 +48,36 @@
   "station": "Target",
   "serviceDate": "2026-10-27",
   "rows": [
+   [
+    261,
+    0,
+    0,
+    "",
+    0
+   ],
+   [
+    200,
+    420,
+    0,
+    "Xenon",
+    25500
+   ],
+   [
+    100,
+    720,
+    0,
+    "Alpha",
+    25200
+   ],
+   [
+    300,
+    900,
+    0,
+    "Ypsilon",
+    27900
+   ]
+  ],
+  "directRows": [
    [
     261,
     0,
