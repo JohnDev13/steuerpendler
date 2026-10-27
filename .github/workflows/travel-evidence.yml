@@ -27,43 +27,54 @@ jobs:
     env:
       SERVICE_DATE: ${{ inputs.service_date || '2026-10-27' }}
       CKAN: https://data.opentransportdata.swiss/api/3/action/package_show?id=timetable-2026-gtfs2020
+      PERMALINKS: >-
+        https://data.opentransportdata.swiss/dataset/timetable-2026-gtfs2020/permalink
+        https://opentransportdata.swiss/de/dataset/timetable-2026-gtfs2020/permalink
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: 3.11.15
-      - name: Find newest GTFS resource
+      - name: Find and pin newest GTFS resource
         run: |
           mkdir -p evidence
-          curl -fsSL --retry 3 "$CKAN" -o "$RUNNER_TEMP/package.json"
-          python3 - "$RUNNER_TEMP/package.json" > evidence/feed.env <<'EOF'
-          import json, sys
-          resources = json.load(open(sys.argv[1]))["result"]["resources"]
-          zips = [r for r in resources if (r.get("url") or "").lower().endswith(".zip")]
-          zips.sort(key=lambda r: r.get("created") or "", reverse=True)
-          for r in zips[:5]:
-              print(f"# {r.get('created')} {r.get('name')} {r['url']}", file=sys.stderr)
-          print(f"GTFS_URL={zips[0]['url']}")
-          print(f"GTFS_NAME={zips[0].get('name')}")
-          EOF
-          cat evidence/feed.env >> "$GITHUB_ENV"; cat evidence/feed.env
-      - name: Download and pin feed
-        run: |
-          curl -fsSL --retry 3 -o "$RUNNER_TEMP/gtfs.zip" "$GTFS_URL"
+          url=""
+          code=$(curl -sSL --retry 3 -o "$RUNNER_TEMP/package.json" -w '%{http_code}' "$CKAN" || true)
+          echo "::notice title=CKAN package_show::HTTP $code"
+          if [ "$code" = 200 ]; then
+            url=$(python3 -c 'import json,sys; r=[x for x in json.load(open(sys.argv[1]))["result"]["resources"] if (x.get("url") or "").lower().endswith(".zip")]; r.sort(key=lambda x: x.get("created") or "", reverse=True); print(r[0]["url"])' "$RUNNER_TEMP/package.json" || true)
+          fi
+          for permalink in $PERMALINKS; do
+            [ -n "$url" ] && break
+            resolved=$(curl -sSIL --retry 2 -o /dev/null -w '%{http_code} %{url_effective}' "$permalink" || true)
+            echo "::notice title=Permalink::$permalink -> $resolved"
+            case "$resolved" in 200\ http*) url=${resolved#200 } ;; esac
+          done
+          [ -n "$url" ] || { echo "::error::No GTFS resource found"; exit 1; }
+          curl -fsSL --retry 3 -o "$RUNNER_TEMP/gtfs.zip" "$url"
           sha=$(sha256sum "$RUNNER_TEMP/gtfs.zip" | cut -d' ' -f1)
-          echo "GTFS_SHA256=$sha" | tee -a evidence/feed.env >> "$GITHUB_ENV"
-          echo "GTFS_BYTES=$(stat -c %s "$RUNNER_TEMP/gtfs.zip")" | tee -a evidence/feed.env
-          unzip -l "$RUNNER_TEMP/gtfs.zip" | tee evidence/feed-contents.txt
+          bytes=$(stat -c %s "$RUNNER_TEMP/gtfs.zip")
+          printf 'GTFS_URL=%s\nGTFS_SHA256=%s\nGTFS_BYTES=%s\n' "$url" "$sha" "$bytes" | tee evidence/feed.env >> "$GITHUB_ENV"
+          echo "::notice title=GTFS feed::$url sha256=$sha bytes=$bytes"
+          unzip -l "$RUNNER_TEMP/gtfs.zip" > evidence/feed-contents.txt
       - name: Unit tests
         run: python3 -m unittest discover -s tests/travel
       - name: Build matrix
         run: |
           /usr/bin/time -v python3 scripts/travel/run_matrix.py --gtfs "$RUNNER_TEMP/gtfs.zip" --date "$SERVICE_DATE" \
             --feed-url "$GTFS_URL" 2>&1 | tee evidence/matrix.log
+          echo "::notice title=Matrix::$(grep -E 'rows=' evidence/matrix.log | tr '\n' ' ' | cut -c1-3500)"
+          echo "::notice title=Resources::$(grep -E 'Elapsed|Maximum resident' evidence/matrix.log | tr '\n' ' ')"
       - name: Fetch reference journeys (transport.opendata.ch)
-        run: python3 scripts/travel/fetch_reference.py --date "$SERVICE_DATE" 2>&1 | tee evidence/reference-fetch.log
+        if: ${{ !cancelled() }}
+        run: |
+          python3 scripts/travel/fetch_reference.py --date "$SERVICE_DATE" 2>&1 | tee evidence/reference-fetch.log
+          echo "::notice title=Reference::$(cut -c1-120 evidence/reference-fetch.log | tr '\n' '|' | cut -c1-3800)"
       - name: Compare
-        run: python3 scripts/travel/compare_reference.py 2>&1 | tee evidence/compare.log || true
+        if: ${{ !cancelled() }}
+        run: |
+          python3 scripts/travel/compare_reference.py 2>&1 | tee evidence/compare.log || true
+          echo "::notice title=Compare::$(tr '\n' '|' < evidence/compare.log | cut -c1-3800)"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
