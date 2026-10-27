@@ -44,14 +44,17 @@ jobs:
           if [ "$code" = 200 ]; then
             url=$(python3 -c 'import json,sys; r=[x for x in json.load(open(sys.argv[1]))["result"]["resources"] if (x.get("url") or "").lower().endswith(".zip")]; r.sort(key=lambda x: x.get("created") or "", reverse=True); print(r[0]["url"])' "$RUNNER_TEMP/package.json" || true)
           fi
-          for permalink in $PERMALINKS; do
-            [ -n "$url" ] && break
-            resolved=$(curl -sSIL --retry 2 -o /dev/null -w '%{http_code} %{url_effective}' "$permalink" || true)
-            echo "::notice title=Permalink::$permalink -> $resolved"
-            case "$resolved" in 200\ http*) url=${resolved#200 } ;; esac
-          done
+          if [ -n "$url" ]; then
+            curl -fsSL --retry 3 -o "$RUNNER_TEMP/gtfs.zip" "$url"
+          else
+            # The permalink redirects to a short-lived signed GET URL of the newest resource.
+            for permalink in $PERMALINKS; do
+              resolved=$(curl -sSL --retry 3 -o "$RUNNER_TEMP/gtfs.zip" -w '%{http_code} %{url_effective}' "$permalink" || true)
+              echo "::notice title=Permalink::$permalink -> ${resolved%%\?*}"
+              case "$resolved" in 200\ http*) url=${resolved#200 }; url=${url%%\?*}; break ;; esac
+            done
+          fi
           [ -n "$url" ] || { echo "::error::No GTFS resource found"; exit 1; }
-          curl -fsSL --retry 3 -o "$RUNNER_TEMP/gtfs.zip" "$url"
           sha=$(sha256sum "$RUNNER_TEMP/gtfs.zip" | cut -d' ' -f1)
           bytes=$(stat -c %s "$RUNNER_TEMP/gtfs.zip")
           printf 'GTFS_URL=%s\nGTFS_SHA256=%s\nGTFS_BYTES=%s\n' "$url" "$sha" "$bytes" | tee evidence/feed.env >> "$GITHUB_ENV"

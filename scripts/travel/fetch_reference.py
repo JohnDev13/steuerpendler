@@ -26,7 +26,16 @@ API = "https://transport.opendata.ch/v1/connections"
 WINDOW = ("06:30", "08:30")
 QUERY_TIMES = ("06:30", "06:50", "07:10", "07:30", "07:50", "08:10", "08:30")
 # Workplace station as SBB names it; everything else uses the Gemeinde name.
-STATION_NAMES = {"Zürich": "Zürich HB", "Basel": "Basel SBB", "Genève": "Genève", "Lugano": "Lugano"}
+STATION_NAMES = {"Zürich": "Zürich HB", "Basel": "Basel SBB", "Genève": "Genève", "Lugano": "Lugano",
+                 # Maur has no rail station of that name; a bare "Maur" resolves to St-Maurice.
+                 "Maur": "Maur, Dorf"}
+
+
+def same_place(query: str, resolved: str) -> bool:
+    """The API's fuzzy match must still name the queried place (guards against Maur -> St-Maurice)."""
+    norm = lambda text: re.sub(r"[^a-z]", "", text.lower().replace("ü", "u").replace("é", "e").replace("è", "e"))
+    head = norm(re.split(r"[ ,(]", query)[0])
+    return norm(resolved).startswith(head)
 
 
 def station_query(name: str) -> str:
@@ -59,6 +68,9 @@ def fastest(origin: str, destination: str, day: dt.date) -> dict | None:
             if departure is None or arrival is None or (departure, arrival) in seen:
                 continue
             seen.add((departure, arrival))
+            if not same_place(origin, connection["from"]["station"]["name"]) \
+                    or not same_place(destination, connection["to"]["station"]["name"]):
+                continue
             # The window is checked in Swiss local time, taken from the ISO string.
             local = dt.datetime.fromisoformat(connection["from"]["departure"]).replace(tzinfo=None)
             if not (WINDOW[0] <= local.strftime("%H:%M") <= WINDOW[1]):
