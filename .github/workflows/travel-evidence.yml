@@ -1,0 +1,74 @@
+# Finds the newest Timetable 2026 GTFS resource, pins its hash, builds the matrix and fetches the 30
+# SPEC 11.2 reference journeys from transport.opendata.ch. Uploads everything as one artifact for review.
+name: Travel evidence
+
+on:
+  workflow_dispatch:
+    inputs:
+      service_date:
+        description: Reference Tuesday (YYYY-MM-DD)
+        required: true
+        default: '2026-10-27'
+  push:
+    branches: ['claude/travel-matrix-*']
+    paths: ['.github/workflows/travel-evidence.yml', 'scripts/travel/**']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: travel-evidence
+  cancel-in-progress: true
+
+jobs:
+  evidence:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    env:
+      SERVICE_DATE: ${{ inputs.service_date || '2026-10-27' }}
+      CKAN: https://data.opentransportdata.swiss/api/3/action/package_show?id=timetable-2026-gtfs2020
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: 3.11.15
+      - name: Find newest GTFS resource
+        run: |
+          mkdir -p evidence
+          curl -fsSL --retry 3 "$CKAN" -o "$RUNNER_TEMP/package.json"
+          python3 - "$RUNNER_TEMP/package.json" > evidence/feed.env <<'EOF'
+          import json, sys
+          resources = json.load(open(sys.argv[1]))["result"]["resources"]
+          zips = [r for r in resources if (r.get("url") or "").lower().endswith(".zip")]
+          zips.sort(key=lambda r: r.get("created") or "", reverse=True)
+          for r in zips[:5]:
+              print(f"# {r.get('created')} {r.get('name')} {r['url']}", file=sys.stderr)
+          print(f"GTFS_URL={zips[0]['url']}")
+          print(f"GTFS_NAME={zips[0].get('name')}")
+          EOF
+          cat evidence/feed.env >> "$GITHUB_ENV"; cat evidence/feed.env
+      - name: Download and pin feed
+        run: |
+          curl -fsSL --retry 3 -o "$RUNNER_TEMP/gtfs.zip" "$GTFS_URL"
+          sha=$(sha256sum "$RUNNER_TEMP/gtfs.zip" | cut -d' ' -f1)
+          echo "GTFS_SHA256=$sha" | tee -a evidence/feed.env >> "$GITHUB_ENV"
+          echo "GTFS_BYTES=$(stat -c %s "$RUNNER_TEMP/gtfs.zip")" | tee -a evidence/feed.env
+          unzip -l "$RUNNER_TEMP/gtfs.zip" | tee evidence/feed-contents.txt
+      - name: Unit tests
+        run: python3 -m unittest discover -s tests/travel
+      - name: Build matrix
+        run: |
+          /usr/bin/time -v python3 scripts/travel/run_matrix.py --gtfs "$RUNNER_TEMP/gtfs.zip" --date "$SERVICE_DATE" \
+            --feed-url "$GTFS_URL" 2>&1 | tee evidence/matrix.log
+      - name: Fetch reference journeys (transport.opendata.ch)
+        run: python3 scripts/travel/fetch_reference.py --date "$SERVICE_DATE" 2>&1 | tee evidence/reference-fetch.log
+      - name: Compare
+        run: python3 scripts/travel/compare_reference.py 2>&1 | tee evidence/compare.log || true
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: travel-evidence
+          path: |
+            evidence
+            site/data/travel/matrix
+            tests/travel/sbb-reference-2026.csv
