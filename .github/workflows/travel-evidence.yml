@@ -14,7 +14,7 @@ on:
     paths: ['.github/workflows/travel-evidence.yml', 'scripts/travel/**']
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: travel-evidence
@@ -86,3 +86,14 @@ jobs:
             evidence
             site/data/travel/matrix
             tests/travel/sbb-reference-2026.csv
+      - name: Commit matrix and reference journeys to this branch
+        if: ${{ success() && startsWith(github.ref_name, 'claude/travel-matrix-') }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898+github-actions[bot]@users.noreply.github.com"
+          git add site/data/travel/matrix tests/travel/sbb-reference-2026.csv
+          git diff --cached --quiet && exit 0
+          source evidence/feed.env
+          git commit -m "data(travel): matrix and SBB reference journeys for ${SERVICE_DATE}" \
+            -m "Feed: ${GTFS_URL%%\?*} (sha256 ${GTFS_SHA256}). Reference: transport.opendata.ch. Run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
