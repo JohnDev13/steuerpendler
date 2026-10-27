@@ -72,6 +72,11 @@ jobs:
       # Deliberately NOT setting TMPDIR: the suite must pass on a default runner.
       - name: Travel unit tests
         run: python3 -m unittest discover -s tests/travel -v
+      - name: Matrix vs SBB reference journeys (SPEC 6.5c, ±3 min)
+        run: |
+          if [ -f site/data/travel/matrix/meta.json ]; then
+            python3 scripts/travel/compare_reference.py --require-complete
+          fi
 
   tax-accuracy:
     name: tax-accuracy

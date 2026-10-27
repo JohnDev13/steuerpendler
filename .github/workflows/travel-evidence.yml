@@ -1,5 +1,6 @@
 # Finds the newest Timetable 2026 GTFS resource, pins its hash, builds the matrix and fetches the 30
-# SPEC 11.2 reference journeys from transport.opendata.ch. Uploads everything as one artifact for review.
+# SPEC 11.2 reference journeys from transport.opendata.ch. Run from Actions -> "Travel evidence";
+# it opens a pull request with the data (close and reopen it to start CI). Terms: name the source.
 name: Travel evidence
 
 on:
@@ -9,12 +10,10 @@ on:
         description: Reference Tuesday (YYYY-MM-DD)
         required: true
         default: '2026-10-27'
-  push:
-    branches: ['claude/travel-matrix-*']
-    paths: ['.github/workflows/travel-evidence.yml', 'scripts/travel/**']
 
 permissions:
   contents: write
+  pull-requests: write
 
 concurrency:
   group: travel-evidence
@@ -35,6 +34,10 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: 3.11.15
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22.23.2
+          cache: npm
       - name: Find and pin newest GTFS resource
         run: |
           mkdir -p evidence
@@ -86,14 +89,29 @@ jobs:
             evidence
             site/data/travel/matrix
             tests/travel/sbb-reference-2026.csv
-      - name: Commit matrix and reference journeys to this branch
-        if: ${{ success() && startsWith(github.ref_name, 'claude/travel-matrix-') }}
+      - name: Regenerate release manifest and check the site still builds
+        if: ${{ success() }}
+        run: |
+          npm ci
+          PAGES_BASE=/steuerpendler/ npm run build
+          npm test
+      - name: Gate (SPEC 6.5c)
+        run: python3 scripts/travel/compare_reference.py --require-complete
+      - name: Commit data and open a pull request
+        if: ${{ success() }}
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898+github-actions[bot]@users.noreply.github.com"
-          git add site/data/travel/matrix tests/travel/sbb-reference-2026.csv
-          git diff --cached --quiet && exit 0
+          git add site/data/travel/matrix tests/travel/sbb-reference-2026.csv site/data/manifest.json site/data/release.json
+          git diff --cached --quiet && { echo "::notice::Data unchanged"; exit 0; }
           source evidence/feed.env
-          git commit -m "data(travel): matrix and SBB reference journeys for ${SERVICE_DATE}" \
-            -m "Feed: ${GTFS_URL%%\?*} (sha256 ${GTFS_SHA256}). Reference: transport.opendata.ch. Run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
-          git push origin "HEAD:${GITHUB_REF_NAME}"
+          message="data(travel): matrix and SBB reference journeys for ${SERVICE_DATE}"
+          details="Feed: ${GTFS_URL} (sha256 ${GTFS_SHA256}). Reference: transport.opendata.ch. Run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          git commit -m "$message" -m "$details"
+          if [[ "$GITHUB_REF_NAME" == claude/travel-matrix-* ]]; then git push origin "HEAD:${GITHUB_REF_NAME}"; exit 0; fi
+          branch="data/travel-matrix-${SERVICE_DATE}-${GITHUB_RUN_ID}"
+          git push origin "HEAD:refs/heads/${branch}"
+          { echo "$details"; echo; echo '```'; cat evidence/compare.log; echo '```'; } > "$RUNNER_TEMP/body.md"
+          gh pr create --base main --head "$branch" --title "$message" --body-file "$RUNNER_TEMP/body.md"

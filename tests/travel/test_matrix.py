@@ -307,6 +307,30 @@ class ReferenceComparison(unittest.TestCase):
                                     "not_a_computed_workplace", "pending_same_stop", "passed", "failed", "pending_same_stop",
                                     "failed"])
 
+    def test_require_complete_fails_on_pending_pairs_of_computed_workplaces(self):
+        import compare_reference
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "to").mkdir()
+            (root / "to" / "261.json").write_text(json.dumps({"rows": [[261, 0, 0, "", 0], [198, 900, 0, "Uster", 1]]}))
+            header = "pair,from,from_bfs,to,to_bfs,sbb_minutes,sbb_departure,same_stop,sbb_same_stop_minutes,retrieved,note\n"
+            done, pending = root / "done.csv", root / "pending.csv"
+            done.write_text(header + "1,Uster,198,Zürich,261,15,,Uster,15,,\n2,Morges,5642,Lausanne,5586,,,,,,\n")
+            pending.write_text(header + "1,Uster,198,Zürich,261,,,,,,\n")
+            args = ["--matrix", str(root), "--require-complete", "--reference"]
+            self.assertEqual(compare_reference.main(args + [str(done)]), 0)
+            self.assertEqual(compare_reference.main(args + [str(pending)]), 1)
+            self.assertEqual(compare_reference.main(["--matrix", str(root), "--reference", str(pending)]), 0)
+
+    def test_committed_matrix_passes_the_committed_reference(self):
+        import compare_reference
+        matrix_dir = Path(__file__).resolve().parents[2] / "site/data/travel/matrix"
+        if not (matrix_dir / "meta.json").exists():
+            self.skipTest("no committed matrix")
+        reference = Path(__file__).resolve().parent / "sbb-reference-2026.csv"
+        self.assertEqual(compare_reference.main(["--matrix", str(matrix_dir), "--reference", str(reference),
+                                                 "--require-complete"]), 0)
+
     def test_committed_reference_keeps_all_30_spec_pairs(self):
         with (Path(__file__).resolve().parent / "sbb-reference-2026.csv").open(encoding="utf-8") as handle:
             rows = list(csv.DictReader(handle))

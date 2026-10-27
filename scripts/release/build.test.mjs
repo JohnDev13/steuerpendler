@@ -49,3 +49,19 @@ test('travel assets stay inventoried but unavailable until the v2 release migrat
   }finally{rmSync(root,{recursive:true,force:true});}
  }
 });
+test('a complete schedule matrix is available on its own; official travel stays unavailable',async()=>{
+ const {buildRelease}=await import('./build.mjs');
+ const root=mkdtempSync(join(tmpdir(),'steuer-release-matrix-'));
+ try{
+  const write=(name,value)=>{const path=join(root,'site/data/travel/matrix',name);mkdirSync(join(path,'..'),{recursive:true});writeFileSync(path,JSON.stringify(value));};
+  write('meta.json',{schema:'steuerpendler.travel-matrix.v1',workplaces:{261:{rows:2},351:{rows:1}}});
+  write('to/261.json',{to:261,rows:[[261,0,0,'',0]]});
+  let result=buildRelease(root);
+  assert.equal(result.availability.matrix,false,'a workplace file is missing');
+  write('to/351.json',{to:351,rows:[[351,0,0,'',0]]});
+  result=buildRelease(root);
+  assert.equal(result.availability.matrix,true);
+  assert.equal(result.availability.travel,false);
+  assert.equal(result.approvals.sbb,false);
+ }finally{rmSync(root,{recursive:true,force:true});}
+});

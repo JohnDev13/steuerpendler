@@ -11,12 +11,7 @@ it('reports an actual zero only after travel becomes available', () => {
     .toBe('0 vergleichbare Gemeinden in Reichweite');
 });
 
-it('does not turn zero observed preview rows into a negative reachability claim', () => {
-  expect(strings.observedWarning).toContain('keine vollständige Erreichbarkeitsmenge');
-  expect(strings.observedEmpty).toContain('unbekannt');
-  expect(strings.previewUnknown).toContain('unbekannt');
-});
-
-it('keeps absent experimental matrix rows unknown, never unreachable', () => {
-  expect(strings.matrixNoRoute(20)).toContain('unbekannt');
+it('states a missing matrix row as a timetable finding, not as unreachable', () => {
+  expect(strings.matrixNoRoute(20)).toBe('Keine Verbindung bis 20 Min. im Fahrplan gefunden');
+  expect(strings.matrixNoRoute(20)).not.toContain('unerreichbar');
 });

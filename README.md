@@ -20,13 +20,12 @@ CHF 1,000 grid rows. Assumptions: gross employment income, age 35, no wealth, ES
 married couples with one income. Checked against 29 frozen cases from the official ESTV calculator:
 21 match within tolerance; cantons more than 5 % off are withheld (currently VS, VD, GE, JU).
 
-**Commute.** The site currently uses the hash-pinned observed-positive export; unlisted
-Gemeinden remain unknown. `scripts/travel/matrix.py` is an *experimental*, inactive candidate
-Connection Scan for an official GTFS feed. It has not been run and independently audited on a
-real national feed; frequency trips, transfer precedence and origin coverage remain unresolved.
-Direct-only journeys are scanned separately. Its presence cannot override the public preview
-while `availability.travel=false`, and it is not proof of globally fastest routes. External
-walking access to the first stop remains unmeasured (zero by owner interim assumption).
+**Commute.** `scripts/travel/matrix.py` scans every connection of the official Swiss GTFS timetable
+([opentransportdata.swiss](https://opentransportdata.swiss), feed of 24 Oct 2026) for Tuesday 27 Oct 2026:
+shortest time from first boarding at any stop in the Gemeinde (06:30–08:30) to arrival at the workplace
+station, any number of changes, up to 30 minutes. CI checks it against 30 SBB reference journeys fetched
+from transport.opendata.ch (all 25 pairs to a covered workplace within 3 minutes). Walking to the first
+stop is not measured. Refresh with the **Travel evidence** workflow.
 
 **Map.** Bundesamt für Statistik (BFS), GEOSTAT — Generalisierte Grenzen G1, 01.01.2026, via
 `swiss-maps@4.7.0`; attributed non-commercial use (`docs/map/publication-assessment.md`).
@@ -46,9 +45,9 @@ npx playwright install --with-deps chromium && npm run test:e2e
 PAGES_BASE=/steuerpendler/ npm run build
 ```
 
-Regenerate data: `npm run tax:build` (tax tables), `npm run map:build` (map), and for travel
-`python3 scripts/travel/run_matrix.py --gtfs <feed.zip> --date 2026-10-27` or the **Build travel matrix**
-workflow. `npm run build` regenerates the release manifest (`site/data/release.json`), which CI checks is
+Regenerate data: `npm run tax:build` (tax tables), `npm run map:build` (map), and for travel the
+**Travel evidence** workflow (or `python3 scripts/travel/run_matrix.py --gtfs <feed.zip> --date 2026-10-27`
+followed by `python3 scripts/travel/fetch_reference.py --date 2026-10-27`). `npm run build` regenerates the release manifest (`site/data/release.json`), which CI checks is
 committed.
 
 ## Contributing

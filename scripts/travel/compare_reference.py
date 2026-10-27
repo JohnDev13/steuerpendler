@@ -63,6 +63,8 @@ def main(argv=None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--matrix", type=Path, default=ROOT / "site/data/travel/matrix")
     parser.add_argument("--reference", type=Path, default=ROOT / "tests/travel/sbb-reference-2026.csv")
+    parser.add_argument("--require-complete", action="store_true",
+                        help="also fail while any pair of a computed workplace is still pending")
     args = parser.parse_args(argv)
     results = compare(args.matrix, args.reference)
     for r in results:
@@ -72,7 +74,8 @@ def main(argv=None) -> int:
     for r in results:
         counts[r["status"]] = counts.get(r["status"], 0) + 1
     print(json.dumps(counts, sort_keys=True))
-    return 1 if any(r["status"].startswith("failed") or r["status"] == "pending_same_stop" for r in results) else 0
+    blocking = ("failed", "pending_same_stop") + (("pending",) if args.require_complete else ())
+    return 1 if any(r["status"].startswith(blocking) for r in results) else 0
 
 
 if __name__ == "__main__":

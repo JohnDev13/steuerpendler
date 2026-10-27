@@ -6,11 +6,11 @@ test('static scaffold shows the project and an honest preview status', async ({ 
  await expect(page.getByTestId('release-status')).not.toContainText('kein produktiver');
 });
 
-test('Aarau overview distinguishes unverified travel from zero reachable Gemeinden', async ({ page }) => {
+test('Aarau overview uses the timetable matrix and states its model', async ({ page }) => {
  await page.goto('./');
  await page.getByRole('combobox', {name:'Arbeitsort'}).fill('Aarau');
  await page.getByRole('option', {name:'Aarau (AG)'}).click();
- await expect(page.locator('#summary')).toContainText('Gemeinden mit beobachteter Verbindung nach Aarau');
- await expect(page.locator('#result-notice')).toContainText('keine vollständige Erreichbarkeitsmenge');
- await expect(page.locator('#result-notice')).toContainText('Nicht aufgeführte Gemeinden bleiben unbekannt');
+ await expect(page.locator('#summary')).toContainText('Gemeinden mit Verbindung nach Aarau bis 25 Min.');
+ await expect(page.locator('#result-notice')).toContainText('Fahrplan vom 27.10.2026');
+ await expect(page.locator('#result-notice')).toContainText('nicht gemessen');
 });
