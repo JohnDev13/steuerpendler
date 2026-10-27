@@ -31,6 +31,7 @@ import hashlib
 import io
 import json
 import math
+import re
 import zipfile
 from collections import defaultdict
 from dataclasses import dataclass, field
@@ -411,9 +412,18 @@ def stop_municipalities(feed: Feed, index: MunicipalityIndex) -> dict[str, int]:
     return result
 
 
-def workplace_targets(feed: Feed, assignment: dict[str, int], workplace: int) -> tuple[set[str], str | None]:
-    """Main rail station of the workplace (most rail calls in the window) and every stop within
-    TARGET_COMPLEX_RADIUS_M of it, so bus/tram stops of the station complex count as arrival."""
+def station_matches(gemeinde: str, station: str) -> bool:
+    """'Altdorf (UR)' ~ 'Altdorf UR', 'Zürich' ~ 'Zürich HB'; 'Stans' is not 'Stansstad'."""
+    base = re.sub(r"\s*\((\w+)\)", r" \1", gemeinde).strip()
+    return station == base or station.startswith(base + " ") or station.startswith(base + ",")
+
+
+def workplace_targets(feed: Feed, assignment: dict[str, int], workplace: int,
+                      gemeinde_name: str | None = None) -> tuple[set[str], str | None]:
+    """Main rail station of the workplace and every stop within TARGET_COMPLEX_RADIUS_M of it, so
+    bus/tram stops of the station complex count as arrival. The main station is the rail station named
+    like the Gemeinde with the most rail calls in the window (merged Gemeinden such as Glarus also
+    contain busier neighbouring stations); without a matching name, the busiest rail station."""
     departures = defaultdict(int)
     for _, _, origin, stop, trip, can_board, can_alight in feed.connections:
         if feed.trip_route_type.get(trip, 3) not in RAIL_ROUTE_TYPES:
@@ -424,7 +434,15 @@ def workplace_targets(feed: Feed, assignment: dict[str, int], workplace: int) ->
             departures[feed.stops[stop].parent] += 1
     if not departures:
         return set(), None
-    parent = max(sorted(departures), key=lambda key: departures[key])
+    candidates = sorted(departures)
+    if gemeinde_name:
+        child_names = {}
+        for stop in feed.stops.values():
+            child_names.setdefault(stop.parent, stop.name)
+        named = [key for key in candidates
+                 if station_matches(gemeinde_name, feed.stops[key].name if key in feed.stops else child_names.get(key, ""))]
+        candidates = named or candidates
+    parent = max(candidates, key=lambda key: departures[key])
     members = [s for s in feed.stops.values() if s.parent == parent or s.stop_id == parent]
     cx = sum(s.x for s in members) / len(members)
     cy = sum(s.y for s in members) / len(members)
@@ -461,7 +479,7 @@ def sha256(path: Path) -> str:
 
 
 def build(gtfs: Path, topology: dict, workplaces: list[int], municipalities: set[int], day: dt.date,
-          feed_url: str = "", revision: str = "") -> tuple[dict, dict[int, dict]]:
+          feed_url: str = "", revision: str = "", names: dict[int, str] | None = None) -> tuple[dict, dict[int, dict]]:
     feed = load_feed(gtfs, day)
     index = MunicipalityIndex(decode_municipalities(topology))
     assignment = stop_municipalities(feed, index)
@@ -470,7 +488,7 @@ def build(gtfs: Path, topology: dict, workplaces: list[int], municipalities: set
     files: dict[int, dict] = {}
     summary = {}
     for workplace in workplaces:
-        targets, name = workplace_targets(feed, assignment, workplace)
+        targets, name = workplace_targets(feed, assignment, workplace, (names or {}).get(workplace))
         if not targets:
             summary[str(workplace)] = {"station": None, "rows": 0}
             continue

@@ -42,12 +42,14 @@ def main(argv: list[str] | None = None) -> int:
         raise matrix.MatrixError(f"{args.date} is not a Tuesday (SPEC 8 reference day)")
 
     topology = json.loads(args.map.read_text(encoding="utf-8"))
-    municipalities = {int(key) for key in json.loads(args.gemeinden.read_text(encoding="utf-8"))["gemeinden"]}
+    gemeinden = json.loads(args.gemeinden.read_text(encoding="utf-8"))["gemeinden"]
+    municipalities = {int(key) for key in gemeinden}
+    names = {int(key): value[0] for key, value in gemeinden.items()}
     try:
         revision = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True, text=True, check=True).stdout.strip()
     except (OSError, subprocess.CalledProcessError):
         revision = ""
-    meta, files = matrix.build(args.gtfs, topology, workplaces(), municipalities, args.date, args.feed_url, revision)
+    meta, files = matrix.build(args.gtfs, topology, workplaces(), municipalities, args.date, args.feed_url, revision, names)
 
     (args.out / "to").mkdir(parents=True, exist_ok=True)
     for old in (args.out / "to").glob("*.json"):

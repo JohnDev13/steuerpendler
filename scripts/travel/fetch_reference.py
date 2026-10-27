@@ -84,15 +84,30 @@ def fastest(origin: str, destination: str, day: dt.date) -> dict | None:
     return best
 
 
+def boarding_stop(matrix_dir: Path, origin: int, workplace: int) -> str:
+    path = matrix_dir / "to" / f"{workplace}.json"
+    if not path.exists():
+        return ""
+    for row in json.loads(path.read_text(encoding="utf-8"))["rows"]:
+        if row[0] == origin:
+            return row[3]
+    return ""
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--date", type=dt.date.fromisoformat, required=True)
     parser.add_argument("--csv", type=Path, default=ROOT / "tests/travel/sbb-reference-2026.csv")
+    parser.add_argument("--matrix", type=Path, default=ROOT / "site/data/travel/matrix",
+                        help="also query SBB from the stop the matrix boards at (SPEC T3: actual boarding stops)")
     args = parser.parse_args(argv)
     with args.csv.open(encoding="utf-8", newline="") as handle:
         reader = csv.DictReader(handle)
         fields = reader.fieldnames
         rows = list(reader)
+    for column in ("same_stop", "sbb_same_stop_minutes"):
+        if column not in fields:
+            fields.insert(fields.index("sbb_departure") + 1 if column == "same_stop" else fields.index("same_stop") + 1, column)
     retrieved = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%MZ")
     failures = 0
     for row in rows:
@@ -109,8 +124,19 @@ def main(argv: list[str] | None = None) -> int:
             row.update(sbb_minutes=str(best["minutes"]), sbb_departure=best["departure"], retrieved=retrieved,
                        note=f"transport.opendata.ch {args.date}: {best['from']} -> {best['to']}, "
                             f"{best['transfers']} changes")
+        row.update(same_stop="", sbb_same_stop_minutes="")
+        board = boarding_stop(args.matrix, int(row["from_bfs"]), int(row["to_bfs"]))
+        if board:
+            try:
+                same = fastest(board, destination, args.date)
+            except Exception as error:  # noqa: BLE001
+                same, failures = None, failures + 1
+                print(f"{row['pair']:>2} {board} -> {destination}: request failed: {error}", file=sys.stderr)
+            row.update(same_stop=board, sbb_same_stop_minutes=str(same["minutes"]) if same else "")
+            if same:
+                row["note"] += f"; same stop: {same['from']} -> {same['to']} {same['departure']}"
         print(f"{row['pair']:>2} {row['from']} -> {row['to']}: {row['sbb_minutes'] or '-'} min "
-              f"({row['sbb_departure'] or '-'}) {row['note']}")
+              f"({row['sbb_departure'] or '-'}); from {board or '-'}: {row['sbb_same_stop_minutes'] or '-'}. {row['note']}")
     with args.csv.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=fields, lineterminator="\n")
         writer.writeheader()
