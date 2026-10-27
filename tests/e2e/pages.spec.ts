@@ -1,5 +1,5 @@
 import {test,expect} from '@playwright/test';
-test('public preview draws genuine geography, searches Gemeinden, and withholds unverified tax recommendations',async({page,context})=>{
+test('public preview draws genuine geography, searches Gemeinden, and explains a Gemeinde without a connection',async({page,context})=>{
  const errors:string[]=[],requests:string[]=[];
  page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
  page.on('request',r=>requests.push(r.url()));
@@ -8,15 +8,14 @@ test('public preview draws genuine geography, searches Gemeinden, and withholds 
  await expect(page.getByTestId('release-status')).toContainText('Vorschau');
  await expect(page.getByLabel('Arbeitsort',{exact:true})).toHaveValue('Aarau');
  await expect(page.locator('#ranked-list tr[data-bfs="4210"]')).toContainText('Staufen');
- await expect(page.locator('#result-notice')).toContainText('keine vollständige Erreichbarkeitsmenge');
+ await expect(page.locator('#result-notice')).toContainText('Fahrplan vom 27.10.2026');
  await page.getByLabel('Arbeitsort',{exact:true}).fill('bern');
  await page.getByLabel('Arbeitsort',{exact:true}).press('Enter');
  await expect(page.locator('#detail h2')).toContainText('Bern');
  await expect(page.locator('#map [data-bfs="351"]')).toHaveClass(/workplace/);
  await page.locator('#map [data-bfs="1711"]').click();
  await expect(page.locator('#detail h2')).toContainText('Zug');
- await expect(page.locator('#detail')).not.toContainText('CHF');
- await expect(page.locator('#detail')).toContainText('Erreichbarkeit unbekannt');
+ await expect(page.locator('#detail')).toContainText('Keine Verbindung bis 25 Min. im Fahrplan gefunden');
  await page.getByLabel('Bruttoeinkommen in CHF',{exact:true}).fill('10000');
  await page.getByLabel('Bruttoeinkommen in CHF',{exact:true}).press('Tab');
  await expect(page.locator('#income')).toHaveValue('40000');await expect(page.locator('#clamp-note')).toBeVisible();

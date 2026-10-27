@@ -102,29 +102,31 @@ total = bund + kanton + gemeinde + kirche + personal</code></pre>
     <p>Nicht berücksichtigt werden insbesondere Miete, Krankenkassenprämien, Vermögenssteuer,
       individuelle Abzüge und zwei Erwerbseinkommen. Die persönliche Veranlagung kann erheblich abweichen.
       Schätzung, keine Steuerberatung; die Tabellen sind keine verbindliche ESTV-Veranlagung.</p>
-    <h2 id="reisen">Pendelzeiten: provisorische Positivvorschau für 19 Arbeitsorte</h2>
-    <p>Für alle 19 Arbeitsorte zeigt der Testbetrieb beobachtete positive Fahrten am
-      <time datetime="2026-10-27">27. Oktober 2026</time>. Die normale Auswahl berücksichtigt direkte
-      Fahrten und Fahrten mit beliebig vielen Umstiegen; es gibt keine Umstiegsobergrenze.
-      «Nur direkt» verwendet eine unabhängig berechnete Teilmenge ohne Fahrzeugwechsel und ist
-      standardmässig ausgeschaltet. Ein Halt wurde vorläufig einer Gemeinde zugeordnet. Das beweist
-      weder Zugang von jeder Wohnung noch die global schnellste Route. Alle nicht angezeigten Gemeinden
-      bleiben <strong>unbekannt</strong>, nicht «unerreichbar».</p>
-    <h3>Zeitraum, Fussweg und fehlende Routen</h3>
+    <h2 id="reisen">Pendelzeiten: Fahrplanberechnung für 19 Arbeitsorte</h2>
+    <p>Die Fahrzeiten stammen aus dem offiziellen Schweizer GTFS-Fahrplan (opentransportdata.swiss,
+      Ausgabe vom 24. Oktober 2026) für Dienstag, <time datetime="2026-10-27">27. Oktober 2026</time>.
+      Für jeden Arbeitsort wird jede Verbindung im Morgenfenster durchsucht (Connection Scan):
+      die kürzeste Fahrt von irgendeiner Haltestelle in der Wohngemeinde bis zum Bahnhof des
+      Arbeitsorts, mit beliebig vielen Umstiegen. «Nur direkt» verwendet eine eigene Suche ohne
+      Fahrzeugwechsel und ist standardmässig ausgeschaltet. Gemeinden ohne Treffer haben in diesem
+      Fahrplan keine Verbindung innerhalb der gewählten Zeit (höchstens 30 Minuten).</p>
+    <h3>Zeitraum, Umstiege und Fussweg</h3>
     <p>Erste Einstiege liegen im Fenster 06:30–08:30 Uhr (Europe/Zurich), beide Grenzen inklusive.
-      Die Fahrzeit läuft vom ersten Einsteigen bis zur Ankunft; Wartezeit und zulässiger Umstieg
-      sind enthalten, der Weg zum Einstiegspunkt wird nicht zusätzlich aufgeschlagen.
-      Der Zeitfilter verwendet exakte Sekunden einschliesslich der Grenze, die
-      Anzeige rundet danach auf volle Minuten auf. Die Vorschau deckt höchstens 30 Minuten ab,
-      nicht alle Reiseoptionen oder den nachweislich schnellsten Weg. Umstiegsminima und Wartezeiten
-      innerhalb der Reise sind enthalten. Weitere Verbindungen und Alternativhaltestellen können
-      zusätzliche oder schnellere positive Fälle ergeben.</p>
-    <p>Der externe Weg von der Wohnung zum Haltestelleneingang ist vorläufig mit null Sekunden
-      <strong>angenommen, nicht gemessen</strong>. Der Fusswegregler bleibt separat, misst aber
-      in dieser Vorschau keine Adresse oder Zugangsstrecke; es gibt keinen zusätzlichen
-      Eingang-zu-Bahnsteig-Zuschlag. Damit ist die Liste keine wohnungsbezogene
-      Erreichbarkeits- oder Fahrplanempfehlung. Die vollständige negative Abdeckung, gemessene
-      Wohnzugänge und unabhängige SBB-Prüfung sind weiterhin ausstehend.</p>
+      Die Fahrzeit läuft vom ersten Einsteigen bis zur Ankunft; Wartezeiten beim Umsteigen sind
+      enthalten. Umsteigen braucht mindestens 2 Minuten oder die Mindestzeit aus dem Fahrplan;
+      kurze Fusswege zwischen Haltestellen (bis 400 m) sind erlaubt. Der Zeitfilter verwendet
+      exakte Sekunden, die Anzeige rundet auf volle Minuten auf.</p>
+    <p>Der Weg von der Wohnung zur ersten Haltestelle ist <strong>nicht gemessen</strong> (0 Minuten).
+      Die Fusswegregler sind deshalb deaktiviert. Die Liste ist keine wohnungsbezogene
+      Reiseempfehlung.</p>
+    <h3>Prüfung gegen den SBB-Fahrplan</h3>
+    <p>30 Referenzverbindungen (SPEC §11.2) werden automatisch aus dem SBB-Fahrplan
+      (transport.opendata.ch) für denselben Tag abgefragt. Weil die Berechnung die schnellste
+      Haltestelle der Gemeinde nimmt, wird zusätzlich von genau dieser Haltestelle abgefragt.
+      Ergebnis: alle 25 Paare mit einem der 19 Arbeitsorte liegen innerhalb von 3 Minuten; ein Paar
+      (Wollerau → Zürich, 38 Minuten) liegt auch laut SBB über 30 Minuten. Fünf Paare führen nach
+      Lausanne, Genf oder Lugano, die keine Arbeitsorte dieser Vorschau sind. CI prüft diesen
+      Vergleich bei jeder Änderung.</p>
     <h2 id="grenzen">Daten in Prüfung und Grenzen</h2>
     <p>Direkter Vergleich mit dem offiziellen ESTV-Steuerrechner (29 eingefrorene Fälle, alle 26 Kantone):
       die ausgelieferte Berechnung besteht <strong>21 von 29</strong> Fällen; <strong>8 von 29</strong>
@@ -132,8 +134,7 @@ total = bund + kanton + gemeinde + kirche + personal</code></pre>
       Die Bundessteuer stimmt in allen 29 Fällen auf CHF 4 genau. Die verbleibenden Abweichungen:
       kleine Tarifdifferenzen in SZ, AG, NW und SO (0,2–1,5 %), eine kantonale Steuergutschrift
       für Kinder in TG (rund 4,5 %) sowie VS, VD und GE (siehe unten). Diese Schätzungen sind daher
-      nicht numerisch freigegeben. Eine Prüfung von 30 SBB-Verbindungen (zulässige Abweichung
-      höchstens 3 Minuten) steht aus.</p>
+      nicht numerisch freigegeben.</p>
     <p>Gesperrt («Daten in Prüfung»), also ohne Steuertotal, Aufschlüsselung, Rang, günstigste
       Gemeinde, Farbgruppe und Differenzen:</p>
     <ul>
@@ -145,11 +146,10 @@ total = bund + kanton + gemeinde + kirche + personal</code></pre>
     </ul>
     <p>Jeder Kanton, dessen ESTV-Referenzfall um mehr als 5 % abweicht, wird automatisch geprüft
       und muss gesperrt sein. Die oberste Tarifstufe von Fribourg muss gesondert geprüft werden.</p>
-    <p>Der Betreiber lässt für die <strong>provisorische All-19-Positivvorschau</strong> indikative
-      Steuerbeträge, Differenzen und eine Sortierung unter den positiven Beobachtungen zu.
+    <p>Steuerbeträge, Differenzen und die Sortierung sind indikativ.
       Sie sind keine amtlich abgeglichenen Steuerergebnisse oder geprüften Empfehlungen.
       «Ungeprüft», «Daten in Prüfung» und technische Ladefehler sind unterschiedliche Zustände.</p>
-    <p>Ein Tag und beobachtete Angebote im Morgenfenster sagen nichts über
+    <p>Ein Fahrplantag im Morgenfenster sagt nichts über
       tägliche Zuverlässigkeit, Verspätungen, reale
       Wartezeiten, Barrierefreiheit, Schulwege oder die Rückfahrt aus.</p>
     <h2 id="quellen">Quellen, Lizenzen und Rechte – Freigabe ausstehend</h2>
@@ -162,13 +162,13 @@ total = bund + kanton + gemeinde + kirche + personal</code></pre>
         dokumentierten Patches ist im Release-Nachweis zu belegen; MIT allein klärt nicht alle Quelldatenbedingungen.</dd>
       <dt>Fahrplan</dt>
       <dd><a href="https://opentransportdata.swiss/">opentransportdata.swiss</a> /
-        <a href="https://opendata.swiss/">opendata.swiss</a>, Quelle der eingefrorenen GTFS-Fahrplandaten
-        für den 27. Oktober 2026; bearbeitet und ausgewertet vom Projekt Steuerpendler (JohnDev13).
+        <a href="https://opendata.swiss/">opendata.swiss</a>, Quelle der GTFS-Fahrplandaten
+        (<code>gtfs_fp2026_20261024.zip</code>) für den 27. Oktober 2026; bearbeitet und ausgewertet vom Projekt Steuerpendler (JohnDev13).
         Die <a href="https://opentransportdata.swiss/en/terms-of-use/">Nutzungsbedingungen</a>
         verlangen Quellenangabe und regelmässige Aktualisierung der Rohdaten. Die Vorschau ist
         ausdrücklich ein datierter historischer Ausschnitt, kein aktueller Fahrplan; die Anwendbarkeit
         der Aktualisierungspflicht auf diesen eingefrorenen Ausschnitt ist nicht rechtlich geklärt.
-        <a href="https://www.sbb.ch/">SBB-Fahrplan</a> als unabhängige Vergleichsquelle, noch ohne abgeschlossene Prüfreihe.</dd>
+        <a href="https://www.sbb.ch/">SBB-Fahrplan</a> über <a href="https://transport.opendata.ch/">transport.opendata.ch</a> als Vergleichsquelle (30 Referenzverbindungen).</dd>
       <dt>Fusswege</dt>
       <dd>© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap-Mitwirkende</a>,
         Open Database License (ODbL). Geplanter Schweizer Snapshot von
@@ -227,7 +227,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</pre>
       sind die jeweils geltenden Bedingungen und Hinweise versionsgenau zu sichern; die Rechte- und Inhaltsfreigabe
       durch die verantwortliche Person und gegebenenfalls fachkundige Prüfung bleiben ausstehend.</p>
     <h2 id="stand">Versionen, Herkunft und Dokumentationsdrift</h2>
-    <p>Aktualisiert am <time datetime="2026-10-24">24. Oktober 2026 (UTC)</time> nach
+    <p>Aktualisiert am <time datetime="2026-10-27">27. Oktober 2026 (UTC)</time> nach
       <code>SPEC.md</code> v1.4 (§§6.5a, 8, 18–21) und
       <code>docs/spec-amendments-v1.4.md</code>. Frühere eingefrorene Fassungen
       bleiben getrennt nachvollziehbar. Der ursprüngliche Implementierungsstand und Prototyp
@@ -235,8 +235,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</pre>
     <p>Steuer-, Gemeinde- und Kartenstand ist 2026. Der Vorschau-Fahrplantag
       <time datetime="2026-10-27">27. Oktober 2026</time> wurde vom Betreiber gewählt; dies ist
       weder ein vollständiger Ferienkalender-Abgleich noch unabhängige SBB- oder Steuerfreigabe.
-      Die abgeleiteten All-19-Vorschaudaten sind an SHA-256
-      <code>426e71f1a361f9b645f4f16fd121854a6955f4b19dab0268b4bed6cf3befb2bb</code>
+      Die Fahrzeiten sind an den GTFS-Fahrplan mit SHA-256
+      <code>10a8bd19f2fa03d363171ac04db70aa6a0c12db0e3af3d2afb58e0501f751090</code>
       und die Karten-/Gemeindequellen im Release-Manifest gebunden. Jede Datenänderung erfordert
       Abgleich von Seite, SPEC, Quellnachweis und Build.</p>
     <p>Der Kartenbericht <code>docs/map/README.md</code> beschreibt die gemeinsame LV95-Topologie

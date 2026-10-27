@@ -1,5 +1,5 @@
 import type { FileDigest } from './tax';
-export interface ReleaseManifest {schemaVersion:number;release:string;taxYear:number;availability:{tax:boolean;map:boolean;travel:boolean};approvals:Record<string,boolean>;status:string;files:Record<string,FileDigest>}
+export interface ReleaseManifest {schemaVersion:number;release:string;taxYear:number;availability:{tax:boolean;map:boolean;travel:boolean;matrix?:boolean};approvals:Record<string,boolean>;status:string;files:Record<string,FileDigest>}
 declare const __DATA_RELEASE__:ReleaseManifest;
 export const DATA_RELEASE = __DATA_RELEASE__;
 // Cantons whose estimates are withheld. scripts/tax/official.test.ts fails if any canton

@@ -192,6 +192,36 @@ class MatrixBuild(unittest.TestCase):
         self.assertEqual(meta["workplaces"]["400"]["rows"], 4)
         json.dumps(meta)
 
+    def test_workplace_station_prefers_the_stop_named_like_the_gemeinde(self):
+        # Glarus: the merged Gemeinde also contains Netstal, which has more rail calls than Glarus.
+        stops = STOPS + [("N", "Nachbardorf", BASE_LAT + 0.038, BASE_LON, "")]
+        trips = {
+            "r1": (2, [("A", "07:00:00", "07:00:00"), ("T", "07:10:00", "07:10:00"), ("N", "07:14:00", "07:14:00")]),
+            "r2": (2, [("Y", "07:20:00", "07:20:00"), ("N", "07:30:00", "07:30:00")]),
+            "r3": (2, [("X", "07:40:00", "07:40:00"), ("N", "07:55:00", "07:55:00")]),
+        }
+        projected = {sid: matrix.wgs84_to_lv95(lon, lat) for sid, _, lat, lon, _ in stops}
+        tx, ty = projected["T"]
+        squares = {100: square(*projected["A"], 300), 200: square(*projected["X"], 300),
+                   300: square(*projected["Y"], 300), 400: square(tx, ty + 450, 600)}
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "feed.zip"
+            write_feed(path, stops, trips)
+            _, unnamed = matrix.build(path, topology_for(squares), [400], {100, 200, 300, 400}, DAY)
+            _, named = matrix.build(path, topology_for(squares), [400], {100, 200, 300, 400}, DAY,
+                                    names={400: "Target"})
+        self.assertEqual(unnamed[400]["station"], "Nachbardorf")
+        self.assertEqual(named[400]["station"], "Target")
+        self.assertEqual({row[0]: row[1] for row in named[400]["rows"]}[100], 600)
+
+    def test_station_name_matching_handles_disambiguated_gemeinde_names(self):
+        self.assertTrue(matrix.station_matches("Altdorf (UR)", "Altdorf UR"))
+        self.assertTrue(matrix.station_matches("Zürich", "Zürich HB"))
+        self.assertTrue(matrix.station_matches("Basel", "Basel SBB"))
+        self.assertTrue(matrix.station_matches("Glarus", "Glarus"))
+        self.assertFalse(matrix.station_matches("Glarus", "Netstal"))
+        self.assertFalse(matrix.station_matches("Stans", "Stansstad"))
+
     def test_independent_direct_rows_keep_slower_direct_when_transfer_is_faster(self):
         trips = {
             "incoming": (2, [("A", "07:00:00", "07:00:00"), ("X", "07:05:00", "07:05:00")]),
@@ -258,15 +288,48 @@ class ReferenceComparison(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             (root / "to").mkdir()
-            (root / "to" / "261.json").write_text(json.dumps({"rows": [[261, 0, 0, "", 0], [198, 900, 0, "Uster", 1], [230, 1200, 0, "W", 1]]}))
+            (root / "to" / "261.json").write_text(json.dumps({"rows": [
+                [261, 0, 0, "", 0], [198, 900, 0, "Uster", 1], [230, 1200, 0, "W", 1], [1322, 1500, 0, "Pfäffikon SZ", 1]]}))
             reference = root / "ref.csv"
-            reference.write_text("pair,from,from_bfs,to,to_bfs,sbb_minutes,sbb_departure,retrieved,note\n"
-                                 "1,Uster,198,Zürich,261,17,,,\n2,Winterthur,230,Zürich,261,,,,\n"
-                                 "3,Zug,1711,Zürich,261,25,,,\n4,Baden,4021,Zürich,261,12,,,\n"
-                                 "5,Morges,5642,Lausanne,5586,10,,,\n6,Uster,198,Zürich,261,19,,,\n"
-                                 "7,Freienbach,1322,Zürich,261,35,,,\n")
+            header = "pair,from,from_bfs,to,to_bfs,sbb_minutes,sbb_departure,same_stop,sbb_same_stop_minutes,retrieved,note\n"
+            reference.write_text(header +
+                                 "1,Uster,198,Zürich,261,17,,,,,\n2,Winterthur,230,Zürich,261,,,,,,\n"
+                                 "3,Zug,1711,Zürich,261,25,,,,,\n4,Baden,4021,Zürich,261,35,,,,,\n"
+                                 "5,Morges,5642,Lausanne,5586,10,,,,,\n6,Uster,198,Zürich,261,19,,,,,\n"
+                                 # Faster stop elsewhere in the Gemeinde: judged against SBB from that stop.
+                                 "7,Freienbach,1322,Zürich,261,32,,Pfäffikon SZ,26,,\n"
+                                 "8,Freienbach,1322,Zürich,261,32,,Pfäffikon SZ,20,,\n"
+                                 "9,Freienbach,1322,Zürich,261,32,,,,,\n"
+                                 # Never slower than SBB from the main stop.
+                                 "10,Winterthur,230,Zürich,261,15,,W,19,,\n")
             statuses = [r["status"] for r in compare_reference.compare(root, reference)]
-        self.assertEqual(statuses, ["passed", "pending", "failed_missing", "failed_missing", "not_a_computed_workplace", "failed", "unknown_unobserved"])
+        self.assertEqual(statuses, ["passed", "pending", "failed_missing", "consistent_beyond_cap",
+                                    "not_a_computed_workplace", "pending_same_stop", "passed", "failed", "pending_same_stop",
+                                    "failed"])
+
+    def test_require_complete_fails_on_pending_pairs_of_computed_workplaces(self):
+        import compare_reference
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "to").mkdir()
+            (root / "to" / "261.json").write_text(json.dumps({"rows": [[261, 0, 0, "", 0], [198, 900, 0, "Uster", 1]]}))
+            header = "pair,from,from_bfs,to,to_bfs,sbb_minutes,sbb_departure,same_stop,sbb_same_stop_minutes,retrieved,note\n"
+            done, pending = root / "done.csv", root / "pending.csv"
+            done.write_text(header + "1,Uster,198,Zürich,261,15,,Uster,15,,\n2,Morges,5642,Lausanne,5586,,,,,,\n")
+            pending.write_text(header + "1,Uster,198,Zürich,261,,,,,,\n")
+            args = ["--matrix", str(root), "--require-complete", "--reference"]
+            self.assertEqual(compare_reference.main(args + [str(done)]), 0)
+            self.assertEqual(compare_reference.main(args + [str(pending)]), 1)
+            self.assertEqual(compare_reference.main(["--matrix", str(root), "--reference", str(pending)]), 0)
+
+    def test_committed_matrix_passes_the_committed_reference(self):
+        import compare_reference
+        matrix_dir = Path(__file__).resolve().parents[2] / "site/data/travel/matrix"
+        if not (matrix_dir / "meta.json").exists():
+            self.skipTest("no committed matrix")
+        reference = Path(__file__).resolve().parent / "sbb-reference-2026.csv"
+        self.assertEqual(compare_reference.main(["--matrix", str(matrix_dir), "--reference", str(reference),
+                                                 "--require-complete"]), 0)
 
     def test_committed_reference_keeps_all_30_spec_pairs(self):
         with (Path(__file__).resolve().parent / "sbb-reference-2026.csv").open(encoding="utf-8") as handle:

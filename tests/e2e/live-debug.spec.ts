@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test('live Aarau preview includes Staufen transfer by default and excludes it in direct-only mode', async ({ page }) => {
+test('Aarau includes Staufen (one change) by default and excludes it in direct-only mode', async ({ page }) => {
   await page.goto('./');
   const workplace = page.getByRole('combobox', { name: 'Arbeitsort' });
   await workplace.fill('Aarau');
@@ -12,8 +12,7 @@ test('live Aarau preview includes Staufen transfer by default and excludes it in
   const row = page.locator('#ranked-list tr[data-bfs="4210"]');
   await expect(row).toBeVisible();
   await expect(row).toContainText('Staufen');
-  await expect(row).toContainText('18');
-  await expect(page.locator('#result-notice')).toContainText('keine vollständige Erreichbarkeitsmenge');
+  await expect(row).toContainText('16 Min.');
   await directOnly.check();
   await expect(row).toHaveCount(0);
   await expect(page.locator('#summary')).toContainText('direkter Verbindung');
@@ -21,5 +20,6 @@ test('live Aarau preview includes Staufen transfer by default and excludes it in
   await expect(row).toBeVisible();
   await row.locator('button').click();
   await expect(page.locator('#detail')).toContainText('Staufen');
-  await expect(page.locator('#detail')).toContainText('18 Min.');
+  await expect(page.locator('#detail')).toContainText('16 Min.');
+  await expect(page.locator('#detail')).toContainText('1 Umstieg');
 });
