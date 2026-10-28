@@ -24,7 +24,7 @@ married couples with one income. Checked against 29 frozen cases from the offici
 ([opentransportdata.swiss](https://opentransportdata.swiss), feed of 24 Oct 2026) for Tuesday 27 Oct 2026:
 shortest time from first boarding at any stop in the Gemeinde (06:30–08:30) to arrival at the workplace
 station, any number of changes, up to 30 minutes. CI checks it against 30 SBB reference journeys fetched
-from transport.opendata.ch (all 25 pairs to a covered workplace within 3 minutes). Walking to the first
+from transport.opendata.ch (29 within 3 minutes; the 30th needs over 30 minutes on SBB too). Walking to the first
 stop is not measured. Refresh with the **Travel evidence** workflow.
 
 **Map.** Bundesamt für Statistik (BFS), GEOSTAT — Generalisierte Grenzen G1, 01.01.2026, via
