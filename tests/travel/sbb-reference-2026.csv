@@ -22,10 +22,10 @@ pair,from,from_bfs,to,to_bfs,sbb_minutes,sbb_departure,same_stop,sbb_same_stop_m
 21,Rheinfelden,4258,Basel,2701,13,08:10,Rheinfelden,13,2026-10-27T09:10Z,"transport.opendata.ch 2026-10-27: Rheinfelden -> Basel SBB, 0 changes; same stop: Rheinfelden -> Basel SBB 08:10"
 22,Kriens,1059,Luzern,1061,5,07:03,Kriens Mattenhof,5,2026-10-27T09:10Z,"transport.opendata.ch 2026-10-27: Kriens Mattenhof -> Luzern, 0 changes; same stop: Kriens Mattenhof -> Luzern 07:03"
 23,Sursee,1103,Luzern,1061,18,07:12,Sursee,18,2026-10-27T09:10Z,"transport.opendata.ch 2026-10-27: Sursee -> Luzern, 0 changes; same stop: Sursee -> Luzern 07:12"
-24,Morges,5642,Lausanne,5586,11,07:26,,,2026-10-27T09:10Z,"transport.opendata.ch 2026-10-27: Morges -> Lausanne, 0 changes"
-25,Vevey,5890,Lausanne,5586,14,06:45,,,2026-10-27T09:10Z,"transport.opendata.ch 2026-10-27: Vevey -> Lausanne, 0 changes"
-26,Nyon,5724,Genève,6621,14,07:53,,,2026-10-27T09:10Z,"transport.opendata.ch 2026-10-27: Nyon -> Genève, 0 changes"
-27,Carouge (GE),6608,Genève,6621,16,07:12,,,2026-10-27T09:10Z,"transport.opendata.ch 2026-10-27: Carouge GE, Rondeau -> Genève, 1 changes"
+24,Grenchen,2546,Solothurn,2601,,,,,,
+25,Neuhausen am Rheinfall,2937,Schaffhausen,2939,,,,,,
+26,Landquart,3955,Chur,3901,,,,,,
+27,Weinfelden,4946,Frauenfeld,4566,,,,,,
 28,Gossau (SG),3443,St. Gallen,3203,8,06:44,Gossau SG,8,2026-10-27T09:10Z,"transport.opendata.ch 2026-10-27: Gossau SG -> St. Gallen, 0 changes; same stop: Gossau SG -> St. Gallen 06:44"
-29,Bellinzona,5002,Lugano,5192,14,07:44,,,2026-10-27T09:10Z,"transport.opendata.ch 2026-10-27: Bellinzona -> Lugano, 0 changes"
+29,Ingenbohl,1364,Schwyz,1372,,,,,,
 30,Olten,2581,Aarau,4001,8,06:49,Olten,8,2026-10-27T09:10Z,"transport.opendata.ch 2026-10-27: Olten -> Aarau, 0 changes; same stop: Olten -> Aarau 06:49"

@@ -331,6 +331,14 @@ class ReferenceComparison(unittest.TestCase):
         self.assertEqual(compare_reference.main(["--matrix", str(matrix_dir), "--reference", str(reference),
                                                  "--require-complete"]), 0)
 
+    def test_every_reference_pair_goes_to_a_workplace(self):
+        import re
+        root = Path(__file__).resolve().parents[2]
+        workplaces = {int(v) for v in re.findall(r"\{bfs:(\d+),", (root / "src/destinations.ts").read_text(encoding="utf-8"))}
+        with (Path(__file__).resolve().parent / "sbb-reference-2026.csv").open(encoding="utf-8") as handle:
+            rows = list(csv.DictReader(handle))
+        self.assertEqual([r["pair"] for r in rows if int(r["to_bfs"]) not in workplaces], [])
+
     def test_committed_reference_keeps_all_30_spec_pairs(self):
         with (Path(__file__).resolve().parent / "sbb-reference-2026.csv").open(encoding="utf-8") as handle:
             rows = list(csv.DictReader(handle))
