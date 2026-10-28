@@ -313,7 +313,7 @@ Depends on T1 scaffold, genuine 2026 tax ID authority and usable map polygons; d
 
 **Accept (scripted):**
 - ≥ 95% verified candidate-access coverage from representative origins; separately report local-reference-stop coverage and no-access reasons, without using the reference as compulsory boarding.
-- Main stops: Zürich → Zürich HB; Bern → Bern; Basel → Basel SBB; Genève → Genève (Cornavin); Lausanne → Lausanne; Luzern → Luzern; Winterthur → Winterthur; St. Gallen → St. Gallen; Lugano → Lugano. Correct via documented overrides.
+- Main stops: Zürich → Zürich HB; Bern → Bern; Basel → Basel SBB; Luzern → Luzern; Winterthur → Winterthur; St. Gallen → St. Gallen; Ingenbohl → Brunnen; Glarus → Glarus (not Netstal). Correct via documented overrides (`STATION_NAMES` in `scripts/travel/fetch_reference.py`, name matching in `matrix.workplace_targets`).
 - Every verified-target workplace has a schema-v2 file with unique known home IDs, exact nondominated options sorted by stable key and within §6.5 bounds; its self row has a zero-transit option **only if** verified access permits one. A no-target workplace has no required file; an ordinary empty/no-service search is distinct. Distinct co-located bus/rail parents cannot manufacture shared-parent zeros; endpoint QA follows §8.
 - Apply §8 speed 100/150 km/h review/blocking policy, tolerances and independently evidenced exceptions; never delete suspicious pairs to pass.
 - Total `travel/` ≤ 25 MB; each file ≤ 100 KB (decimal); metadata included.
@@ -429,7 +429,7 @@ Check first: **Sion (VS)** looks too high. Kantons- plus Gemeindesteuer come to 
 
 ### 11.2 Travel: pairs to check against the SBB timetable
 
-Fastest connection between nominated main stops under §8 on the frozen Tuesday 06:30–08:30 inclusive. T3 initially collects "SBB min" from https://www.sbb.ch with actual stop IDs/date/itinerary evidence; T9 revalidates. Empty SBB/Ours cells stay pending. Preserve all 30 original named pairs; never substitute easier cases.
+Fastest connection between nominated main stops under §8 on the frozen Tuesday 06:30–08:30 inclusive. T3 initially collects "SBB min" from https://www.sbb.ch with actual stop IDs/date/itinerary evidence; T9 revalidates. Empty SBB/Ours cells stay pending. Never substitute easier cases. On 28 Oct 2026 the owner replaced pairs 24–27 and 29 (Morges, Vevey → Lausanne; Nyon, Carouge → Genève; Bellinzona → Lugano), whose destinations are not workplaces of this preview, with pairs to uncovered German-speaking capitals; every pair must go to one of the 19 workplaces (enforced by test).
 
 | # | From | To | SBB min | Ours min |
 | --- | --- | --- | --- | --- |
@@ -456,12 +456,12 @@ Fastest connection between nominated main stops under §8 on the frozen Tuesday 
 | 21 | Rheinfelden | Basel | | |
 | 22 | Kriens | Luzern | | |
 | 23 | Sursee | Luzern | | |
-| 24 | Morges | Lausanne | | |
-| 25 | Vevey | Lausanne | | |
-| 26 | Nyon | Genève | | |
-| 27 | Carouge (GE) | Genève | | |
+| 24 | Grenchen | Solothurn | | |
+| 25 | Neuhausen am Rheinfall | Schaffhausen | | |
+| 26 | Landquart | Chur | | |
+| 27 | Weinfelden | Frauenfeld | | |
 | 28 | Gossau (SG) | St. Gallen | | |
-| 29 | Bellinzona | Lugano | | |
+| 29 | Ingenbohl (Brunnen) | Schwyz | | |
 | 30 | Olten | Aarau | | |
 
 ## 12. Testing summary

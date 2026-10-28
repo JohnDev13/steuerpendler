@@ -26,7 +26,9 @@ API = "https://transport.opendata.ch/v1/connections"
 WINDOW = ("06:30", "08:30")
 QUERY_TIMES = ("06:30", "06:50", "07:10", "07:30", "07:50", "08:10", "08:30")
 # Workplace station as SBB names it; everything else uses the Gemeinde name.
-STATION_NAMES = {"Zürich": "Zürich HB", "Basel": "Basel SBB", "Genève": "Genève", "Lugano": "Lugano",
+STATION_NAMES = {"Zürich": "Zürich HB", "Basel": "Basel SBB",
+                 # Ingenbohl's railway station is Brunnen.
+                 "Ingenbohl": "Brunnen",
                  # Maur has no rail station of that name; a bare "Maur" resolves to St-Maurice.
                  "Maur": "Maur, Dorf"}
 

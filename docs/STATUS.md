@@ -22,7 +22,7 @@ keep it short and update it in the same PR that changes what it describes.
 | Tax off-grid, 300 cases vs engine | pass, max CHF 0 | `npm run tax:test` |
 | Tax vs official ESTV, 29 frozen cases | 21 pass, 8 fail (ratchet: may only improve) | `npm run tax:official` |
 | Cantons > 5 % off ESTV are withheld | enforced by test | `npm test` |
-| Travel vs SBB, 30 pairs, ± 3 min | pass: 24 within 3 min, Wollerau consistent (SBB 38 min > cap); 5 pairs go to non-workplaces | `python3 scripts/travel/compare_reference.py --require-complete` |
+| Travel vs SBB, 30 pairs, ± 3 min | pass: 29 within 3 min, Wollerau consistent (SBB 38 min > cap) | `python3 scripts/travel/compare_reference.py --require-complete` |
 | Unit, release, map, content, e2e | pass | see CI |
 
 The green `tax-accuracy` job checks engine parity, not the independently failing ESTV gate;
@@ -46,9 +46,6 @@ tax credit the engine has no concept of, and VS, VD, GE (withheld). Details:
 
 ## Open tasks
 
-- Five §11.2 pairs (Morges, Vevey → Lausanne; Nyon, Carouge → Genève; Bellinzona → Lugano) go to towns
-  that are not workplaces in this preview, so they can never be checked. Owner decision: replace them
-  with pairs to German-speaking capitals, or add those workplaces.
 - Walking from home to the first stop is not measured; frequency-based trips and route-/trip-specific
   transfer rows are not modelled.
 - Refresh the vendored 2026 ESTV data (`importdata 2026 --download` upstream) and re-check
