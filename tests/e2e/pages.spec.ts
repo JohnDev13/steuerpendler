@@ -15,7 +15,7 @@ test('public preview draws genuine geography, searches Gemeinden, and explains a
  await expect(page.locator('#map [data-bfs="351"]')).toHaveClass(/workplace/);
  await page.locator('#map [data-bfs="1711"]').click();
  await expect(page.locator('#detail h2')).toContainText('Zug');
- await expect(page.locator('#detail')).toContainText('Keine Verbindung bis 25 Min. im Fahrplan gefunden');
+ await expect(page.locator('#detail')).toContainText('Keine Verbindung bis 25 Min. gefunden (Fahrplanmodell noch unvollständig)');
  await page.getByLabel('Bruttoeinkommen in CHF',{exact:true}).fill('10000');
  await page.getByLabel('Bruttoeinkommen in CHF',{exact:true}).press('Tab');
  await expect(page.locator('#income')).toHaveValue('40000');await expect(page.locator('#clamp-note')).toBeVisible();

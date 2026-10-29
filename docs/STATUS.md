@@ -9,8 +9,8 @@ keep it short and update it in the same PR that changes what it describes.
   connection to the workplace, with indicative tax totals and the difference to the workplace.
 - Travel: full timetable matrix (`site/data/travel/matrix/`, SPEC §6.5c) from the official GTFS feed
   `gtfs_fp2026_20261024.zip` (SHA-256 `10a8bd19…1090`) for Tuesday 27 Oct 2026, all 19 workplaces,
-  any number of changes, up to 30 minutes. A Gemeinde without a row has no connection within the
-  selected time in this timetable. The old observed-positive export and its probes are removed.
+  any number of changes, up to 30 minutes. A Gemeinde without a row has no connection found under the current model; that
+  is not yet proof, because frequency-based trips and route-/trip-specific transfer rules are not modelled. The old observed-positive export and its probes are removed.
 - Walking from home to the first stop is not measured (0 min); the walk controls are disabled and say so.
 - Withheld cantons ("Daten in Prüfung"): VS, VD, GE, JU (`src/config.ts`).
 
