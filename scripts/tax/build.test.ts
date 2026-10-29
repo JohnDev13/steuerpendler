@@ -49,8 +49,8 @@ test('SZ deductions match the official Freienbach line items after the recorded 
   expect(calculatedDeductions.get('SozLedig_EK')).toBe(officialInfo.get('TXT_60'));
   expect(dineroToNumber(taxable.taxableIncomeCanton)).toBe(official.TaxableIncomeCanton);
   expect(row[0]).toBe(official.IncomeTaxFed);
-  // Remaining gap is in the SZ tariff itself (simple tax), tracked by the ESTV ratchet.
-  expect(row[1]).toBeGreaterThan(official.IncomeSimpleTaxCanton);
+  // With the 29 Oct 2026 ESTV tariff refresh the simple tax matches too (ESTV shows whole francs).
+  expect(Math.abs(row[1] - official.IncomeSimpleTaxCanton)).toBeLessThan(1);
 });
 
 test('one profile contains all 26 cantons and 461 finite rows at the specified grid', async () => {

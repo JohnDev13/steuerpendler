@@ -7,7 +7,7 @@ import { TaxRepository, calculateTax, type Gemeinde, type TaxBreakdown } from '.
 import { sitePath } from './paths';
 import { withheldCantons } from './policy';
 import { filterAndRank, type Access, type TravelRows, type RankedResult } from './filter';
-import { DATA_RELEASE, QUARANTINED_CANTONS, COLOURS } from './config';
+import { DATA_RELEASE, QUARANTINED_CANTONS, COLOURS, withheldFor } from './config';
 import { formatCHF } from './format';
 import { createMap } from './map';
 import { renderList } from './list';
@@ -52,14 +52,14 @@ function clearPresentedResults(){
  $('cheapest').textContent='';$('summary').textContent=s.loading;$('profile-status').textContent=s.loading;
  $('data-status').textContent='';$('data-status').classList.remove('error');$('empty-state').hidden=true;
  $('detail').textContent=s.selectDetail;
- map?.update([],state.workplace,state.selected,matrixMeta?QUARANTINED_CANTONS:reviewCantons);
+ map?.update([],state.workplace,state.selected,matrixMeta?withheldFor(state.civ,state.kids):reviewCantons);
 }
 function showError(error:unknown){$('summary').textContent=s.loadFailureSummary;$('data-status').textContent=s.loadError(error instanceof Error?error.message:String(error));$('data-status').classList.add('error');}
 function selectGemeinde(id:number){
  if(!gemeinden[id]){$('detail').textContent=s.noData;return;}
  state.selected=id;
  $<HTMLInputElement>('residence').value=gemeinden[id][0];
- const indicative=!!matrixMeta,activeReview=indicative?QUARANTINED_CANTONS:reviewCantons,witnessed=!!rows.find(row=>row[0]===id);
+ const indicative=!!matrixMeta,activeReview=indicative?withheldFor(state.civ,state.kids):reviewCantons,witnessed=!!rows.find(row=>row[0]===id);
  const notice=s.detailMatrix;
  renderDetail($('detail'),gemeinden[id],id,witnessed||!indicative||matrixMeta?breakdowns[id]??null:null,access[id],results.find(r=>r.id===id),rows.find(r=>r[0]===id)?.[1],travelReady,activeReview.has(gemeinden[id][1]),indicative,notice,matrixMeta?{maxTime:state.maxTime,transfers:transfersFor(matrixCurrent,id,directOnly)}:undefined);
  map?.update(results,state.workplace,state.selected,activeReview);
@@ -78,7 +78,7 @@ async function loadRows(workplace:number):Promise<TravelRows>{
 async function update(){
  const current=++revision,snapshot={...state};
  const matrix=!!matrixMeta;
- const indicative=matrix,available=travelReady||indicative,activeReview=indicative?QUARANTINED_CANTONS:reviewCantons;
+ const indicative=matrix,available=travelReady||indicative,activeReview=indicative?withheldFor(snapshot.civ,snapshot.kids):reviewCantons;
  $('time-value').textContent=`${state.maxTime} ${s.minutes}`;$('walk-value').textContent=`${state.maxWalk} ${s.minutes}`;
  // Walking access is not measured in the indicative modes, so its controls cannot have an effect.
  $<HTMLInputElement>('max-walk').disabled=indicative;$<HTMLInputElement>('count-walk').disabled=indicative;$('walk-hint').hidden=!indicative;

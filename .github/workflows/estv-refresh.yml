@@ -1,0 +1,62 @@
+# Refreshes the vendored ESTV 2026 tables and re-asks ESTV for today's answers to the 29 frozen cases.
+# Run from Actions -> "ESTV refresh" on a branch named claude/estv-refresh*: it commits the refreshed tables, the
+# rebuilt site data and a new broad official sample there; today's answers to the 29 cases are an artifact.
+name: ESTV refresh
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  refresh:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22.23.2
+          cache: npm
+      - run: npm ci
+      - name: Fetch ESTV tables and official answers
+        run: |
+          node scripts/tax/estv-fetch.mjs --out "$RUNNER_TEMP/estv-fresh" | tee "$RUNNER_TEMP/fetch.log"
+          echo "::notice title=ESTV::$(tr '\n' '|' < "$RUNNER_TEMP/fetch.log" | cut -c1-3900)"
+      - name: Capture broad official sample
+        run: node scripts/tax/estv-sample.mjs | tee -a "$RUNNER_TEMP/fetch.log"
+      - name: Re-import tables
+        run: |
+          printf '%s\n' "import { importAndParseDeductions } from '~/lib/taxes/deduction/dataImporter';" \
+            "import { importAndParseFactors } from '~/lib/taxes/factor/dataImporter';" \
+            "import { importAndParseTarifs } from '~/lib/taxes/tarif/dataImporter';" \
+            "importAndParseTarifs(2026); importAndParseFactors(2026); importAndParseDeductions(2026);" > scripts/tax/_reimport.ts
+          npx tsx --tsconfig scripts/tax/tsconfig.json scripts/tax/_reimport.ts
+          rm scripts/tax/_reimport.ts
+          echo "::notice title=Changed files::$(git status --short | tr '\n' ' ' | cut -c1-3900)"
+      - name: Rebuild tax data and run the gates
+        id: gates
+        continue-on-error: true
+        run: |
+          npm run tax:build 2>&1 | tail -5
+          npm run tax:test 2>&1 | tail -3 | tee "$RUNNER_TEMP/gates.log"
+          npm run tax:official 2>&1 | tail -40 | tee -a "$RUNNER_TEMP/gates.log" || true
+          echo "::notice title=Gates::$(tr '\n' '|' < "$RUNNER_TEMP/gates.log" | cut -c1-3900)"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: estv-refresh
+          path: ${{ runner.temp }}/estv-fresh
+      - name: Commit refreshed data to this branch
+        if: ${{ startsWith(github.ref_name, 'claude/estv-refresh') }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898+github-actions[bot]@users.noreply.github.com"
+          git add -A vendor/swisstaxcalculator/data site/data tests/reference/estv-2026-sample.jsonl
+          git diff --cached --quiet && { echo "::notice::Nothing changed"; exit 0; }
+          git commit -m "data(tax): ESTV 2026 refresh $(date -u +%F)" -m "Run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"

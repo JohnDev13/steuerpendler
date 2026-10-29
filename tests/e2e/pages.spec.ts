@@ -37,13 +37,21 @@ test('missing municipality data produces a readable error rather than a blank pa
  await page.goto('./');await expect(page.locator('#data-status')).toContainText('HTTP 404');
  await expect(page.getByRole('heading',{name:'Steuerpendler',exact:true})).toBeVisible();
 });
-test('profile controls show a clearly indicative amount for a positive Bern route',async({page})=>{
+test('profile controls show a clearly indicative amount for a positive Zürich route',async({page})=>{
  await page.goto('./');await expect(page.locator('#profile-status')).toContainText('CHF 120');
- await page.getByLabel('Arbeitsort',{exact:true}).fill('Bern');await page.getByLabel('Arbeitsort',{exact:true}).press('Enter');
+ await page.getByLabel('Arbeitsort',{exact:true}).fill('Zürich');await page.getByLabel('Arbeitsort',{exact:true}).press('Enter');
  await page.getByLabel('Zivilstand',{exact:true}).selectOption('m');await page.getByLabel('Kinder',{exact:true}).selectOption('2');await page.getByLabel('Kirchensteuer',{exact:true}).selectOption('reformed');
  await expect(page.locator('#profile-status')).toContainText('Verheiratet');await expect(page.locator('#profile-status')).toContainText('2 Kinder');await expect(page.locator('#profile-status')).toContainText('Reformiert');
  await expect(page.locator('#detail')).toContainText('CHF');await expect(page.locator('#detail')).toContainText('Schätzung mit Standardannahmen');
  await expect(page.locator('#cheapest')).toContainText('indikative Steuerschätzung');
+});
+test('a canton x profile that differs from ESTV by more than 5% is withheld, not shown',async({page})=>{
+ await page.goto('./');
+ await page.getByLabel('Arbeitsort',{exact:true}).fill('Bern');await page.getByLabel('Arbeitsort',{exact:true}).press('Enter');
+ await expect(page.locator('#detail')).toContainText('CHF');  // single, no children: within 5%
+ await page.getByLabel('Zivilstand',{exact:true}).selectOption('m');await page.getByLabel('Kinder',{exact:true}).selectOption('2');
+ await expect(page.locator('#detail')).toContainText('Daten werden geprüft');
+ await expect(page.locator('#detail')).not.toContainText('CHF');
 });
 test('a stale profile is rejected by its pinned served-byte digest',async({page})=>{
  await page.route('**/data/tax-2026-s-0.json?*',async route=>{const response=await route.fetch();await route.fulfill({response,body:(await response.text())+' '});});
@@ -52,8 +60,8 @@ test('a stale profile is rejected by its pinned served-byte digest',async({page}
 });
 test('methodology discloses the current ESTV comparison result',async({page})=>{
  await page.goto('pages/methode.html');
- await expect(page.locator('#grenzen + p')).toContainText('21 von 29');
- await expect(page.locator('#grenzen + p')).toContainText('8 von 29');
+ await expect(page.locator('#grenzen + p')).toContainText('23 von 29');
+ await expect(page.locator('#grenzen + p')).toContainText('6 von 29');
 });
 test('methodology identifies the Jura tax quarantine separately from Wallis',async({page})=>{
  await page.goto('pages/methode.html');
