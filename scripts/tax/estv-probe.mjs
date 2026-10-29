@@ -3,7 +3,7 @@
 // the answers are frozen in tests/reference/estv-2026-probes/<name>.jsonl like the broad sample.
 // Usage: node scripts/tax/estv-probe.mjs scripts/tax/probes/<name>.json [...]
 import { createHash } from 'node:crypto';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -38,6 +38,8 @@ async function post(body) {
   }
 }
 
+mkdirSync(join(ROOT, 'tests/reference/estv-2026-probes'), { recursive: true });
+process.on('uncaughtException', error => { console.log(`::error title=Probe::${String(error.stack ?? error).replace(/\n/g, ' | ')}`); process.exit(1); });
 for (const file of process.argv.slice(2)) {
   const name = basename(file, '.json');
   const target = join(ROOT, 'tests/reference/estv-2026-probes', `${name}.jsonl`);
