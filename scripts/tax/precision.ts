@@ -39,5 +39,6 @@ export async function compilePrecision(input:TaxInput):Promise<PreciseCanton> {
   const [tariff,used]=await getTaxTarifTable(id,2026,'EINKOMMENSSTEUER',group);
   return {deductions:ops,tariff:{type:tariff.tableType,split:tariff.splitting>0&&isGroupEligableForSplitting(used)?tariff.splitting:1,rounding:tariffRounding(id,tariff.tableType),table:tariff.table}};
  };
- return {bund:await compile(0),canton:await compile(input.cantonId),personal:dineroToNumber(calculateTaxesPersonnel(input)),kids:input.children,persons:input.persons.length};
+ const personal=(confession:'other'|'protestant'|'roman')=>dineroToNumber(calculateTaxesPersonnel({...input,persons:input.persons.map(p=>({...p,confession}))}));
+ return {bund:await compile(0),canton:await compile(input.cantonId),personal:personal('other'),personalChurch:{reformed:personal('protestant')-personal('other'),catholic:personal('roman')-personal('other')},kids:input.children,persons:input.persons.length};
 }

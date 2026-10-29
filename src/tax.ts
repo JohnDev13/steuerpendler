@@ -10,7 +10,7 @@ export interface DeductionOp {source:'net'|'constant'|'rent30';value:number;form
 export type TariffType = 'BUND'|'ZUERICH'|'FORMEL'|'FREIBURG'|'FLATTAX';
 export type TariffRounding='split100'|'income100'|'exact';
 export interface PreciseTariff {type:TariffType;split:number;rounding:TariffRounding;table:{amount:number;percent:number;taxes:number;formula:string}[]}
-export interface PreciseCanton {bund:{deductions:DeductionOp[];tariff:PreciseTariff};canton:{deductions:DeductionOp[];tariff:PreciseTariff};personal:number;kids:number;persons:number}
+export interface PreciseCanton {bund:{deductions:DeductionOp[];tariff:PreciseTariff};canton:{deductions:DeductionOp[];tariff:PreciseTariff};personal:number;personalChurch:{reformed:number;catholic:number};kids:number;persons:number}
 export interface TaxProfile {meta:{year:number;incomes:{from:number;step:number;count:number};pensionDefault?:PensionDefault;budgetDefault?:BudgetDefault;[key:string]:unknown};cantons:Record<string,number[][]>;precision?:Record<string,PreciseCanton>}
 // Integer ties-to-even, matching the engine's monetary rounding, not display rounding.
 // ESTV rounds percentage deductions down to whole francs.
@@ -30,7 +30,7 @@ const tariffTypes = new Set<TariffType>(['BUND','ZUERICH','FORMEL','FREIBURG','F
 function validatePrecision(value:unknown):value is PreciseCanton {
  if(!value||typeof value!=='object')return false;
  const p=value as PreciseCanton;
- if(!Number.isFinite(p.personal)||!Number.isInteger(p.kids)||p.kids<0||p.kids>3||!Number.isInteger(p.persons)||p.persons<1||p.persons>2)return false;
+ if(!Number.isFinite(p.personal)||!p.personalChurch||!Number.isFinite(p.personalChurch.reformed)||!Number.isFinite(p.personalChurch.catholic)||!Number.isInteger(p.kids)||p.kids<0||p.kids>3||!Number.isInteger(p.persons)||p.persons<1||p.persons>2)return false;
  for(const part of [p.bund,p.canton]){
   if(!part||!Array.isArray(part.deductions)||!part.tariff)return false;
   for(const op of part.deductions)if(!op||!['net','constant','rent30'].includes(op.source)||!deductionFormats.has(op.format)||![op.value,op.amount,op.percent,op.minimum,op.maximum,op.multiplier].every(Number.isFinite))return false;
@@ -100,7 +100,7 @@ export function calculateTax(profile:TaxProfile,g:Gemeinde,income:number,church:
  const rate=church==='reformed'?g[4]:church==='catholic'?g[5]:0;
  const round=precise?halfEven:(x:number)=>x;
  const churchRate=precise?Math.round(rate/precise.persons*100)/100*precise.persons:rate;
- const bund=row[0],kanton=round(row[1]*g[2]/100),gemeinde=round(row[1]*g[3]/100),kirche=round(row[1]*churchRate/100),personal=row[2];
+ const bund=row[0],kanton=round(row[1]*g[2]/100),gemeinde=round(row[1]*g[3]/100),kirche=round(row[1]*churchRate/100),personal=row[2]+(precise&&church!=='none'?precise.personalChurch[church]:0);
  const total=bund+kanton+gemeinde+kirche+personal;
  if(!Number.isFinite(total)) throw new Error('Steuerdaten sind unvollständig.');
  return {bund,kanton,gemeinde,kirche,personal,total,income:clampedIncome,clamped:income!==clampedIncome};
