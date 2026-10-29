@@ -8,7 +8,7 @@ export function renderDetail(container:HTMLElement,g:Gemeinde,id:number,tax:TaxB
  container.replaceChildren(title,status);
  if(!underReview&&tax){
   const dl=document.createElement('dl');
-  for(const [label,value] of [[s.bund,tax.bund],[s.kanton,tax.kanton],[s.gemeinde,tax.gemeinde],[s.kirche,tax.kirche],[s.personal,tax.personal],[s.total,tax.total]] as const){const dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=label;dd.textContent=formatCHF(value);dl.append(dt,dd);}
+  for(const [label,value] of [[s.bund,tax.bund],[s.kanton,tax.kanton],[s.gemeinde,tax.gemeinde],[s.kirche,tax.kirche],[s.personal,tax.personal],...(tax.credit?[[s.credit,-tax.credit] as const]:[]),[s.total,tax.total]] as const){const dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=label;dd.textContent=formatCHF(value);dl.append(dt,dd);}
   container.append(dl);
  }
  const info=document.createElement('p');info.className='detail-meta';info.textContent=`${s.rate}: ${g[3]}% · BFS ${id}`;container.append(info);

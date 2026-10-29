@@ -23,8 +23,8 @@ keep it short and update it in the same PR that changes what it describes.
 | --- | --- | --- |
 | Tax on-grid, 500 cases vs engine (`src/tax.ts`) | pass, max CHF 0 | `npm run tax:test` |
 | Tax off-grid, 300 cases vs engine | pass, max CHF 0 | `npm run tax:test` |
-| Tax vs official ESTV, 29 frozen cases | 25 pass, 4 fail (ratchet: may only improve) | `npm run tax:official` |
-| Tax vs broad official sample, 650 cases (26 capitals × 6 profiles × 4 incomes + church) | 465 pass (ratchet) | `npx tsx --tsconfig scripts/tax/tsconfig.json scripts/tax/sample.ts --fail` |
+| Tax vs official ESTV, 29 frozen cases | 26 pass, 3 fail (VD, GE, VS; ratchet: may only improve) | `npm run tax:official` |
+| Tax vs broad official sample, 650 cases (26 capitals × 6 profiles × 4 incomes + church) | 512 pass (ratchet) | `npx tsx --tsconfig scripts/tax/tsconfig.json scripts/tax/sample.ts --fail` |
 | Canton × profile more than 5 % off ESTV is withheld | enforced by test (`src/withheld.ts`) | `npm test` |
 | Cantons > 5 % off ESTV are withheld | enforced by test | `npm test` |
 | Travel vs SBB, 30 pairs, ± 3 min | pass: 29 within 3 min, Wollerau consistent (SBB 38 min > cap) | `python3 scripts/travel/compare_reference.py --require-complete` |

@@ -78,3 +78,15 @@ export const applyLateRules = (rules: LateRule[], income: number, ordinary: Map<
   }
   return done;
 };
+
+// Steuerpendler patch 24: per-child reductions after the tariff. Evidence: deductions-grid probe and broad sample.
+//  simpleReduction: subtracted from the cantonal simple tax before the multipliers, not below 0 (BL 750 per child,
+//                   table StErmässigungProKind_EK)
+//  credit:          subtracted from the cantonal, communal, church and personal tax, not below 0 (ESTV TaxCredit:
+//                   SH 320, TG 100 per child)
+export const cantonalReductions = (h: Household, table: TaxDeductionTable): { simpleReduction: number; credit: number } => {
+  if (h.cantonId === 5) return { simpleReduction: h.kids * amount(table, 'StErmässigungProKind_EK'), credit: 0 };
+  if (h.cantonId === 17) return { simpleReduction: 0, credit: 320 * h.kids };
+  if (h.cantonId === 20) return { simpleReduction: 0, credit: 100 * h.kids };
+  return { simpleReduction: 0, credit: 0 };
+};

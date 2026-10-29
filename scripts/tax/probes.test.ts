@@ -22,7 +22,7 @@ test('personal and church personal tax match ESTV in every canton (patch 21)', a
 
 // Cantons whose income-dependent deductions are modelled (patch 22): every deductions-grid case (6 profiles,
 // CHF 40k-140k) must match ESTV's total within the official tolerance. Extend the list as cantons are fixed.
-const GRID_EXACT = ['BE', 'LU', 'SZ', 'OW'];
+const GRID_EXACT = ['BE', 'LU', 'SZ', 'OW', 'TG'];
 
 test('income-dependent cantonal deductions match ESTV on the whole income grid (patch 22)', async () => {
   const gemeinden = (await data('gemeinden-2026.json')).gemeinden as Record<string, Gemeinde>;

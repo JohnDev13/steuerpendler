@@ -1,7 +1,7 @@
 // Partial evaluation of authentic deductions for the frozen one-earner profile.
 // No tax results, sampler cases or municipal scope constants are embedded here.
 import { calculateDeductionByDefinition, calculateGrossNetDetails, taxDeductionDefinitions } from '../../vendor/swisstaxcalculator/lib/taxes/deduction';
-import { cantonalRules } from '../../vendor/swisstaxcalculator/lib/taxes/deduction/cantonal';
+import { cantonalReductions, cantonalRules } from '../../vendor/swisstaxcalculator/lib/taxes/deduction/cantonal';
 import { getTaxDecutionTable } from '../../vendor/swisstaxcalculator/lib/taxes/deduction/provider';
 import { getTaxTarifGroup, isGroupEligableForSplitting, tariffRounding } from '../../vendor/swisstaxcalculator/lib/taxes/tarif';
 import { getTaxTarifTable } from '../../vendor/swisstaxcalculator/lib/taxes/tarif/provider';
@@ -58,8 +58,11 @@ export async function compilePrecision(input:TaxInput):Promise<PreciseCanton> {
     reduction:rule.kind==='step'?rule.reduction:0,addBack,addBackLate};
   });
   const [tariff,used]=await getTaxTarifTable(id,2026,'EINKOMMENSSTEUER',group);
-  return {deductions:ops,...(late.length?{late}:{}),tariff:{type:tariff.tableType,split:tariff.splitting>0&&isGroupEligableForSplitting(used)?tariff.splitting:1,rounding:tariffRounding(id,tariff.tableType),table:tariff.table}};
+  const reductions=id===0?{simpleReduction:0}:cantonalReductions({cantonId:id,married:['m','rp'].includes(input.relationship),kids:input.children},deductions);
+  return {deductions:ops,...(late.length?{late}:{}),...(reductions.simpleReduction?{reduction:reductions.simpleReduction}:{}),tariff:{type:tariff.tableType,split:tariff.splitting>0&&isGroupEligableForSplitting(used)?tariff.splitting:1,rounding:tariffRounding(id,tariff.tableType),table:tariff.table}};
  };
  const personal=(confession:'other'|'protestant'|'roman')=>dineroToNumber(calculateTaxesPersonnel({...input,persons:input.persons.map(p=>({...p,confession}))}));
- return {bund:await compile(0),canton:await compile(input.cantonId),personal:personal('other'),personalChurch:{reformed:personal('protestant')-personal('other'),catholic:personal('roman')-personal('other')},kids:input.children,persons:input.persons.length};
+ const cantonTable=await getTaxDecutionTable(input.cantonId,2026,'EINKOMMENSSTEUER');
+ const {credit}=cantonalReductions({cantonId:input.cantonId,married:['m','rp'].includes(input.relationship),kids:input.children},cantonTable);
+ return {bund:await compile(0),canton:await compile(input.cantonId),credit,personal:personal('other'),personalChurch:{reformed:personal('protestant')-personal('other'),catholic:personal('roman')-personal('other')},kids:input.children,persons:input.persons.length};
 }

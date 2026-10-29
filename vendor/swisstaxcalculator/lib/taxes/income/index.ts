@@ -13,7 +13,7 @@ import {
   calculateDeductionByDefinition
 } from '../deduction';
 import { getTaxDecutionTable } from '../deduction/provider';
-import { applyLateRules, cantonalRules } from '../deduction/cantonal';
+import { applyLateRules, cantonalReductions, cantonalRules } from '../deduction/cantonal';
 import {
   calculateTaxesCantonAndCity,
   getChurchIncomeFactor,
@@ -132,7 +132,15 @@ export const calculateTaxesIncomeAndFortune = async (taxInput: TaxInput): Promis
     progression = { bund, cantonIncome, cantonFortune, overall };
   }
 
-  const taxesTotal = dineroAddMany(
+  // Steuerpendler patch 24: cantonal tax credit per child (ESTV TaxCredit), not below 0.
+  const { credit } = cantonalReductions(
+    { cantonId: taxInput.cantonId, married: ['m', 'rp'].includes(taxInput.relationship), kids: taxInput.children },
+    await getTaxDecutionTable(taxInput.cantonId, taxInput.year, 'EINKOMMENSSTEUER')
+  );
+  const nonFederal = dineroToNumber(dineroAddMany(taxesIncomeCanton, taxesIncomeCity, taxesIncomeChurch, taxesFortuneCanton,
+    taxesFortuneCity, taxesFortuneChurch, taxesPersonnel));
+  const taxCredit = Math.min(credit, Math.max(0, nonFederal));
+  const taxesTotal = subtract(dineroAddMany(
     taxesIncomeCanton,
     taxesIncomeCity,
     taxesIncomeChurch,
@@ -141,7 +149,7 @@ export const calculateTaxesIncomeAndFortune = async (taxInput: TaxInput): Promis
     taxesFortuneChurch,
     taxesIncomeBund,
     taxesPersonnel
-  );
+  ), dineroChf(taxCredit));
 
   const result: TaxResult = {
     input: taxInput,
@@ -303,7 +311,15 @@ export const calculateTaxesBase = async (
     taxableFortuneCanton
   );
 
-  return { taxesIncomeBase, taxesFortuneBase };
+  // Steuerpendler patch 24: per-child reduction of the cantonal simple tax (BL).
+  const { simpleReduction } = cantonalReductions(
+    { cantonId: taxInput.cantonId, married: ['m', 'rp'].includes(taxInput.relationship), kids: taxInput.children },
+    await getTaxDecutionTable(taxInput.cantonId, taxInput.year, 'EINKOMMENSSTEUER')
+  );
+  const reducedIncomeBase = simpleReduction
+    ? dineroChf(Math.max(0, dineroToNumber(taxesIncomeBase) - simpleReduction), 5)
+    : taxesIncomeBase;
+  return { taxesIncomeBase: reducedIncomeBase, taxesFortuneBase };
 };
 
 export const calculateTaxesBund = async (

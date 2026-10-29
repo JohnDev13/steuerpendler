@@ -101,3 +101,5 @@ The standard-default result must be visibly qualified in German: **„Dies ist e
 Each canton program also carries `personal` (personal tax without church) and `personalChurch: {reformed, catholic}`, the church personal tax added when that church is selected (vendor patch 21).
 
 A canton program may carry `late: PreciseLate[]` (vendor patch 22): cantonal deductions evaluated in order on the taxable income after the ordinary deductions. Each has `kind` (`fixed` | `percent` | `linear` | `step`), numeric `amount`, `rate`, `max`, `threshold`, `base`, `step`, `reduction`, `addBack` (ordinary deductions added to the basis, constant per profile) and `addBackLate` (indices of earlier late deductions added to the basis). See `src/tax.ts` `applyLate`.
+
+Each program carries `credit` (cantonal tax credit per profile, subtracted from cantonal + communal + church + personal tax, not below 0) and the canton part may carry `reduction` (subtracted from the cantonal simple tax before the multipliers, not below 0) — vendor patch 24.
