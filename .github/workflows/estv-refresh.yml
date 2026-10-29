@@ -1,12 +1,10 @@
 # Refreshes the vendored ESTV 2026 tables and re-asks ESTV for today's answers to the 29 frozen cases.
-# Run from Actions -> "ESTV refresh"; on claude/estv-refresh-* branches it commits the refreshed data.
+# Run from Actions -> "ESTV refresh" on a branch named claude/estv-refresh*: it commits the refreshed tables, the
+# rebuilt site data and a new broad official sample there; today's answers to the 29 cases are an artifact.
 name: ESTV refresh
 
 on:
   workflow_dispatch:
-  push:
-    branches: ['claude/estv-refresh']
-    paths: ['.github/workflows/estv-refresh.yml', 'scripts/tax/estv-fetch.mjs', 'scripts/tax/estv-sample.mjs']
 
 permissions:
   contents: write
@@ -58,8 +56,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898+github-actions[bot]@users.noreply.github.com"
-          mkdir -p tests/reference/estv-2026-fresh && cp "$RUNNER_TEMP"/estv-fresh/* tests/reference/estv-2026-fresh/
-          git add -A vendor/swisstaxcalculator/data site/data tests/reference/estv-2026-fresh tests/reference/estv-2026-sample.jsonl
+          git add -A vendor/swisstaxcalculator/data site/data tests/reference/estv-2026-sample.jsonl
           git diff --cached --quiet && { echo "::notice::Nothing changed"; exit 0; }
           git commit -m "data(tax): ESTV 2026 refresh $(date -u +%F)" -m "Run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
           git push origin "HEAD:${GITHUB_REF_NAME}"

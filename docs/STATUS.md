@@ -13,7 +13,9 @@ keep it short and update it in the same PR that changes what it describes.
   transfer rules (with their service days) are modelled; a Gemeinde without a row has no connection
   within the selected time in this timetable (access walk to the first stop: 0 min, unmeasured). The old observed-positive export and its probes are removed.
 - Walking from home to the first stop is not measured (0 min); the walk controls are disabled and say so.
-- Withheld cantons ("Daten in Prüfung"): VS, VD, GE, JU (`src/config.ts`).
+- Withheld ("Daten in Prüfung"): VS, VD, GE, JU for every profile, plus every canton × profile that the broad
+  ESTV sample shows more than 5 % off (`src/withheld.ts`). Single without children is shown everywhere except
+  LU, VS, VD, GE, JU; most other profiles are withheld in many cantons until their rules are modelled.
 
 ## Gates
 
@@ -21,7 +23,9 @@ keep it short and update it in the same PR that changes what it describes.
 | --- | --- | --- |
 | Tax on-grid, 500 cases vs engine (`src/tax.ts`) | pass, max CHF 0 | `npm run tax:test` |
 | Tax off-grid, 300 cases vs engine | pass, max CHF 0 | `npm run tax:test` |
-| Tax vs official ESTV, 29 frozen cases | 21 pass, 8 fail (ratchet: may only improve) | `npm run tax:official` |
+| Tax vs official ESTV, 29 frozen cases | 23 pass, 6 fail (ratchet: may only improve) | `npm run tax:official` |
+| Tax vs broad official sample, 650 cases (26 capitals × 6 profiles × 4 incomes + church) | 340 pass (ratchet) | `npx tsx --tsconfig scripts/tax/tsconfig.json scripts/tax/sample.ts --fail` |
+| Canton × profile more than 5 % off ESTV is withheld | enforced by test (`src/withheld.ts`) | `npm test` |
 | Cantons > 5 % off ESTV are withheld | enforced by test | `npm test` |
 | Travel vs SBB, 30 pairs, ± 3 min | pass: 29 within 3 min, Wollerau consistent (SBB 38 min > cap) | `python3 scripts/travel/compare_reference.py --require-complete` |
 | Unit, release, map, content, e2e | pass | see CI |
@@ -30,15 +34,18 @@ The green `tax-accuracy` job checks engine parity, not the independently failing
 `npm run tax:official` still exits 1 (8/29 cases fail). `availability.travel` (official, audited
 travel) and the approval flags stay false; the preview uses `availability.matrix`.
 
-Remaining ESTV differences: tariff-level differences in SZ, AG (married), NW and SO (0.2–1.5 %), a TG child
-tax credit the engine has no concept of, and VS, VD, GE (withheld). Details:
-`vendor/swisstaxcalculator/STEUERPENDLER-PATCHES.md`.
+Tax tables were refreshed from ESTV on 29 Oct 2026 (new tariffs for JU, NW, SZ, TI, VD, VS; six data corrections
+became unnecessary). The 650-case sample shows what the engine still lacks: low-income deductions, cantonal
+married and single-parent deduction rules, tax reductions per child (e.g. BL) and the VD family quotient.
+These are being added canton by canton; each fix lowers the sample ratchet and un-withholds combinations.
 
 ## CI and deployment
 
 - `.github/workflows/ci.yml` on every PR and push to main: `web` (types, unit, release, map, build, manifest
   current, content, e2e), `travel` (Python), `tax-accuracy` (engine parity only). All three are required on
   `main` with strict checks and admin enforcement; this does not make `tax:official` green.
+- `.github/workflows/estv-refresh.yml` (manual, on a `claude/estv-refresh*` branch): refreshes the ESTV tables,
+  re-asks ESTV for the 29 cases and captures a new broad sample.
 - `.github/workflows/travel-evidence.yml` (manual): downloads the newest GTFS feed, pins its hash, builds the
   matrix, fetches the 30 SBB reference journeys, runs the gate and opens a data PR. The `travel` CI job
   re-runs the gate on every PR.
@@ -49,8 +56,7 @@ tax credit the engine has no concept of, and VS, VD, GE (withheld). Details:
 
 - Walking from home to the first stop is not measured; frequency-based trips and route-/trip-specific
   transfer rows are not modelled.
-- Refresh the vendored 2026 ESTV data (`importdata 2026 --download` upstream) and re-check
-  `vendor/swisstaxcalculator/data/corrections/2026.json` (8 ESTV cases still fail).
+- Model the missing cantonal tax rules found by the 650-case sample (see Gates).
 - Production host (Cloudflare per SPEC §3), Impressum details (O5), commercial map rights.
 
 ## History

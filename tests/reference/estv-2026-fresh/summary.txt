@@ -1,4 +1,0 @@
-table tarifs: unchanged (566 entries, sha256 846c48d1c4ec)
-table factors: unchanged (2110 entries, sha256 1f868ff88a5a)
-table deductions: unchanged (78 entries, sha256 7ed201c9b29a)
-frozen responses byte-identical today: 58
