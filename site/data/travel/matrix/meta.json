@@ -32,122 +32,179 @@
   "sha256": "f4d87e846a6f6cf588fda8bc67fd78fb028f2c7778588a70710378295bafa782",
   "bytes": 291103301
  },
- "codeRevision": "f163efe6b7335ec47e03763fe36e433b3915fa07",
+ "codeRevision": "0e2bbd9cbc7735ff69727634d82922bf4e12dc41",
  "connections": 460377,
  "workplaces": {
   "261": {
    "station": "Zürich HB",
    "targetStops": 41,
    "rows": 100,
-   "directRows": 65
+   "directRows": 65,
+   "tripRuleDecisions": {
+    "ruleAllowed": 25
+   }
   },
   "351": {
    "station": "Bern",
    "targetStops": 74,
    "rows": 83,
-   "directRows": 63
+   "directRows": 63,
+   "tripRuleDecisions": {
+    "ruleAllowed": 21
+   }
   },
   "1061": {
    "station": "Luzern",
    "targetStops": 74,
    "rows": 59,
-   "directRows": 43
+   "directRows": 43,
+   "tripRuleDecisions": {
+    "ruleAllowed": 11
+   }
   },
   "1201": {
    "station": "Altdorf UR",
    "targetStops": 15,
    "rows": 21,
-   "directRows": 18
+   "directRows": 18,
+   "tripRuleDecisions": {
+    "ruleAllowed": 3
+   }
   },
   "1372": {
    "station": "Schwyz",
    "targetStops": 9,
    "rows": 23,
-   "directRows": 14
+   "directRows": 14,
+   "tripRuleDecisions": {
+    "ruleAllowed": 8
+   }
   },
   "1407": {
    "station": "Sarnen",
    "targetStops": 9,
    "rows": 13,
-   "directRows": 12
+   "directRows": 12,
+   "tripRuleDecisions": {
+    "ruleAllowed": 2
+   }
   },
   "1509": {
    "station": "Stans",
    "targetStops": 13,
    "rows": 18,
-   "directRows": 16
+   "directRows": 16,
+   "tripRuleDecisions": {
+    "ruleAllowed": 2
+   }
   },
   "1632": {
    "station": "Glarus",
    "targetStops": 13,
    "rows": 10,
-   "directRows": 7
+   "directRows": 7,
+   "tripRuleDecisions": {
+    "ruleAllowed": 6
+   }
   },
   "1711": {
    "station": "Zug",
    "targetStops": 32,
    "rows": 50,
-   "directRows": 28
+   "directRows": 28,
+   "tripRuleDecisions": {
+    "ruleAllowed": 12
+   }
   },
   "2601": {
    "station": "Solothurn",
    "targetStops": 23,
    "rows": 97,
-   "directRows": 68
+   "directRows": 68,
+   "tripRuleDecisions": {
+    "ruleAllowed": 11
+   }
   },
   "2701": {
    "station": "Basel SBB",
    "targetStops": 51,
    "rows": 56,
-   "directRows": 33
+   "directRows": 33,
+   "tripRuleDecisions": {
+    "ruleAllowed": 28
+   }
   },
   "2829": {
    "station": "Liestal",
    "targetStops": 28,
    "rows": 72,
-   "directRows": 37
+   "directRows": 37,
+   "tripRuleDecisions": {
+    "ruleAllowed": 20
+   }
   },
   "2939": {
    "station": "Schaffhausen",
    "targetStops": 33,
    "rows": 45,
-   "directRows": 37
+   "directRows": 37,
+   "tripRuleDecisions": {
+    "ruleAllowed": 9
+   }
   },
   "3001": {
    "station": "Herisau",
    "targetStops": 18,
    "rows": 31,
-   "directRows": 20
+   "directRows": 20,
+   "tripRuleDecisions": {
+    "ruleAllowed": 6
+   }
   },
   "3101": {
    "station": "Appenzell",
    "targetStops": 13,
    "rows": 11,
-   "directRows": 10
+   "directRows": 10,
+   "tripRuleDecisions": {
+    "ruleAllowed": 3
+   }
   },
   "3203": {
    "station": "St. Gallen",
    "targetStops": 39,
    "rows": 58,
-   "directRows": 41
+   "directRows": 41,
+   "tripRuleDecisions": {
+    "ruleAllowed": 12
+   }
   },
   "3901": {
    "station": "Chur",
    "targetStops": 50,
    "rows": 29,
-   "directRows": 24
+   "directRows": 24,
+   "tripRuleDecisions": {
+    "ruleAllowed": 4
+   }
   },
   "4001": {
    "station": "Aarau",
    "targetStops": 21,
    "rows": 112,
-   "directRows": 62
+   "directRows": 62,
+   "tripRuleDecisions": {
+    "ruleAllowed": 18
+   }
   },
   "4566": {
    "station": "Frauenfeld",
    "targetStops": 27,
    "rows": 55,
-   "directRows": 42
+   "directRows": 42,
+   "tripRuleDecisions": {
+    "ruleAllowed": 6
+   }
   }
  }
 }
