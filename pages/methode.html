@@ -104,18 +104,20 @@ total = bund + kanton + gemeinde + kirche + personal</code></pre>
       Schätzung, keine Steuerberatung; die Tabellen sind keine verbindliche ESTV-Veranlagung.</p>
     <h2 id="reisen">Pendelzeiten: Fahrplanberechnung für 19 Arbeitsorte</h2>
     <p>Die Fahrzeiten stammen aus dem offiziellen Schweizer GTFS-Fahrplan (opentransportdata.swiss,
-      Ausgabe vom 24. Oktober 2026) für Dienstag, <time datetime="2026-10-27">27. Oktober 2026</time>.
+      Ausgabe vom 28. Oktober 2026) für Dienstag, <time datetime="2026-10-27">27. Oktober 2026</time>.
       Für jeden Arbeitsort wird jede Verbindung im Morgenfenster durchsucht (Connection Scan):
       die kürzeste Fahrt von irgendeiner Haltestelle in der Wohngemeinde bis zum Bahnhof des
       Arbeitsorts, mit beliebig vielen Umstiegen. «Nur direkt» verwendet eine eigene Suche ohne
-      Fahrzeugwechsel und ist standardmässig ausgeschaltet. Für Gemeinden ohne Treffer wurde keine
-      Verbindung innerhalb der gewählten Zeit (höchstens 30 Minuten) gefunden. Das ist noch kein Beweis:
-      Fahrten mit Taktangabe (frequencies.txt) und linien- oder fahrtbezogene Umsteigeregeln sind noch
-      nicht abgebildet.</p>
+      Fahrzeugwechsel und ist standardmässig ausgeschaltet. Für Gemeinden ohne Treffer gibt es im
+      Fahrplan keine Verbindung innerhalb der gewählten Zeit (höchstens 30 Minuten). Berücksichtigt sind
+      auch Seilbahnen, Standseilbahnen und Schiffe mit Taktangabe (frequencies.txt) sowie die
+      fahrtbezogenen Umsteigeregeln des Fahrplans (Mindestumsteigezeiten, garantierte und
+      ausgeschlossene Anschlüsse, Durchbindungen) an ihren Gültigkeitstagen.</p>
     <h3>Zeitraum, Umstiege und Fussweg</h3>
     <p>Erste Einstiege liegen im Fenster 06:30–08:30 Uhr (Europe/Zurich), beide Grenzen inklusive.
       Die Fahrzeit läuft vom ersten Einsteigen bis zur Ankunft; Wartezeiten beim Umsteigen sind
-      enthalten. Umsteigen braucht mindestens 2 Minuten oder die Mindestzeit aus dem Fahrplan;
+      enthalten. Umsteigen braucht mindestens 2 Minuten oder die Mindestzeit aus dem Fahrplan (für das
+      konkrete Zugpaar, sonst für die Haltestellen);
       kurze Fusswege zwischen Haltestellen (bis 400 m) sind erlaubt. Der Zeitfilter verwendet
       exakte Sekunden, die Anzeige rundet auf volle Minuten auf.</p>
     <p>Der Weg von der Wohnung zur ersten Haltestelle ist <strong>nicht gemessen</strong> (0 Minuten).
@@ -164,7 +166,7 @@ total = bund + kanton + gemeinde + kirche + personal</code></pre>
       <dt>Fahrplan</dt>
       <dd><a href="https://opentransportdata.swiss/">opentransportdata.swiss</a> /
         <a href="https://opendata.swiss/">opendata.swiss</a>, Quelle der GTFS-Fahrplandaten
-        (<code>gtfs_fp2026_20261024.zip</code>) für den 27. Oktober 2026; bearbeitet und ausgewertet vom Projekt Steuerpendler (JohnDev13).
+        (<code>gtfs_fp2026_20261028.zip</code>) für den 27. Oktober 2026; bearbeitet und ausgewertet vom Projekt Steuerpendler (JohnDev13).
         Die <a href="https://opentransportdata.swiss/en/terms-of-use/">Nutzungsbedingungen</a>
         verlangen Quellenangabe und regelmässige Aktualisierung der Rohdaten. Die Vorschau ist
         ausdrücklich ein datierter historischer Ausschnitt, kein aktueller Fahrplan; die Anwendbarkeit
@@ -237,7 +239,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</pre>
       <time datetime="2026-10-27">27. Oktober 2026</time> wurde vom Betreiber gewählt; dies ist
       weder ein vollständiger Ferienkalender-Abgleich noch unabhängige SBB- oder Steuerfreigabe.
       Die Fahrzeiten sind an den GTFS-Fahrplan mit SHA-256
-      <code>10a8bd19f2fa03d363171ac04db70aa6a0c12db0e3af3d2afb58e0501f751090</code>
+      <code>f4d87e846a6f6cf588fda8bc67fd78fb028f2c7778588a70710378295bafa782</code>
       und die Karten-/Gemeindequellen im Release-Manifest gebunden. Jede Datenänderung erfordert
       Abgleich von Seite, SPEC, Quellnachweis und Build.</p>
     <p>Der Kartenbericht <code>docs/map/README.md</code> beschreibt die gemeinsame LV95-Topologie

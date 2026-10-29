@@ -11,8 +11,8 @@ it('reports an actual zero only after travel becomes available', () => {
     .toBe('0 vergleichbare Gemeinden in Reichweite');
 });
 
-it('does not claim a missing matrix row is a complete timetable result while the model is incomplete', () => {
-  expect(strings.matrixNoRoute(20)).toBe('Keine Verbindung bis 20 Min. gefunden (Fahrplanmodell noch unvollständig)');
-  expect(strings.matrixEmpty).toContain('noch nicht alle');
+it('states a missing matrix row as a timetable result, never as unreachable', () => {
+  expect(strings.matrixNoRoute(20)).toBe('Im Fahrplan keine Verbindung bis 20 Min.');
+  expect(strings.matrixEmpty).toBe('Im Fahrplan gibt es keine Gemeinde mit Verbindung in der gewählten Zeit.');
   expect(strings.matrixNoRoute(20)).not.toContain('unerreichbar');
 });

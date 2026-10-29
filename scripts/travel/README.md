@@ -15,12 +15,12 @@ the reference journeys and opens a pull request with the data.
 
 ```sh
 python3 -m unittest discover -s tests/travel -v
-python3 scripts/travel/run_matrix.py --gtfs gtfs_fp2026_20261024.zip --date 2026-10-27 --feed-url <url>
+python3 scripts/travel/run_matrix.py --gtfs gtfs_fp2026_20261028.zip --date 2026-10-27 --feed-url <url>
 python3 scripts/travel/fetch_reference.py --date 2026-10-27      # needs network
 python3 scripts/travel/compare_reference.py --require-complete
 ```
 
-Known limits: home-to-stop walking is not measured (0 s); frequency-based trips and route- or
-trip-specific transfer rows are not modelled (counts are recorded in `meta.json`). Earlier probes
+Modelled: frequency-based trips (expanded per departure) and trip-pair transfer rules with their
+service days (precedence over stop-pair rules). Known limit: home-to-stop walking is not measured (0 s). Earlier probes
 (R5, Aarau screens, canonical event exports) are retired; their dated findings stay in `docs/travel/`
 and Git history.

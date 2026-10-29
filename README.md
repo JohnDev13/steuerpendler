@@ -21,7 +21,7 @@ married couples with one income. Checked against 29 frozen cases from the offici
 21 match within tolerance; cantons more than 5 % off are withheld (currently VS, VD, GE, JU).
 
 **Commute.** `scripts/travel/matrix.py` scans every connection of the official Swiss GTFS timetable
-([opentransportdata.swiss](https://opentransportdata.swiss), feed of 24 Oct 2026) for Tuesday 27 Oct 2026:
+([opentransportdata.swiss](https://opentransportdata.swiss), feed of 28 Oct 2026) for Tuesday 27 Oct 2026:
 shortest time from first boarding at any stop in the Gemeinde (06:30–08:30) to arrival at the workplace
 station, any number of changes, up to 30 minutes. CI checks it against 30 SBB reference journeys fetched
 from transport.opendata.ch (29 within 3 minutes; the 30th needs over 30 minutes on SBB too). Walking to the first
