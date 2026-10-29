@@ -56,5 +56,10 @@ with zipfile.ZipFile(path) as z:
     say("TR sample", [dict((k, v) for k, v in r.items() if v) for r in specific[:3]])
     say("TR stop-level type2 rows", len(stop_level), "min/median/max", min(stop_level.values()), sorted(stop_level.values())[len(stop_level)//2], max(stop_level.values()))
 print("\n".join(out))
-for line in out:
-    print("::notice title=stats::" + line[:3900])
+tr = [l for l in out if l.startswith("TR")]
+chunk = ""
+for line in tr:
+    if len(chunk) + len(line) > 3800:
+        print("::notice title=tr::" + chunk); chunk = ""
+    chunk += line[:1800] + " || "
+print("::notice title=tr::" + chunk)
