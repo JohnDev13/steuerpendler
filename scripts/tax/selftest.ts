@@ -54,7 +54,7 @@ export function reconstruct(artifacts: Artifacts, sample: Sample): number {
   const round=(v:number)=>{const f=Math.floor(v);return Math.abs(v-f-.5)<1e-8?(f%2===0?f:f+1):Math.round(v);};
   const r=precise?round:(v:number)=>v;
   const churchRate=precise?Math.round(rateChurch/precise.persons*100)/100*precise.persons:rateChurch;
-  const nonFederal = r(row[1] * g[2] / 100) + r(row[1] * g[3] / 100) + r(row[1] * churchRate / 100) + row[2] + (precise && sample.church !== 'none' ? precise.personalChurch[sample.church] : 0);
+  const nonFederal = Math.max(0, r(row[1] * g[2] / 100) - (precise ? precise.cantonReduction : 0)) + r(row[1] * g[3] / 100) + r(row[1] * churchRate / 100) + row[2] + (precise && sample.church !== 'none' ? precise.personalChurch[sample.church] : 0);
   const total = row[0] + nonFederal - (precise ? Math.min(precise.credit, Math.max(0, nonFederal)) : 0);
   if (!Number.isFinite(total)) throw new Error('Nonfinite reconstructed total');
   return total;

@@ -55,14 +55,14 @@ export async function compilePrecision(input:TaxInput):Promise<PreciseCanton> {
    const addBackLate=rule.addBack.flatMap(x=>lateIds.flatMap((lid,i)=>lid===x?[i]:[]));
    return {kind:rule.kind,amount:rule.kind==='fixed'?rule.amount:0,rate:'rate' in rule?rule.rate:0,max:rule.kind==='percent'?rule.max:0,
     threshold:'threshold' in rule?rule.threshold:0,base:rule.kind==='step'?rule.base:0,step:rule.kind==='step'?rule.step:0,
-    reduction:rule.kind==='step'?rule.reduction:0,addBack,addBackLate};
+    reduction:rule.kind==='step'?rule.reduction:0,roundUp:rule.kind==='step'&&rule.roundUp?1:0,min:rule.kind==='step'?rule.min??0:0,bands:rule.kind==='bands'?rule.bands:[],addBack,addBackLate};
   });
   const [tariff,used]=await getTaxTarifTable(id,2026,'EINKOMMENSSTEUER',group);
-  const reductions=id===0?{simpleReduction:0}:cantonalReductions({cantonId:id,married:['m','rp'].includes(input.relationship),kids:input.children},deductions);
+  const reductions=id===0?{simpleReduction:0,cantonReduction:0,credit:0}:cantonalReductions({cantonId:id,married:['m','rp'].includes(input.relationship),kids:input.children},deductions);
   return {deductions:ops,...(late.length?{late}:{}),...(reductions.simpleReduction?{reduction:reductions.simpleReduction}:{}),tariff:{type:tariff.tableType,split:tariff.splitting>0&&isGroupEligableForSplitting(used)?tariff.splitting:1,rounding:tariffRounding(id,tariff.tableType),table:tariff.table}};
  };
  const personal=(confession:'other'|'protestant'|'roman')=>dineroToNumber(calculateTaxesPersonnel({...input,persons:input.persons.map(p=>({...p,confession}))}));
  const cantonTable=await getTaxDecutionTable(input.cantonId,2026,'EINKOMMENSSTEUER');
- const {credit}=cantonalReductions({cantonId:input.cantonId,married:['m','rp'].includes(input.relationship),kids:input.children},cantonTable);
- return {bund:await compile(0),canton:await compile(input.cantonId),credit,personal:personal('other'),personalChurch:{reformed:personal('protestant')-personal('other'),catholic:personal('roman')-personal('other')},kids:input.children,persons:input.persons.length};
+ const {credit,cantonReduction}=cantonalReductions({cantonId:input.cantonId,married:['m','rp'].includes(input.relationship),kids:input.children},cantonTable);
+ return {bund:await compile(0),canton:await compile(input.cantonId),credit,cantonReduction,personal:personal('other'),personalChurch:{reformed:personal('protestant')-personal('other'),catholic:personal('roman')-personal('other')},kids:input.children,persons:input.persons.length};
 }

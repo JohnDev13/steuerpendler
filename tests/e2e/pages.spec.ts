@@ -45,16 +45,19 @@ test('profile controls show a clearly indicative amount for a positive Zürich r
  await expect(page.locator('#detail')).toContainText('CHF');await expect(page.locator('#detail')).toContainText('Schätzung mit Standardannahmen');
  await expect(page.locator('#cheapest')).toContainText('indikative Steuerschätzung');
 });
-test('a canton x profile that differs from ESTV by more than 5% is withheld, not shown',async({page})=>{
+// No canton x profile outside the quarantined cantons is more than 5% off the ESTV sample any more, and no
+// quarantined Gemeinde is within reach; scripts/tax/sample.test.ts keeps enforcing the 5% withholding rule.
+test('Fribourg families are estimated now that the FR child and modest-income rules are modelled',async({page})=>{
  await page.goto('./');
  await page.getByLabel('Arbeitsort',{exact:true}).fill('Bern');await page.getByLabel('Arbeitsort',{exact:true}).press('Enter');
  const residence=page.getByLabel('Wohngemeinde suchen',{exact:true});
  await residence.fill('Fribourg');await residence.press('Enter');
  await expect(page.locator('#detail h2')).toContainText('Fribourg');
- await expect(page.locator('#detail')).toContainText('CHF');  // single, no children: within 5%
+ await expect(page.locator('#detail')).toContainText('CHF');  // single, no children
  await page.getByLabel('Zivilstand',{exact:true}).selectOption('m');await page.getByLabel('Kinder',{exact:true}).selectOption('2');
- await expect(page.locator('#detail')).toContainText('Daten werden geprüft');
- await expect(page.locator('#detail')).not.toContainText('CHF');
+ await expect(page.locator('#profile-status')).toContainText('2 Kinder');
+ await expect(page.locator('#detail')).not.toContainText('Daten werden geprüft');
+ await expect(page.locator('#detail')).toContainText('CHF');
 });
 test('a stale profile is rejected by its pinned served-byte digest',async({page})=>{
  await page.route('**/data/tax-2026-s-0.json?*',async route=>{const response=await route.fetch();await route.fulfill({response,body:(await response.text())+' '});});

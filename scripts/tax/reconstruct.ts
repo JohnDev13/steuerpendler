@@ -31,7 +31,7 @@ export function reconstructPrecision(p:PreciseCanton,income:number,rates:number[
   const done:number[]=[];
   for(const l of (part.late??[]) as PreciseLate[]){
    const basis=taxable+l.addBack+l.addBackLate.reduce((s,i)=>s+done[i],0);
-   const d=lateDeduction({...l,id:'',addBack:[]} as any,basis);
+   const d=lateDeduction({...l,id:'',roundUp:l.roundUp===1,addBack:[]} as any,basis);
    done.push(d);taxable-=d;
   }
   taxable=Math.max(0,taxable);
@@ -42,6 +42,6 @@ export function reconstructPrecision(p:PreciseCanton,income:number,rates:number[
  const unreduced=base(p.canton);
  const canton=p.canton.reduction?dineroChf(Math.max(0,dineroToNumber(unreduced)-p.canton.reduction),5):unreduced;
  const churchRate=Math.round(rates[2]/p.persons*100)/100*p.persons;
- const nonFederal=dineroToNumber([dineroRound(multiplyDineroPercent(canton,rates[0],5)),dineroRound(multiplyDineroPercent(canton,rates[1],5)),dineroRound(multiplyDineroPercent(canton,churchRate,5)),dineroChf(p.personal+personalChurch)].reduce(add,dineroChf(0)));
+ const nonFederal=dineroToNumber([dineroChf(Math.max(0,dineroToNumber(dineroRound(multiplyDineroPercent(canton,rates[0],5)))-(p.cantonReduction??0))),dineroRound(multiplyDineroPercent(canton,rates[1],5)),dineroRound(multiplyDineroPercent(canton,churchRate,5)),dineroChf(p.personal+personalChurch)].reduce(add,dineroChf(0)));
  return dineroToNumber(bundLevied)+nonFederal-Math.min(p.credit??0,Math.max(0,nonFederal));
 }
