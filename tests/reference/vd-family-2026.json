@@ -1,0 +1,3791 @@
+{
+  "schema": 1,
+  "scope": "VD 2026 family deduction",
+  "sourceDistinction": {
+    "indexed2026": "VD deductions table and ESTV canton sheet",
+    "mechanism2025": "VD 2025 instructions pp. 49-50 (completed tranches, carry-forward, zero floor)"
+  },
+  "primarySources": [
+    {
+      "file": "vd-deductions-2026.pdf",
+      "url": "https://www.vd.ch/fileadmin/user_upload/organisation/dfin/aci/fichiers_pdf/Tableau_des_d%C3%A9ductions_2026.pdf",
+      "sha256": "687e8e2ee5c45187d53ada71cf13d27d2a063c894905b007529dd057c818c7f3",
+      "bytes": 231744
+    },
+    {
+      "file": "vd-instructions-2025.pdf",
+      "url": "https://www.vd.ch/fileadmin/user_upload/organisation/dfin/aci/fichiers_pdf/21001_2025.pdf",
+      "sha256": "afffb2c233fe77aaaaff026566ed4b37de0f778ebb6f61259f167f0033373f64",
+      "bytes": 4121012
+    },
+    {
+      "file": "estv-vd-2026.pdf",
+      "url": "https://www.estv2.admin.ch/stp/kb/vd-fr.pdf",
+      "sha256": "c18325a02697f7a7fcb5185c6269a4ab88aa6e444d982b26041dfedf93e36947",
+      "bytes": 598573
+    }
+  ],
+  "captures": [
+    {
+      "grossIncome": 90000,
+      "sourceCapture": "steuerpendler-vd-official-probe-2026-10-29",
+      "budget": {
+        "request": {
+          "SimKey": null,
+          "TaxYear": 2026,
+          "TaxLocationID": 100000000,
+          "Relationship": 2,
+          "Confession1": 4,
+          "Children": [
+            {
+              "Age": 10
+            },
+            {
+              "Age": 10
+            }
+          ],
+          "Age1": 35,
+          "RevenueType1": 1,
+          "Revenue1": 90000,
+          "Fortune": 0,
+          "Confession2": 4,
+          "Age2": 35,
+          "RevenueType2": 0,
+          "Revenue2": 0,
+          "Budget": [],
+          "Language": 1
+        },
+        "response": {
+          "response": [
+            {
+              "Main": 1,
+              "Ident": "BRUTTOLOHN_P1",
+              "Name": {
+                "ID": "TXT_BRUTTOLOHN_P1",
+                "DE": "Bruttolohn",
+                "FR": "Revenu brut",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 90000,
+              "Show": false
+            },
+            {
+              "Main": 1,
+              "Ident": "BEITRAG_AIO_P1",
+              "Name": {
+                "ID": "TXT_BEITRAG_AIO_P1",
+                "DE": "AHV+IV+EO Beiträge",
+                "FR": "Cotisations AVS+AI+APG",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 4770,
+              "Show": false
+            },
+            {
+              "Main": 1,
+              "Ident": "BEITRAG_ALV_P1",
+              "Name": {
+                "ID": "TXT_BEITRAG_ALV_P1",
+                "DE": "ALV Beiträge",
+                "FR": "Cotisations AC",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 990,
+              "Show": false
+            },
+            {
+              "Main": 1,
+              "Ident": "BEITRAG_NBU_P1",
+              "Name": {
+                "ID": "TXT_BEITRAG_NBU_P1",
+                "DE": "NBU Beiträge",
+                "FR": "Cotisations AANP",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 360,
+              "Show": false
+            },
+            {
+              "Main": 1,
+              "Ident": "BEITRAG_BVG_P1",
+              "Name": {
+                "ID": "TXT_BEITRAG_BVG_P1",
+                "DE": "BVG Beiträge",
+                "FR": "Cotisations LPP",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 3177,
+              "Show": false
+            },
+            {
+              "Main": 1,
+              "Ident": "NETTOLOHN_P1",
+              "Name": {
+                "ID": "TXT_NETTOLOHN_P1",
+                "DE": "Nettolohn",
+                "FR": "Revenu net",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 80703,
+              "Show": false
+            },
+            {
+              "Main": 1,
+              "Ident": "NEBENERWERB_P1",
+              "Name": {
+                "ID": "TXT_NEBENERWERB_P1",
+                "DE": "Nettolohn Nebenerwerb",
+                "FR": "Revenu complémentaire net",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 1,
+              "Ident": "NEBENERWERB_P2",
+              "Name": {
+                "ID": "TXT_NEBENERWERB_P2",
+                "DE": "Nettolohn Nebenerwerb Lebenspartner",
+                "FR": "Revenu complémentaire net partenaire",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 1,
+              "Ident": "MIETERTRAG",
+              "Name": {
+                "ID": "TXT_MIETERTRAG",
+                "DE": "Eigenmietwert und Mieterträge",
+                "FR": "Valeur locative et revenus locatifs",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 1,
+              "Ident": "UEBRIGESEK",
+              "Name": {
+                "ID": "TXT_UEBRIGESEK",
+                "DE": "Übrige Einnahmen",
+                "FR": "Autres revenus",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 1,
+              "Ident": "VMERTRAEGE",
+              "Name": {
+                "ID": "TXT_VMERTRAEGE",
+                "DE": "Vermögenserträge",
+                "FR": "Revenus des titres",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 1,
+              "Ident": "BETEILIGUNG",
+              "Name": {
+                "ID": "TXT_BETEILIGUNG",
+                "DE": "davon aus Beteiligungen",
+                "FR": "part en participations",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "KKPRAEMIEN",
+              "Name": {
+                "ID": "TXT_KKPRAEMIEN",
+                "DE": "Krankenkassenprämien",
+                "FR": "Primes d'assurance maladie",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 11520,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "IPVEXTRA",
+              "Name": {
+                "ID": "TXT_IPVEXTRA",
+                "DE": "Individuelle Prämienverbilligung",
+                "FR": "Réduction de prime individuelle",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "PRAEMIEN3A",
+              "Name": {
+                "ID": "TXT_PRAEMIEN3A",
+                "DE": "Beiträge an Säule 3a",
+                "FR": "Contributions pilier 3a",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "VERPFLEGUNG_P1",
+              "Name": {
+                "ID": "TXT_VERPFLEGUNG_P1",
+                "DE": "Verpflegungskosten",
+                "FR": "Frais de restauration",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "FAHRKOSTEN_P1",
+              "Name": {
+                "ID": "TXT_FAHRKOSTEN_P1",
+                "DE": "Fahrkosten",
+                "FR": "Frais de déplacement",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "BERUFSKOSTEN_P1",
+              "Name": {
+                "ID": "TXT_BERUFSKOSTEN_P1",
+                "DE": "Übrige Berufsauslagen",
+                "FR": "Autres frais professionnels",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "BERUFSAUSLAGEN_NE_P1",
+              "Name": {
+                "ID": "TXT_BERUFSAUSLAGEN_NE_P1",
+                "DE": "Berufsauslagen Nebenerwerb",
+                "FR": "Frais prof. revenu compl.",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "BERUFSAUSLAGEN_NE_P2",
+              "Name": {
+                "ID": "TXT_BERUFSAUSLAGEN_NE_P2",
+                "DE": "Berufsauslagen Nebenerwerb Lebenspartner",
+                "FR": "Frais prof. revenu compl. partenaire",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "KINDBETREUUNGSKOSTEN",
+              "Name": {
+                "ID": "TXT_KINDBETREUUNGSKOSTEN",
+                "DE": "Kinderfremdbetreuungskosten",
+                "FR": "Frais de garde par des tiers des enfants",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "MIETAUSGABEN",
+              "Name": {
+                "ID": "TXT_MIETAUSGABEN",
+                "DE": "Mietausgaben",
+                "FR": "Frais de location",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 20180,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "SCHULDZINSEN",
+              "Name": {
+                "ID": "TXT_SCHULDZINSEN",
+                "DE": "Schuldzinsen",
+                "FR": "Intérêts des dettes",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "IMMOUNTERHALT",
+              "Name": {
+                "ID": "TXT_IMMOUNTERHALT",
+                "DE": "Unterhaltskosten Immobilien",
+                "FR": "Frais d'entretient d'immeubles",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "UEBRIGEABZUEGE",
+              "Name": {
+                "ID": "TXT_UEBRIGEABZUEGE",
+                "DE": "Übrige Abzüge",
+                "FR": "Autres déductions",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 3,
+              "Ident": "NETTO_VM",
+              "Name": {
+                "ID": "TXT_NETTO_VM",
+                "DE": "Reinvermögen",
+                "FR": "Fortune nette",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            }
+          ]
+        },
+        "provenance": {
+          "url": "https://swisstaxcalculator.estv.admin.ch/delegate/ost-integration/v1/lg-proxy/operation/c3b67379_ESTV/API_calculateTaxBudget",
+          "retrievedAt": "2026-10-29T23:06:57.211Z",
+          "status": 200,
+          "anonymous": true,
+          "requestSha256": "7eae1f5939737808f6fe3c964557b8822d6ace305336e256e2f4038c9a397cae",
+          "responseSha256": "bfd15b1affe735422a8b16907e001958feeaebb87958c90d372dfbf55f5237d8",
+          "requestBytes": 261,
+          "responseBytes": 4355,
+          "sourceFrozenCase": "estv-2026-12",
+          "changedAxis": "Revenue1: 140000 -> 90000",
+          "requestFileSha256": "9125034ebb35acfd555a73ec904739abb84fc0f54931d3cbc0e6a926781e8317",
+          "requestFileBytes": 262,
+          "requestSerialization": "raw file has one trailing newline; requestSha256/requestBytes refer to transmitted JSON without newline"
+        }
+      },
+      "tax": {
+        "request": {
+          "SimKey": null,
+          "TaxYear": 2026,
+          "TaxLocationID": 100000000,
+          "Relationship": 2,
+          "Confession1": 4,
+          "Children": [
+            {
+              "Age": 10
+            },
+            {
+              "Age": 10
+            }
+          ],
+          "Age1": 35,
+          "RevenueType1": 1,
+          "Revenue1": 90000,
+          "Fortune": 0,
+          "Confession2": 4,
+          "Age2": 35,
+          "RevenueType2": 0,
+          "Revenue2": 0,
+          "Budget": [
+            {
+              "Main": 1,
+              "Ident": "BRUTTOLOHN_P1",
+              "Name": {
+                "ID": "TXT_BRUTTOLOHN_P1",
+                "DE": "Bruttolohn",
+                "FR": "Revenu brut",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 90000,
+              "Show": false
+            },
+            {
+              "Main": 1,
+              "Ident": "BEITRAG_AIO_P1",
+              "Name": {
+                "ID": "TXT_BEITRAG_AIO_P1",
+                "DE": "AHV+IV+EO Beiträge",
+                "FR": "Cotisations AVS+AI+APG",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 4770,
+              "Show": false
+            },
+            {
+              "Main": 1,
+              "Ident": "BEITRAG_ALV_P1",
+              "Name": {
+                "ID": "TXT_BEITRAG_ALV_P1",
+                "DE": "ALV Beiträge",
+                "FR": "Cotisations AC",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 990,
+              "Show": false
+            },
+            {
+              "Main": 1,
+              "Ident": "BEITRAG_NBU_P1",
+              "Name": {
+                "ID": "TXT_BEITRAG_NBU_P1",
+                "DE": "NBU Beiträge",
+                "FR": "Cotisations AANP",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 360,
+              "Show": false
+            },
+            {
+              "Main": 1,
+              "Ident": "BEITRAG_BVG_P1",
+              "Name": {
+                "ID": "TXT_BEITRAG_BVG_P1",
+                "DE": "BVG Beiträge",
+                "FR": "Cotisations LPP",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 3177,
+              "Show": false
+            },
+            {
+              "Main": 1,
+              "Ident": "NETTOLOHN_P1",
+              "Name": {
+                "ID": "TXT_NETTOLOHN_P1",
+                "DE": "Nettolohn",
+                "FR": "Revenu net",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 80703,
+              "Show": false
+            },
+            {
+              "Main": 1,
+              "Ident": "NEBENERWERB_P1",
+              "Name": {
+                "ID": "TXT_NEBENERWERB_P1",
+                "DE": "Nettolohn Nebenerwerb",
+                "FR": "Revenu complémentaire net",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 1,
+              "Ident": "NEBENERWERB_P2",
+              "Name": {
+                "ID": "TXT_NEBENERWERB_P2",
+                "DE": "Nettolohn Nebenerwerb Lebenspartner",
+                "FR": "Revenu complémentaire net partenaire",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 1,
+              "Ident": "MIETERTRAG",
+              "Name": {
+                "ID": "TXT_MIETERTRAG",
+                "DE": "Eigenmietwert und Mieterträge",
+                "FR": "Valeur locative et revenus locatifs",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 1,
+              "Ident": "UEBRIGESEK",
+              "Name": {
+                "ID": "TXT_UEBRIGESEK",
+                "DE": "Übrige Einnahmen",
+                "FR": "Autres revenus",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 1,
+              "Ident": "VMERTRAEGE",
+              "Name": {
+                "ID": "TXT_VMERTRAEGE",
+                "DE": "Vermögenserträge",
+                "FR": "Revenus des titres",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 1,
+              "Ident": "BETEILIGUNG",
+              "Name": {
+                "ID": "TXT_BETEILIGUNG",
+                "DE": "davon aus Beteiligungen",
+                "FR": "part en participations",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "KKPRAEMIEN",
+              "Name": {
+                "ID": "TXT_KKPRAEMIEN",
+                "DE": "Krankenkassenprämien",
+                "FR": "Primes d'assurance maladie",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 11520,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "IPVEXTRA",
+              "Name": {
+                "ID": "TXT_IPVEXTRA",
+                "DE": "Individuelle Prämienverbilligung",
+                "FR": "Réduction de prime individuelle",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "PRAEMIEN3A",
+              "Name": {
+                "ID": "TXT_PRAEMIEN3A",
+                "DE": "Beiträge an Säule 3a",
+                "FR": "Contributions pilier 3a",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "VERPFLEGUNG_P1",
+              "Name": {
+                "ID": "TXT_VERPFLEGUNG_P1",
+                "DE": "Verpflegungskosten",
+                "FR": "Frais de restauration",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "FAHRKOSTEN_P1",
+              "Name": {
+                "ID": "TXT_FAHRKOSTEN_P1",
+                "DE": "Fahrkosten",
+                "FR": "Frais de déplacement",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "BERUFSKOSTEN_P1",
+              "Name": {
+                "ID": "TXT_BERUFSKOSTEN_P1",
+                "DE": "Übrige Berufsauslagen",
+                "FR": "Autres frais professionnels",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "BERUFSAUSLAGEN_NE_P1",
+              "Name": {
+                "ID": "TXT_BERUFSAUSLAGEN_NE_P1",
+                "DE": "Berufsauslagen Nebenerwerb",
+                "FR": "Frais prof. revenu compl.",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "BERUFSAUSLAGEN_NE_P2",
+              "Name": {
+                "ID": "TXT_BERUFSAUSLAGEN_NE_P2",
+                "DE": "Berufsauslagen Nebenerwerb Lebenspartner",
+                "FR": "Frais prof. revenu compl. partenaire",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "KINDBETREUUNGSKOSTEN",
+              "Name": {
+                "ID": "TXT_KINDBETREUUNGSKOSTEN",
+                "DE": "Kinderfremdbetreuungskosten",
+                "FR": "Frais de garde par des tiers des enfants",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "MIETAUSGABEN",
+              "Name": {
+                "ID": "TXT_MIETAUSGABEN",
+                "DE": "Mietausgaben",
+                "FR": "Frais de location",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 20180,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "SCHULDZINSEN",
+              "Name": {
+                "ID": "TXT_SCHULDZINSEN",
+                "DE": "Schuldzinsen",
+                "FR": "Intérêts des dettes",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "IMMOUNTERHALT",
+              "Name": {
+                "ID": "TXT_IMMOUNTERHALT",
+                "DE": "Unterhaltskosten Immobilien",
+                "FR": "Frais d'entretient d'immeubles",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "UEBRIGEABZUEGE",
+              "Name": {
+                "ID": "TXT_UEBRIGEABZUEGE",
+                "DE": "Übrige Abzüge",
+                "FR": "Autres déductions",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 3,
+              "Ident": "NETTO_VM",
+              "Name": {
+                "ID": "TXT_NETTO_VM",
+                "DE": "Reinvermögen",
+                "FR": "Fortune nette",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            }
+          ]
+        },
+        "response": {
+          "response": {
+            "IncomeTaxFed": 0,
+            "IncomeTaxCanton": 2806,
+            "IncomeTaxCity": 1496,
+            "IncomeTaxChurch": 0,
+            "FortuneTaxCanton": 0,
+            "FortuneTaxCity": 0,
+            "FortuneTaxChurch": 0,
+            "PersonalTax": 0,
+            "TotalTax": 4302,
+            "TaxCredit": 0,
+            "TotalNetTax": 4302,
+            "IncomeSimpleTaxFed": 0,
+            "IncomeSimpleTaxCanton": 1906,
+            "IncomeSimpleTaxCity": 1906,
+            "FortuneSimpleTaxCanton": 0,
+            "FortuneSimpleTaxCity": 0,
+            "Location": {
+              "TaxLocationID": 100000000,
+              "CantonID": 23,
+              "BfsID": 5586,
+              "BfsName": "Lausanne",
+              "ZipCode": "1000",
+              "City": "Lausanne",
+              "Canton": "VD"
+            },
+            "AssertiveIncomeFed": 56782,
+            "AssertiveIncomeCanton": 45462,
+            "AssertiveFortuneCanton": 0,
+            "TaxableIncomeFed": 56782,
+            "TaxableIncomeCanton": 45462,
+            "TaxableFortuneCanton": 0,
+            "TaxFreedomDay": 19,
+            "MarginalTaxRate": 24.1,
+            "MarginalTaxRateVM": 0,
+            "IncomeP1": {
+              "GrossIncome": 90000,
+              "AIOContribution": 4770,
+              "ALVContribution": 990,
+              "NBUContribution": 360,
+              "BVGContribution": 3177,
+              "NetIncome": 80703
+            },
+            "IncomeP2": {
+              "GrossIncome": 0,
+              "AIOContribution": 0,
+              "ALVContribution": 0,
+              "NBUContribution": 0,
+              "BVGContribution": 0,
+              "NetIncome": 0
+            },
+            "InfoFed": [
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_201",
+                  "DE": "Einkommen aus Erwerbstätigkeit",
+                  "FR": "Revenus d'une activité professionnelle",
+                  "IT": "Redditi da attività lucrativa",
+                  "EN": "Earned income"
+                },
+                "Entry": {
+                  "ID": "TXT_1",
+                  "DE": "Unselbständiger Erwerb Nettolohn",
+                  "FR": "Revenu net salarié",
+                  "IT": "Salario netto da attività lucrativa dipendente",
+                  "EN": "Disposable income from gainful employment"
+                },
+                "Value": 80703,
+                "Fed": 0,
+                "Canton": 0
+              },
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_204",
+                  "DE": "Berufsauslagen",
+                  "FR": "Frais professionnels",
+                  "IT": "Spese professionali",
+                  "EN": "Professional expenses"
+                },
+                "Entry": {
+                  "ID": "TXT_30",
+                  "DE": "Übrige Berufsauslagen Haupterwerb",
+                  "FR": "Autres frais prof.  revenu principal",
+                  "IT": "Altre spese professionali att principale",
+                  "EN": "Deduction for gainful employment"
+                },
+                "Value": -2421,
+                "Fed": 0,
+                "Canton": 0
+              },
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_205",
+                  "DE": "Vorsorge- und Versicherungbeiträge",
+                  "FR": "Cotisations de prévoyance et assurance",
+                  "IT": "Contributi previdenziali e assicurativi",
+                  "EN": "Pension plan and insurance contributions"
+                },
+                "Entry": {
+                  "ID": "TXT_49",
+                  "DE": "Abzug private Versicherungen / Sparzinsen",
+                  "FR": "Déduction ass. privées, intérêt épargne",
+                  "IT": "Deduzione ass private / interessi di rispamio",
+                  "EN": "Additional deduction for private insurance contributions and savings interest"
+                },
+                "Value": -5100,
+                "Fed": 0,
+                "Canton": 0
+              },
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_208",
+                  "DE": "Sozialabzüge",
+                  "FR": "Déductions sociales",
+                  "IT": "Deduzioni sociali",
+                  "EN": "Welfare deductions"
+                },
+                "Entry": {
+                  "ID": "TXT_53",
+                  "DE": "Kindersozialabzug",
+                  "FR": "Déduction sociale enfants",
+                  "IT": "Deduzione sociale per i figli",
+                  "EN": "Special deduction for children"
+                },
+                "Value": -13600,
+                "Fed": 0,
+                "Canton": 0
+              },
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_208",
+                  "DE": "Sozialabzüge",
+                  "FR": "Déductions sociales",
+                  "IT": "Deduzioni sociali",
+                  "EN": "Welfare deductions"
+                },
+                "Entry": {
+                  "ID": "TXT_57",
+                  "DE": "Abzug verheiratete Steuerpflichtige",
+                  "FR": "Déduction contribuables mariés",
+                  "IT": "Deduzione per contribuenti coniugati",
+                  "EN": "Personal deduction for married tax payers"
+                },
+                "Value": -2800,
+                "Fed": 0,
+                "Canton": 0
+              },
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_220",
+                  "DE": "Total Einkommen",
+                  "FR": "Total revenus",
+                  "IT": "Totale reddito",
+                  "EN": "Total income"
+                },
+                "Entry": {
+                  "ID": "TXT_54",
+                  "DE": "Massgebendes Einkommen",
+                  "FR": "Revenu pris en considération",
+                  "IT": "Reddito determinante",
+                  "EN": "Decisive income"
+                },
+                "Value": 56782,
+                "Fed": 0,
+                "Canton": 0
+              }
+            ],
+            "InfoCanton": [
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_201",
+                  "DE": "Einkommen aus Erwerbstätigkeit",
+                  "FR": "Revenus d'une activité professionnelle",
+                  "IT": "Redditi da attività lucrativa",
+                  "EN": "Earned income"
+                },
+                "Entry": {
+                  "ID": "TXT_1",
+                  "DE": "Unselbständiger Erwerb Nettolohn",
+                  "FR": "Revenu net salarié",
+                  "IT": "Salario netto da attività lucrativa dipendente",
+                  "EN": "Disposable income from gainful employment"
+                },
+                "Value": 80703,
+                "Fed": 0,
+                "Canton": 0
+              },
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_204",
+                  "DE": "Berufsauslagen",
+                  "FR": "Frais professionnels",
+                  "IT": "Spese professionali",
+                  "EN": "Professional expenses"
+                },
+                "Entry": {
+                  "ID": "TXT_30",
+                  "DE": "Übrige Berufsauslagen Haupterwerb",
+                  "FR": "Autres frais prof.  revenu principal",
+                  "IT": "Altre spese professionali att principale",
+                  "EN": "Deduction for gainful employment"
+                },
+                "Value": -2421,
+                "Fed": 0,
+                "Canton": 0
+              },
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_205",
+                  "DE": "Vorsorge- und Versicherungbeiträge",
+                  "FR": "Cotisations de prévoyance et assurance",
+                  "IT": "Contributi previdenziali e assicurativi",
+                  "EN": "Pension plan and insurance contributions"
+                },
+                "Entry": {
+                  "ID": "TXT_459",
+                  "DE": "Abzug private Versicherungen",
+                  "FR": "Déduction ass. privées",
+                  "IT": "Deduzione assic. private",
+                  "EN": "Additional deduction for private insurance contributions"
+                },
+                "Value": -11520,
+                "Fed": 0,
+                "Canton": 0
+              },
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_208",
+                  "DE": "Sozialabzüge",
+                  "FR": "Déductions sociales",
+                  "IT": "Deduzioni sociali",
+                  "EN": "Welfare deductions"
+                },
+                "Entry": {
+                  "ID": "TXT_461",
+                  "DE": "Abzug bescheidene Einkommen",
+                  "FR": "Déduction revenus modestes",
+                  "IT": "Deduzione per redditi modesti",
+                  "EN": "Deduction for moderate incomes"
+                },
+                "Value": -11200,
+                "Fed": 0,
+                "Canton": 0
+              },
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_208",
+                  "DE": "Sozialabzüge",
+                  "FR": "Déductions sociales",
+                  "IT": "Deduzioni sociali",
+                  "EN": "Welfare deductions"
+                },
+                "Entry": {
+                  "ID": "TXT_59",
+                  "DE": "Mieterabzug",
+                  "FR": "Déduction charges locatives",
+                  "IT": "Deduzione costi di locazione",
+                  "EN": "Deduction for renters"
+                },
+                "Value": -6800,
+                "Fed": 0,
+                "Canton": 0
+              },
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_208",
+                  "DE": "Sozialabzüge",
+                  "FR": "Déductions sociales",
+                  "IT": "Deduzioni sociali",
+                  "EN": "Welfare deductions"
+                },
+                "Entry": {
+                  "ID": "TXT_462",
+                  "DE": "Abzug Verheiratete oder Alleinerzieher",
+                  "FR": "Déduction mariés ou parents isolés",
+                  "IT": "Deduzioni persone sposate o famiglie monoparentali",
+                  "EN": "Additional deduction for married persons or single-parent families"
+                },
+                "Value": -3300,
+                "Fed": 0,
+                "Canton": 0
+              },
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_220",
+                  "DE": "Total Einkommen",
+                  "FR": "Total revenus",
+                  "IT": "Totale reddito",
+                  "EN": "Total income"
+                },
+                "Entry": {
+                  "ID": "TXT_54",
+                  "DE": "Massgebendes Einkommen",
+                  "FR": "Revenu pris en considération",
+                  "IT": "Reddito determinante",
+                  "EN": "Decisive income"
+                },
+                "Value": 45462,
+                "Fed": 0,
+                "Canton": 0
+              }
+            ],
+            "InfoBoth": [
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_201",
+                  "DE": "Einkommen aus Erwerbstätigkeit",
+                  "FR": "Revenus d'une activité professionnelle",
+                  "IT": "Redditi da attività lucrativa",
+                  "EN": "Earned income"
+                },
+                "Entry": {
+                  "ID": "TXT_1",
+                  "DE": "Unselbständiger Erwerb Nettolohn",
+                  "FR": "Revenu net salarié",
+                  "IT": "Salario netto da attività lucrativa dipendente",
+                  "EN": "Disposable income from gainful employment"
+                },
+                "Value": 0,
+                "Fed": 80703,
+                "Canton": 80703
+              },
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_204",
+                  "DE": "Berufsauslagen",
+                  "FR": "Frais professionnels",
+                  "IT": "Spese professionali",
+                  "EN": "Professional expenses"
+                },
+                "Entry": {
+                  "ID": "TXT_30",
+                  "DE": "Übrige Berufsauslagen Haupterwerb",
+                  "FR": "Autres frais prof.  revenu principal",
+                  "IT": "Altre spese professionali att principale",
+                  "EN": "Deduction for gainful employment"
+                },
+                "Value": 0,
+                "Fed": -2421,
+                "Canton": -2421
+              },
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_205",
+                  "DE": "Vorsorge- und Versicherungbeiträge",
+                  "FR": "Cotisations de prévoyance et assurance",
+                  "IT": "Contributi previdenziali e assicurativi",
+                  "EN": "Pension plan and insurance contributions"
+                },
+                "Entry": {
+                  "ID": "TXT_49",
+                  "DE": "Abzug private Versicherungen / Sparzinsen",
+                  "FR": "Déduction ass. privées, intérêt épargne",
+                  "IT": "Deduzione ass private / interessi di rispamio",
+                  "EN": "Additional deduction for private insurance contributions and savings interest"
+                },
+                "Value": 0,
+                "Fed": -5100,
+                "Canton": 0
+              },
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_205",
+                  "DE": "Vorsorge- und Versicherungbeiträge",
+                  "FR": "Cotisations de prévoyance et assurance",
+                  "IT": "Contributi previdenziali e assicurativi",
+                  "EN": "Pension plan and insurance contributions"
+                },
+                "Entry": {
+                  "ID": "TXT_459",
+                  "DE": "Abzug private Versicherungen",
+                  "FR": "Déduction ass. privées",
+                  "IT": "Deduzione assic. private",
+                  "EN": "Additional deduction for private insurance contributions"
+                },
+                "Value": 0,
+                "Fed": 0,
+                "Canton": -11520
+              },
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_208",
+                  "DE": "Sozialabzüge",
+                  "FR": "Déductions sociales",
+                  "IT": "Deduzioni sociali",
+                  "EN": "Welfare deductions"
+                },
+                "Entry": {
+                  "ID": "TXT_53",
+                  "DE": "Kindersozialabzug",
+                  "FR": "Déduction sociale enfants",
+                  "IT": "Deduzione sociale per i figli",
+                  "EN": "Special deduction for children"
+                },
+                "Value": 0,
+                "Fed": -13600,
+                "Canton": 0
+              },
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_208",
+                  "DE": "Sozialabzüge",
+                  "FR": "Déductions sociales",
+                  "IT": "Deduzioni sociali",
+                  "EN": "Welfare deductions"
+                },
+                "Entry": {
+                  "ID": "TXT_57",
+                  "DE": "Abzug verheiratete Steuerpflichtige",
+                  "FR": "Déduction contribuables mariés",
+                  "IT": "Deduzione per contribuenti coniugati",
+                  "EN": "Personal deduction for married tax payers"
+                },
+                "Value": 0,
+                "Fed": -2800,
+                "Canton": 0
+              },
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_208",
+                  "DE": "Sozialabzüge",
+                  "FR": "Déductions sociales",
+                  "IT": "Deduzioni sociali",
+                  "EN": "Welfare deductions"
+                },
+                "Entry": {
+                  "ID": "TXT_461",
+                  "DE": "Abzug bescheidene Einkommen",
+                  "FR": "Déduction revenus modestes",
+                  "IT": "Deduzione per redditi modesti",
+                  "EN": "Deduction for moderate incomes"
+                },
+                "Value": 0,
+                "Fed": 0,
+                "Canton": -11200
+              },
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_208",
+                  "DE": "Sozialabzüge",
+                  "FR": "Déductions sociales",
+                  "IT": "Deduzioni sociali",
+                  "EN": "Welfare deductions"
+                },
+                "Entry": {
+                  "ID": "TXT_59",
+                  "DE": "Mieterabzug",
+                  "FR": "Déduction charges locatives",
+                  "IT": "Deduzione costi di locazione",
+                  "EN": "Deduction for renters"
+                },
+                "Value": 0,
+                "Fed": 0,
+                "Canton": -6800
+              },
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_208",
+                  "DE": "Sozialabzüge",
+                  "FR": "Déductions sociales",
+                  "IT": "Deduzioni sociali",
+                  "EN": "Welfare deductions"
+                },
+                "Entry": {
+                  "ID": "TXT_462",
+                  "DE": "Abzug Verheiratete oder Alleinerzieher",
+                  "FR": "Déduction mariés ou parents isolés",
+                  "IT": "Deduzioni persone sposate o famiglie monoparentali",
+                  "EN": "Additional deduction for married persons or single-parent families"
+                },
+                "Value": 0,
+                "Fed": 0,
+                "Canton": -3300
+              },
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_220",
+                  "DE": "Total Einkommen",
+                  "FR": "Total revenus",
+                  "IT": "Totale reddito",
+                  "EN": "Total income"
+                },
+                "Entry": {
+                  "ID": "TXT_54",
+                  "DE": "Massgebendes Einkommen",
+                  "FR": "Revenu pris en considération",
+                  "IT": "Reddito determinante",
+                  "EN": "Decisive income"
+                },
+                "Value": 0,
+                "Fed": 56782,
+                "Canton": 45462
+              }
+            ],
+            "TaxRates": {
+              "IncomeRateCanton": 155,
+              "IncomeRateCity": 78.5,
+              "IncomeRateProtestant": 0,
+              "IncomeRateRoman": 0,
+              "IncomeRateChrist": 0,
+              "FortuneRateCanton": 155,
+              "FortuneRateCity": 78.5,
+              "FortuneRateProtestant": 0,
+              "FortuneRateRoman": 0,
+              "FortuneRateChrist": 0,
+              "ProfitTaxRateCanton": 0,
+              "ProfitTaxRateCity": 0,
+              "ProfitTaxRateChurch": 0,
+              "CapitalTaxRateCanton": 0,
+              "CapitalTaxRateCity": 0,
+              "CapitalTaxRateChurch": 0
+            },
+            "Diagnosis": ""
+          }
+        },
+        "provenance": {
+          "url": "https://swisstaxcalculator.estv.admin.ch/delegate/ost-integration/v1/lg-proxy/operation/c3b67379_ESTV/API_calculateDetailedTaxes",
+          "retrievedAt": "2026-10-29T23:06:57.480Z",
+          "status": 200,
+          "anonymous": true,
+          "requestSha256": "6f61e3b9864829982e4ede682a9e9e47653e91668d3d43846e9ea1db70ef76e0",
+          "responseSha256": "3860874fa18e5f9d83b62b4295c8b1dd81c4c84a990f39fbe641a11425d690e9",
+          "requestBytes": 4588,
+          "responseBytes": 10121,
+          "sourceFrozenCase": "estv-2026-12",
+          "changedAxis": "Revenue1: 140000 -> 90000",
+          "requestFileSha256": "2595e5facf742c3e1809f8d0346a84e35a10a2a4a08713c888d42d686e9dcb61",
+          "requestFileBytes": 4589,
+          "requestSerialization": "raw file has one trailing newline; requestSha256/requestBytes refer to transmitted JSON without newline"
+        }
+      }
+    },
+    {
+      "grossIncome": 160000,
+      "sourceCapture": "steuerpendler-vd-official-probe-160000-2026-10-29",
+      "budget": {
+        "request": {
+          "SimKey": null,
+          "TaxYear": 2026,
+          "TaxLocationID": 100000000,
+          "Relationship": 2,
+          "Confession1": 4,
+          "Children": [
+            {
+              "Age": 10
+            },
+            {
+              "Age": 10
+            }
+          ],
+          "Age1": 35,
+          "RevenueType1": 1,
+          "Revenue1": 160000,
+          "Fortune": 0,
+          "Confession2": 4,
+          "Age2": 35,
+          "RevenueType2": 0,
+          "Revenue2": 0,
+          "Budget": [],
+          "Language": 1
+        },
+        "response": {
+          "response": [
+            {
+              "Main": 1,
+              "Ident": "BRUTTOLOHN_P1",
+              "Name": {
+                "ID": "TXT_BRUTTOLOHN_P1",
+                "DE": "Bruttolohn",
+                "FR": "Revenu brut",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 160000,
+              "Show": false
+            },
+            {
+              "Main": 1,
+              "Ident": "BEITRAG_AIO_P1",
+              "Name": {
+                "ID": "TXT_BEITRAG_AIO_P1",
+                "DE": "AHV+IV+EO Beiträge",
+                "FR": "Cotisations AVS+AI+APG",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 8480,
+              "Show": false
+            },
+            {
+              "Main": 1,
+              "Ident": "BEITRAG_ALV_P1",
+              "Name": {
+                "ID": "TXT_BEITRAG_ALV_P1",
+                "DE": "ALV Beiträge",
+                "FR": "Cotisations AC",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 1630,
+              "Show": false
+            },
+            {
+              "Main": 1,
+              "Ident": "BEITRAG_NBU_P1",
+              "Name": {
+                "ID": "TXT_BEITRAG_NBU_P1",
+                "DE": "NBU Beiträge",
+                "FR": "Cotisations AANP",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 593,
+              "Show": false
+            },
+            {
+              "Main": 1,
+              "Ident": "BEITRAG_BVG_P1",
+              "Name": {
+                "ID": "TXT_BEITRAG_BVG_P1",
+                "DE": "BVG Beiträge",
+                "FR": "Cotisations LPP",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 5638,
+              "Show": false
+            },
+            {
+              "Main": 1,
+              "Ident": "NETTOLOHN_P1",
+              "Name": {
+                "ID": "TXT_NETTOLOHN_P1",
+                "DE": "Nettolohn",
+                "FR": "Revenu net",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 143659,
+              "Show": false
+            },
+            {
+              "Main": 1,
+              "Ident": "NEBENERWERB_P1",
+              "Name": {
+                "ID": "TXT_NEBENERWERB_P1",
+                "DE": "Nettolohn Nebenerwerb",
+                "FR": "Revenu complémentaire net",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 1,
+              "Ident": "NEBENERWERB_P2",
+              "Name": {
+                "ID": "TXT_NEBENERWERB_P2",
+                "DE": "Nettolohn Nebenerwerb Lebenspartner",
+                "FR": "Revenu complémentaire net partenaire",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 1,
+              "Ident": "MIETERTRAG",
+              "Name": {
+                "ID": "TXT_MIETERTRAG",
+                "DE": "Eigenmietwert und Mieterträge",
+                "FR": "Valeur locative et revenus locatifs",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 1,
+              "Ident": "UEBRIGESEK",
+              "Name": {
+                "ID": "TXT_UEBRIGESEK",
+                "DE": "Übrige Einnahmen",
+                "FR": "Autres revenus",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 1,
+              "Ident": "VMERTRAEGE",
+              "Name": {
+                "ID": "TXT_VMERTRAEGE",
+                "DE": "Vermögenserträge",
+                "FR": "Revenus des titres",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 1,
+              "Ident": "BETEILIGUNG",
+              "Name": {
+                "ID": "TXT_BETEILIGUNG",
+                "DE": "davon aus Beteiligungen",
+                "FR": "part en participations",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "KKPRAEMIEN",
+              "Name": {
+                "ID": "TXT_KKPRAEMIEN",
+                "DE": "Krankenkassenprämien",
+                "FR": "Primes d'assurance maladie",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 11520,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "IPVEXTRA",
+              "Name": {
+                "ID": "TXT_IPVEXTRA",
+                "DE": "Individuelle Prämienverbilligung",
+                "FR": "Réduction de prime individuelle",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "PRAEMIEN3A",
+              "Name": {
+                "ID": "TXT_PRAEMIEN3A",
+                "DE": "Beiträge an Säule 3a",
+                "FR": "Contributions pilier 3a",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "VERPFLEGUNG_P1",
+              "Name": {
+                "ID": "TXT_VERPFLEGUNG_P1",
+                "DE": "Verpflegungskosten",
+                "FR": "Frais de restauration",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "FAHRKOSTEN_P1",
+              "Name": {
+                "ID": "TXT_FAHRKOSTEN_P1",
+                "DE": "Fahrkosten",
+                "FR": "Frais de déplacement",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "BERUFSKOSTEN_P1",
+              "Name": {
+                "ID": "TXT_BERUFSKOSTEN_P1",
+                "DE": "Übrige Berufsauslagen",
+                "FR": "Autres frais professionnels",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "BERUFSAUSLAGEN_NE_P1",
+              "Name": {
+                "ID": "TXT_BERUFSAUSLAGEN_NE_P1",
+                "DE": "Berufsauslagen Nebenerwerb",
+                "FR": "Frais prof. revenu compl.",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "BERUFSAUSLAGEN_NE_P2",
+              "Name": {
+                "ID": "TXT_BERUFSAUSLAGEN_NE_P2",
+                "DE": "Berufsauslagen Nebenerwerb Lebenspartner",
+                "FR": "Frais prof. revenu compl. partenaire",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "KINDBETREUUNGSKOSTEN",
+              "Name": {
+                "ID": "TXT_KINDBETREUUNGSKOSTEN",
+                "DE": "Kinderfremdbetreuungskosten",
+                "FR": "Frais de garde par des tiers des enfants",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "MIETAUSGABEN",
+              "Name": {
+                "ID": "TXT_MIETAUSGABEN",
+                "DE": "Mietausgaben",
+                "FR": "Frais de location",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 35910,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "SCHULDZINSEN",
+              "Name": {
+                "ID": "TXT_SCHULDZINSEN",
+                "DE": "Schuldzinsen",
+                "FR": "Intérêts des dettes",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "IMMOUNTERHALT",
+              "Name": {
+                "ID": "TXT_IMMOUNTERHALT",
+                "DE": "Unterhaltskosten Immobilien",
+                "FR": "Frais d'entretient d'immeubles",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "UEBRIGEABZUEGE",
+              "Name": {
+                "ID": "TXT_UEBRIGEABZUEGE",
+                "DE": "Übrige Abzüge",
+                "FR": "Autres déductions",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 3,
+              "Ident": "NETTO_VM",
+              "Name": {
+                "ID": "TXT_NETTO_VM",
+                "DE": "Reinvermögen",
+                "FR": "Fortune nette",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            }
+          ]
+        },
+        "provenance": {
+          "url": "https://swisstaxcalculator.estv.admin.ch/delegate/ost-integration/v1/lg-proxy/operation/c3b67379_ESTV/API_calculateTaxBudget",
+          "retrievedAt": "2026-10-29T23:12:47.942Z",
+          "status": 200,
+          "anonymous": true,
+          "requestSha256": "2d8075206ea700af0acb22ab015775bebfd745efaf5d9d85e3272860b50c17ba",
+          "responseSha256": "34368cbfb2f75b53b88accb2abfe57d63dc72ed7e90a2ddd7e0b4ce2932af52b",
+          "requestBytes": 262,
+          "responseBytes": 4358,
+          "sourceFrozenCase": "estv-2026-12",
+          "changedAxis": "Revenue1: 140000 -> 160000",
+          "requestFileSha256": "9e8488cad591dba64e6fc135bab0ff0ad9be48d79bfe05e9b06a81f2c15e346d",
+          "requestFileBytes": 263,
+          "requestSerialization": "raw file has one trailing newline; requestSha256/requestBytes refer to transmitted JSON without newline"
+        }
+      },
+      "tax": {
+        "request": {
+          "SimKey": null,
+          "TaxYear": 2026,
+          "TaxLocationID": 100000000,
+          "Relationship": 2,
+          "Confession1": 4,
+          "Children": [
+            {
+              "Age": 10
+            },
+            {
+              "Age": 10
+            }
+          ],
+          "Age1": 35,
+          "RevenueType1": 1,
+          "Revenue1": 160000,
+          "Fortune": 0,
+          "Confession2": 4,
+          "Age2": 35,
+          "RevenueType2": 0,
+          "Revenue2": 0,
+          "Budget": [
+            {
+              "Main": 1,
+              "Ident": "BRUTTOLOHN_P1",
+              "Name": {
+                "ID": "TXT_BRUTTOLOHN_P1",
+                "DE": "Bruttolohn",
+                "FR": "Revenu brut",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 160000,
+              "Show": false
+            },
+            {
+              "Main": 1,
+              "Ident": "BEITRAG_AIO_P1",
+              "Name": {
+                "ID": "TXT_BEITRAG_AIO_P1",
+                "DE": "AHV+IV+EO Beiträge",
+                "FR": "Cotisations AVS+AI+APG",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 8480,
+              "Show": false
+            },
+            {
+              "Main": 1,
+              "Ident": "BEITRAG_ALV_P1",
+              "Name": {
+                "ID": "TXT_BEITRAG_ALV_P1",
+                "DE": "ALV Beiträge",
+                "FR": "Cotisations AC",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 1630,
+              "Show": false
+            },
+            {
+              "Main": 1,
+              "Ident": "BEITRAG_NBU_P1",
+              "Name": {
+                "ID": "TXT_BEITRAG_NBU_P1",
+                "DE": "NBU Beiträge",
+                "FR": "Cotisations AANP",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 593,
+              "Show": false
+            },
+            {
+              "Main": 1,
+              "Ident": "BEITRAG_BVG_P1",
+              "Name": {
+                "ID": "TXT_BEITRAG_BVG_P1",
+                "DE": "BVG Beiträge",
+                "FR": "Cotisations LPP",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 5638,
+              "Show": false
+            },
+            {
+              "Main": 1,
+              "Ident": "NETTOLOHN_P1",
+              "Name": {
+                "ID": "TXT_NETTOLOHN_P1",
+                "DE": "Nettolohn",
+                "FR": "Revenu net",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 143659,
+              "Show": false
+            },
+            {
+              "Main": 1,
+              "Ident": "NEBENERWERB_P1",
+              "Name": {
+                "ID": "TXT_NEBENERWERB_P1",
+                "DE": "Nettolohn Nebenerwerb",
+                "FR": "Revenu complémentaire net",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 1,
+              "Ident": "NEBENERWERB_P2",
+              "Name": {
+                "ID": "TXT_NEBENERWERB_P2",
+                "DE": "Nettolohn Nebenerwerb Lebenspartner",
+                "FR": "Revenu complémentaire net partenaire",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 1,
+              "Ident": "MIETERTRAG",
+              "Name": {
+                "ID": "TXT_MIETERTRAG",
+                "DE": "Eigenmietwert und Mieterträge",
+                "FR": "Valeur locative et revenus locatifs",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 1,
+              "Ident": "UEBRIGESEK",
+              "Name": {
+                "ID": "TXT_UEBRIGESEK",
+                "DE": "Übrige Einnahmen",
+                "FR": "Autres revenus",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 1,
+              "Ident": "VMERTRAEGE",
+              "Name": {
+                "ID": "TXT_VMERTRAEGE",
+                "DE": "Vermögenserträge",
+                "FR": "Revenus des titres",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 1,
+              "Ident": "BETEILIGUNG",
+              "Name": {
+                "ID": "TXT_BETEILIGUNG",
+                "DE": "davon aus Beteiligungen",
+                "FR": "part en participations",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "KKPRAEMIEN",
+              "Name": {
+                "ID": "TXT_KKPRAEMIEN",
+                "DE": "Krankenkassenprämien",
+                "FR": "Primes d'assurance maladie",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 11520,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "IPVEXTRA",
+              "Name": {
+                "ID": "TXT_IPVEXTRA",
+                "DE": "Individuelle Prämienverbilligung",
+                "FR": "Réduction de prime individuelle",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "PRAEMIEN3A",
+              "Name": {
+                "ID": "TXT_PRAEMIEN3A",
+                "DE": "Beiträge an Säule 3a",
+                "FR": "Contributions pilier 3a",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "VERPFLEGUNG_P1",
+              "Name": {
+                "ID": "TXT_VERPFLEGUNG_P1",
+                "DE": "Verpflegungskosten",
+                "FR": "Frais de restauration",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "FAHRKOSTEN_P1",
+              "Name": {
+                "ID": "TXT_FAHRKOSTEN_P1",
+                "DE": "Fahrkosten",
+                "FR": "Frais de déplacement",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "BERUFSKOSTEN_P1",
+              "Name": {
+                "ID": "TXT_BERUFSKOSTEN_P1",
+                "DE": "Übrige Berufsauslagen",
+                "FR": "Autres frais professionnels",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "BERUFSAUSLAGEN_NE_P1",
+              "Name": {
+                "ID": "TXT_BERUFSAUSLAGEN_NE_P1",
+                "DE": "Berufsauslagen Nebenerwerb",
+                "FR": "Frais prof. revenu compl.",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "BERUFSAUSLAGEN_NE_P2",
+              "Name": {
+                "ID": "TXT_BERUFSAUSLAGEN_NE_P2",
+                "DE": "Berufsauslagen Nebenerwerb Lebenspartner",
+                "FR": "Frais prof. revenu compl. partenaire",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "KINDBETREUUNGSKOSTEN",
+              "Name": {
+                "ID": "TXT_KINDBETREUUNGSKOSTEN",
+                "DE": "Kinderfremdbetreuungskosten",
+                "FR": "Frais de garde par des tiers des enfants",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "MIETAUSGABEN",
+              "Name": {
+                "ID": "TXT_MIETAUSGABEN",
+                "DE": "Mietausgaben",
+                "FR": "Frais de location",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 35910,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "SCHULDZINSEN",
+              "Name": {
+                "ID": "TXT_SCHULDZINSEN",
+                "DE": "Schuldzinsen",
+                "FR": "Intérêts des dettes",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "IMMOUNTERHALT",
+              "Name": {
+                "ID": "TXT_IMMOUNTERHALT",
+                "DE": "Unterhaltskosten Immobilien",
+                "FR": "Frais d'entretient d'immeubles",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "UEBRIGEABZUEGE",
+              "Name": {
+                "ID": "TXT_UEBRIGEABZUEGE",
+                "DE": "Übrige Abzüge",
+                "FR": "Autres déductions",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 3,
+              "Ident": "NETTO_VM",
+              "Name": {
+                "ID": "TXT_NETTO_VM",
+                "DE": "Reinvermögen",
+                "FR": "Fortune nette",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            }
+          ]
+        },
+        "response": {
+          "response": {
+            "IncomeTaxFed": 2289,
+            "IncomeTaxCanton": 12017,
+            "IncomeTaxCity": 6406,
+            "IncomeTaxChurch": 0,
+            "FortuneTaxCanton": 0,
+            "FortuneTaxCity": 0,
+            "FortuneTaxChurch": 0,
+            "PersonalTax": 0,
+            "TotalTax": 20712,
+            "TaxCredit": 0,
+            "TotalNetTax": 20712,
+            "IncomeSimpleTaxFed": 2289,
+            "IncomeSimpleTaxCanton": 8161,
+            "IncomeSimpleTaxCity": 8161,
+            "FortuneSimpleTaxCanton": 0,
+            "FortuneSimpleTaxCity": 0,
+            "Location": {
+              "TaxLocationID": 100000000,
+              "CantonID": 23,
+              "BfsID": 5586,
+              "BfsName": "Lausanne",
+              "ZipCode": "1000",
+              "City": "Lausanne",
+              "Canton": "VD"
+            },
+            "AssertiveIncomeFed": 118159,
+            "AssertiveIncomeCanton": 124839,
+            "AssertiveFortuneCanton": 0,
+            "TaxableIncomeFed": 118159,
+            "TaxableIncomeCanton": 124839,
+            "TaxableFortuneCanton": 0,
+            "TaxFreedomDay": 49,
+            "MarginalTaxRate": 28.6,
+            "MarginalTaxRateVM": 0,
+            "IncomeP1": {
+              "GrossIncome": 160000,
+              "AIOContribution": 8480,
+              "ALVContribution": 1630,
+              "NBUContribution": 593,
+              "BVGContribution": 5638,
+              "NetIncome": 143659
+            },
+            "IncomeP2": {
+              "GrossIncome": 0,
+              "AIOContribution": 0,
+              "ALVContribution": 0,
+              "NBUContribution": 0,
+              "BVGContribution": 0,
+              "NetIncome": 0
+            },
+            "InfoFed": [
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_201",
+                  "DE": "Einkommen aus Erwerbstätigkeit",
+                  "FR": "Revenus d'une activité professionnelle",
+                  "IT": "Redditi da attività lucrativa",
+                  "EN": "Earned income"
+                },
+                "Entry": {
+                  "ID": "TXT_1",
+                  "DE": "Unselbständiger Erwerb Nettolohn",
+                  "FR": "Revenu net salarié",
+                  "IT": "Salario netto da attività lucrativa dipendente",
+                  "EN": "Disposable income from gainful employment"
+                },
+                "Value": 143659,
+                "Fed": 0,
+                "Canton": 0
+              },
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_204",
+                  "DE": "Berufsauslagen",
+                  "FR": "Frais professionnels",
+                  "IT": "Spese professionali",
+                  "EN": "Professional expenses"
+                },
+                "Entry": {
+                  "ID": "TXT_30",
+                  "DE": "Übrige Berufsauslagen Haupterwerb",
+                  "FR": "Autres frais prof.  revenu principal",
+                  "IT": "Altre spese professionali att principale",
+                  "EN": "Deduction for gainful employment"
+                },
+                "Value": -4000,
+                "Fed": 0,
+                "Canton": 0
+              },
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_205",
+                  "DE": "Vorsorge- und Versicherungbeiträge",
+                  "FR": "Cotisations de prévoyance et assurance",
+                  "IT": "Contributi previdenziali e assicurativi",
+                  "EN": "Pension plan and insurance contributions"
+                },
+                "Entry": {
+                  "ID": "TXT_49",
+                  "DE": "Abzug private Versicherungen / Sparzinsen",
+                  "FR": "Déduction ass. privées, intérêt épargne",
+                  "IT": "Deduzione ass private / interessi di rispamio",
+                  "EN": "Additional deduction for private insurance contributions and savings interest"
+                },
+                "Value": -5100,
+                "Fed": 0,
+                "Canton": 0
+              },
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_208",
+                  "DE": "Sozialabzüge",
+                  "FR": "Déductions sociales",
+                  "IT": "Deduzioni sociali",
+                  "EN": "Welfare deductions"
+                },
+                "Entry": {
+                  "ID": "TXT_53",
+                  "DE": "Kindersozialabzug",
+                  "FR": "Déduction sociale enfants",
+                  "IT": "Deduzione sociale per i figli",
+                  "EN": "Special deduction for children"
+                },
+                "Value": -13600,
+                "Fed": 0,
+                "Canton": 0
+              },
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_208",
+                  "DE": "Sozialabzüge",
+                  "FR": "Déductions sociales",
+                  "IT": "Deduzioni sociali",
+                  "EN": "Welfare deductions"
+                },
+                "Entry": {
+                  "ID": "TXT_57",
+                  "DE": "Abzug verheiratete Steuerpflichtige",
+                  "FR": "Déduction contribuables mariés",
+                  "IT": "Deduzione per contribuenti coniugati",
+                  "EN": "Personal deduction for married tax payers"
+                },
+                "Value": -2800,
+                "Fed": 0,
+                "Canton": 0
+              },
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_220",
+                  "DE": "Total Einkommen",
+                  "FR": "Total revenus",
+                  "IT": "Totale reddito",
+                  "EN": "Total income"
+                },
+                "Entry": {
+                  "ID": "TXT_54",
+                  "DE": "Massgebendes Einkommen",
+                  "FR": "Revenu pris en considération",
+                  "IT": "Reddito determinante",
+                  "EN": "Decisive income"
+                },
+                "Value": 118159,
+                "Fed": 0,
+                "Canton": 0
+              }
+            ],
+            "InfoCanton": [
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_201",
+                  "DE": "Einkommen aus Erwerbstätigkeit",
+                  "FR": "Revenus d'une activité professionnelle",
+                  "IT": "Redditi da attività lucrativa",
+                  "EN": "Earned income"
+                },
+                "Entry": {
+                  "ID": "TXT_1",
+                  "DE": "Unselbständiger Erwerb Nettolohn",
+                  "FR": "Revenu net salarié",
+                  "IT": "Salario netto da attività lucrativa dipendente",
+                  "EN": "Disposable income from gainful employment"
+                },
+                "Value": 143659,
+                "Fed": 0,
+                "Canton": 0
+              },
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_204",
+                  "DE": "Berufsauslagen",
+                  "FR": "Frais professionnels",
+                  "IT": "Spese professionali",
+                  "EN": "Professional expenses"
+                },
+                "Entry": {
+                  "ID": "TXT_30",
+                  "DE": "Übrige Berufsauslagen Haupterwerb",
+                  "FR": "Autres frais prof.  revenu principal",
+                  "IT": "Altre spese professionali att principale",
+                  "EN": "Deduction for gainful employment"
+                },
+                "Value": -4000,
+                "Fed": 0,
+                "Canton": 0
+              },
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_205",
+                  "DE": "Vorsorge- und Versicherungbeiträge",
+                  "FR": "Cotisations de prévoyance et assurance",
+                  "IT": "Contributi previdenziali e assicurativi",
+                  "EN": "Pension plan and insurance contributions"
+                },
+                "Entry": {
+                  "ID": "TXT_459",
+                  "DE": "Abzug private Versicherungen",
+                  "FR": "Déduction ass. privées",
+                  "IT": "Deduzione assic. private",
+                  "EN": "Additional deduction for private insurance contributions"
+                },
+                "Value": -11520,
+                "Fed": 0,
+                "Canton": 0
+              },
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_208",
+                  "DE": "Sozialabzüge",
+                  "FR": "Déductions sociales",
+                  "IT": "Deduzioni sociali",
+                  "EN": "Welfare deductions"
+                },
+                "Entry": {
+                  "ID": "TXT_462",
+                  "DE": "Abzug Verheiratete oder Alleinerzieher",
+                  "FR": "Déduction mariés ou parents isolés",
+                  "IT": "Deduzioni persone sposate o famiglie monoparentali",
+                  "EN": "Additional deduction for married persons or single-parent families"
+                },
+                "Value": -3300,
+                "Fed": 0,
+                "Canton": 0
+              },
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_220",
+                  "DE": "Total Einkommen",
+                  "FR": "Total revenus",
+                  "IT": "Totale reddito",
+                  "EN": "Total income"
+                },
+                "Entry": {
+                  "ID": "TXT_54",
+                  "DE": "Massgebendes Einkommen",
+                  "FR": "Revenu pris en considération",
+                  "IT": "Reddito determinante",
+                  "EN": "Decisive income"
+                },
+                "Value": 124839,
+                "Fed": 0,
+                "Canton": 0
+              }
+            ],
+            "InfoBoth": [
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_201",
+                  "DE": "Einkommen aus Erwerbstätigkeit",
+                  "FR": "Revenus d'une activité professionnelle",
+                  "IT": "Redditi da attività lucrativa",
+                  "EN": "Earned income"
+                },
+                "Entry": {
+                  "ID": "TXT_1",
+                  "DE": "Unselbständiger Erwerb Nettolohn",
+                  "FR": "Revenu net salarié",
+                  "IT": "Salario netto da attività lucrativa dipendente",
+                  "EN": "Disposable income from gainful employment"
+                },
+                "Value": 0,
+                "Fed": 143659,
+                "Canton": 143659
+              },
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_204",
+                  "DE": "Berufsauslagen",
+                  "FR": "Frais professionnels",
+                  "IT": "Spese professionali",
+                  "EN": "Professional expenses"
+                },
+                "Entry": {
+                  "ID": "TXT_30",
+                  "DE": "Übrige Berufsauslagen Haupterwerb",
+                  "FR": "Autres frais prof.  revenu principal",
+                  "IT": "Altre spese professionali att principale",
+                  "EN": "Deduction for gainful employment"
+                },
+                "Value": 0,
+                "Fed": -4000,
+                "Canton": -4000
+              },
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_205",
+                  "DE": "Vorsorge- und Versicherungbeiträge",
+                  "FR": "Cotisations de prévoyance et assurance",
+                  "IT": "Contributi previdenziali e assicurativi",
+                  "EN": "Pension plan and insurance contributions"
+                },
+                "Entry": {
+                  "ID": "TXT_49",
+                  "DE": "Abzug private Versicherungen / Sparzinsen",
+                  "FR": "Déduction ass. privées, intérêt épargne",
+                  "IT": "Deduzione ass private / interessi di rispamio",
+                  "EN": "Additional deduction for private insurance contributions and savings interest"
+                },
+                "Value": 0,
+                "Fed": -5100,
+                "Canton": 0
+              },
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_205",
+                  "DE": "Vorsorge- und Versicherungbeiträge",
+                  "FR": "Cotisations de prévoyance et assurance",
+                  "IT": "Contributi previdenziali e assicurativi",
+                  "EN": "Pension plan and insurance contributions"
+                },
+                "Entry": {
+                  "ID": "TXT_459",
+                  "DE": "Abzug private Versicherungen",
+                  "FR": "Déduction ass. privées",
+                  "IT": "Deduzione assic. private",
+                  "EN": "Additional deduction for private insurance contributions"
+                },
+                "Value": 0,
+                "Fed": 0,
+                "Canton": -11520
+              },
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_208",
+                  "DE": "Sozialabzüge",
+                  "FR": "Déductions sociales",
+                  "IT": "Deduzioni sociali",
+                  "EN": "Welfare deductions"
+                },
+                "Entry": {
+                  "ID": "TXT_53",
+                  "DE": "Kindersozialabzug",
+                  "FR": "Déduction sociale enfants",
+                  "IT": "Deduzione sociale per i figli",
+                  "EN": "Special deduction for children"
+                },
+                "Value": 0,
+                "Fed": -13600,
+                "Canton": 0
+              },
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_208",
+                  "DE": "Sozialabzüge",
+                  "FR": "Déductions sociales",
+                  "IT": "Deduzioni sociali",
+                  "EN": "Welfare deductions"
+                },
+                "Entry": {
+                  "ID": "TXT_57",
+                  "DE": "Abzug verheiratete Steuerpflichtige",
+                  "FR": "Déduction contribuables mariés",
+                  "IT": "Deduzione per contribuenti coniugati",
+                  "EN": "Personal deduction for married tax payers"
+                },
+                "Value": 0,
+                "Fed": -2800,
+                "Canton": 0
+              },
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_208",
+                  "DE": "Sozialabzüge",
+                  "FR": "Déductions sociales",
+                  "IT": "Deduzioni sociali",
+                  "EN": "Welfare deductions"
+                },
+                "Entry": {
+                  "ID": "TXT_462",
+                  "DE": "Abzug Verheiratete oder Alleinerzieher",
+                  "FR": "Déduction mariés ou parents isolés",
+                  "IT": "Deduzioni persone sposate o famiglie monoparentali",
+                  "EN": "Additional deduction for married persons or single-parent families"
+                },
+                "Value": 0,
+                "Fed": 0,
+                "Canton": -3300
+              },
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_220",
+                  "DE": "Total Einkommen",
+                  "FR": "Total revenus",
+                  "IT": "Totale reddito",
+                  "EN": "Total income"
+                },
+                "Entry": {
+                  "ID": "TXT_54",
+                  "DE": "Massgebendes Einkommen",
+                  "FR": "Revenu pris en considération",
+                  "IT": "Reddito determinante",
+                  "EN": "Decisive income"
+                },
+                "Value": 0,
+                "Fed": 118159,
+                "Canton": 124839
+              }
+            ],
+            "TaxRates": {
+              "IncomeRateCanton": 155,
+              "IncomeRateCity": 78.5,
+              "IncomeRateProtestant": 0,
+              "IncomeRateRoman": 0,
+              "IncomeRateChrist": 0,
+              "FortuneRateCanton": 155,
+              "FortuneRateCity": 78.5,
+              "FortuneRateProtestant": 0,
+              "FortuneRateRoman": 0,
+              "FortuneRateChrist": 0,
+              "ProfitTaxRateCanton": 0,
+              "ProfitTaxRateCity": 0,
+              "ProfitTaxRateChurch": 0,
+              "CapitalTaxRateCanton": 0,
+              "CapitalTaxRateCity": 0,
+              "CapitalTaxRateChurch": 0
+            },
+            "Diagnosis": ""
+          }
+        },
+        "provenance": {
+          "url": "https://swisstaxcalculator.estv.admin.ch/delegate/ost-integration/v1/lg-proxy/operation/c3b67379_ESTV/API_calculateDetailedTaxes",
+          "retrievedAt": "2026-10-29T23:12:48.176Z",
+          "status": 200,
+          "anonymous": true,
+          "requestSha256": "919a3d32ce9ab3254eda98a4e630f64643239b32a56190abeffa0b95f197e917",
+          "responseSha256": "27842572d0fc27dd05717cad30dbb3f60c7afa3b4c9fa385d640cb8f43fd397f",
+          "requestBytes": 4592,
+          "responseBytes": 8839,
+          "sourceFrozenCase": "estv-2026-12",
+          "changedAxis": "Revenue1: 140000 -> 160000",
+          "requestFileSha256": "71e9ca962f2867d09c7b58be23ea7dd1f3419fa7dbb9ee08a7c0db1d549b30a9",
+          "requestFileBytes": 4593,
+          "requestSerialization": "raw file has one trailing newline; requestSha256/requestBytes refer to transmitted JSON without newline"
+        }
+      }
+    },
+    {
+      "grossIncome": 161000,
+      "sourceCapture": "steuerpendler-vd-official-probe-161000-2026-10-29",
+      "budget": {
+        "request": {
+          "SimKey": null,
+          "TaxYear": 2026,
+          "TaxLocationID": 100000000,
+          "Relationship": 2,
+          "Confession1": 4,
+          "Children": [
+            {
+              "Age": 10
+            },
+            {
+              "Age": 10
+            }
+          ],
+          "Age1": 35,
+          "RevenueType1": 1,
+          "Revenue1": 161000,
+          "Fortune": 0,
+          "Confession2": 4,
+          "Age2": 35,
+          "RevenueType2": 0,
+          "Revenue2": 0,
+          "Budget": [],
+          "Language": 1
+        },
+        "response": {
+          "response": [
+            {
+              "Main": 1,
+              "Ident": "BRUTTOLOHN_P1",
+              "Name": {
+                "ID": "TXT_BRUTTOLOHN_P1",
+                "DE": "Bruttolohn",
+                "FR": "Revenu brut",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 161000,
+              "Show": false
+            },
+            {
+              "Main": 1,
+              "Ident": "BEITRAG_AIO_P1",
+              "Name": {
+                "ID": "TXT_BEITRAG_AIO_P1",
+                "DE": "AHV+IV+EO Beiträge",
+                "FR": "Cotisations AVS+AI+APG",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 8533,
+              "Show": false
+            },
+            {
+              "Main": 1,
+              "Ident": "BEITRAG_ALV_P1",
+              "Name": {
+                "ID": "TXT_BEITRAG_ALV_P1",
+                "DE": "ALV Beiträge",
+                "FR": "Cotisations AC",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 1630,
+              "Show": false
+            },
+            {
+              "Main": 1,
+              "Ident": "BEITRAG_NBU_P1",
+              "Name": {
+                "ID": "TXT_BEITRAG_NBU_P1",
+                "DE": "NBU Beiträge",
+                "FR": "Cotisations AANP",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 593,
+              "Show": false
+            },
+            {
+              "Main": 1,
+              "Ident": "BEITRAG_BVG_P1",
+              "Name": {
+                "ID": "TXT_BEITRAG_BVG_P1",
+                "DE": "BVG Beiträge",
+                "FR": "Cotisations LPP",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 5673,
+              "Show": false
+            },
+            {
+              "Main": 1,
+              "Ident": "NETTOLOHN_P1",
+              "Name": {
+                "ID": "TXT_NETTOLOHN_P1",
+                "DE": "Nettolohn",
+                "FR": "Revenu net",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 144571,
+              "Show": false
+            },
+            {
+              "Main": 1,
+              "Ident": "NEBENERWERB_P1",
+              "Name": {
+                "ID": "TXT_NEBENERWERB_P1",
+                "DE": "Nettolohn Nebenerwerb",
+                "FR": "Revenu complémentaire net",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 1,
+              "Ident": "NEBENERWERB_P2",
+              "Name": {
+                "ID": "TXT_NEBENERWERB_P2",
+                "DE": "Nettolohn Nebenerwerb Lebenspartner",
+                "FR": "Revenu complémentaire net partenaire",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 1,
+              "Ident": "MIETERTRAG",
+              "Name": {
+                "ID": "TXT_MIETERTRAG",
+                "DE": "Eigenmietwert und Mieterträge",
+                "FR": "Valeur locative et revenus locatifs",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 1,
+              "Ident": "UEBRIGESEK",
+              "Name": {
+                "ID": "TXT_UEBRIGESEK",
+                "DE": "Übrige Einnahmen",
+                "FR": "Autres revenus",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 1,
+              "Ident": "VMERTRAEGE",
+              "Name": {
+                "ID": "TXT_VMERTRAEGE",
+                "DE": "Vermögenserträge",
+                "FR": "Revenus des titres",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 1,
+              "Ident": "BETEILIGUNG",
+              "Name": {
+                "ID": "TXT_BETEILIGUNG",
+                "DE": "davon aus Beteiligungen",
+                "FR": "part en participations",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "KKPRAEMIEN",
+              "Name": {
+                "ID": "TXT_KKPRAEMIEN",
+                "DE": "Krankenkassenprämien",
+                "FR": "Primes d'assurance maladie",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 11520,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "IPVEXTRA",
+              "Name": {
+                "ID": "TXT_IPVEXTRA",
+                "DE": "Individuelle Prämienverbilligung",
+                "FR": "Réduction de prime individuelle",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "PRAEMIEN3A",
+              "Name": {
+                "ID": "TXT_PRAEMIEN3A",
+                "DE": "Beiträge an Säule 3a",
+                "FR": "Contributions pilier 3a",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "VERPFLEGUNG_P1",
+              "Name": {
+                "ID": "TXT_VERPFLEGUNG_P1",
+                "DE": "Verpflegungskosten",
+                "FR": "Frais de restauration",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "FAHRKOSTEN_P1",
+              "Name": {
+                "ID": "TXT_FAHRKOSTEN_P1",
+                "DE": "Fahrkosten",
+                "FR": "Frais de déplacement",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "BERUFSKOSTEN_P1",
+              "Name": {
+                "ID": "TXT_BERUFSKOSTEN_P1",
+                "DE": "Übrige Berufsauslagen",
+                "FR": "Autres frais professionnels",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "BERUFSAUSLAGEN_NE_P1",
+              "Name": {
+                "ID": "TXT_BERUFSAUSLAGEN_NE_P1",
+                "DE": "Berufsauslagen Nebenerwerb",
+                "FR": "Frais prof. revenu compl.",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "BERUFSAUSLAGEN_NE_P2",
+              "Name": {
+                "ID": "TXT_BERUFSAUSLAGEN_NE_P2",
+                "DE": "Berufsauslagen Nebenerwerb Lebenspartner",
+                "FR": "Frais prof. revenu compl. partenaire",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "KINDBETREUUNGSKOSTEN",
+              "Name": {
+                "ID": "TXT_KINDBETREUUNGSKOSTEN",
+                "DE": "Kinderfremdbetreuungskosten",
+                "FR": "Frais de garde par des tiers des enfants",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "MIETAUSGABEN",
+              "Name": {
+                "ID": "TXT_MIETAUSGABEN",
+                "DE": "Mietausgaben",
+                "FR": "Frais de location",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 36140,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "SCHULDZINSEN",
+              "Name": {
+                "ID": "TXT_SCHULDZINSEN",
+                "DE": "Schuldzinsen",
+                "FR": "Intérêts des dettes",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "IMMOUNTERHALT",
+              "Name": {
+                "ID": "TXT_IMMOUNTERHALT",
+                "DE": "Unterhaltskosten Immobilien",
+                "FR": "Frais d'entretient d'immeubles",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "UEBRIGEABZUEGE",
+              "Name": {
+                "ID": "TXT_UEBRIGEABZUEGE",
+                "DE": "Übrige Abzüge",
+                "FR": "Autres déductions",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 3,
+              "Ident": "NETTO_VM",
+              "Name": {
+                "ID": "TXT_NETTO_VM",
+                "DE": "Reinvermögen",
+                "FR": "Fortune nette",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            }
+          ]
+        },
+        "provenance": {
+          "url": "https://swisstaxcalculator.estv.admin.ch/delegate/ost-integration/v1/lg-proxy/operation/c3b67379_ESTV/API_calculateTaxBudget",
+          "retrievedAt": "2026-10-29T23:12:57.577Z",
+          "status": 200,
+          "anonymous": true,
+          "requestSha256": "b2f3339f9cab6d7371f08f370a308884d5fa59afa5560d34b629df325e988041",
+          "responseSha256": "1fecc88d6630e30037acb6c1a5fe1206285f35e0d3251e546e124bfa5cce811c",
+          "requestBytes": 262,
+          "responseBytes": 4358,
+          "sourceFrozenCase": "estv-2026-12",
+          "changedAxis": "Revenue1: 140000 -> 161000",
+          "requestFileSha256": "8e489be5dee4e2e03312fd9ddec99ca2600ba419c54d13196a66e0a74cb3b0e8",
+          "requestFileBytes": 263,
+          "requestSerialization": "raw file has one trailing newline; requestSha256/requestBytes refer to transmitted JSON without newline"
+        }
+      },
+      "tax": {
+        "request": {
+          "SimKey": null,
+          "TaxYear": 2026,
+          "TaxLocationID": 100000000,
+          "Relationship": 2,
+          "Confession1": 4,
+          "Children": [
+            {
+              "Age": 10
+            },
+            {
+              "Age": 10
+            }
+          ],
+          "Age1": 35,
+          "RevenueType1": 1,
+          "Revenue1": 161000,
+          "Fortune": 0,
+          "Confession2": 4,
+          "Age2": 35,
+          "RevenueType2": 0,
+          "Revenue2": 0,
+          "Budget": [
+            {
+              "Main": 1,
+              "Ident": "BRUTTOLOHN_P1",
+              "Name": {
+                "ID": "TXT_BRUTTOLOHN_P1",
+                "DE": "Bruttolohn",
+                "FR": "Revenu brut",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 161000,
+              "Show": false
+            },
+            {
+              "Main": 1,
+              "Ident": "BEITRAG_AIO_P1",
+              "Name": {
+                "ID": "TXT_BEITRAG_AIO_P1",
+                "DE": "AHV+IV+EO Beiträge",
+                "FR": "Cotisations AVS+AI+APG",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 8533,
+              "Show": false
+            },
+            {
+              "Main": 1,
+              "Ident": "BEITRAG_ALV_P1",
+              "Name": {
+                "ID": "TXT_BEITRAG_ALV_P1",
+                "DE": "ALV Beiträge",
+                "FR": "Cotisations AC",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 1630,
+              "Show": false
+            },
+            {
+              "Main": 1,
+              "Ident": "BEITRAG_NBU_P1",
+              "Name": {
+                "ID": "TXT_BEITRAG_NBU_P1",
+                "DE": "NBU Beiträge",
+                "FR": "Cotisations AANP",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 593,
+              "Show": false
+            },
+            {
+              "Main": 1,
+              "Ident": "BEITRAG_BVG_P1",
+              "Name": {
+                "ID": "TXT_BEITRAG_BVG_P1",
+                "DE": "BVG Beiträge",
+                "FR": "Cotisations LPP",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 5673,
+              "Show": false
+            },
+            {
+              "Main": 1,
+              "Ident": "NETTOLOHN_P1",
+              "Name": {
+                "ID": "TXT_NETTOLOHN_P1",
+                "DE": "Nettolohn",
+                "FR": "Revenu net",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 144571,
+              "Show": false
+            },
+            {
+              "Main": 1,
+              "Ident": "NEBENERWERB_P1",
+              "Name": {
+                "ID": "TXT_NEBENERWERB_P1",
+                "DE": "Nettolohn Nebenerwerb",
+                "FR": "Revenu complémentaire net",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 1,
+              "Ident": "NEBENERWERB_P2",
+              "Name": {
+                "ID": "TXT_NEBENERWERB_P2",
+                "DE": "Nettolohn Nebenerwerb Lebenspartner",
+                "FR": "Revenu complémentaire net partenaire",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 1,
+              "Ident": "MIETERTRAG",
+              "Name": {
+                "ID": "TXT_MIETERTRAG",
+                "DE": "Eigenmietwert und Mieterträge",
+                "FR": "Valeur locative et revenus locatifs",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 1,
+              "Ident": "UEBRIGESEK",
+              "Name": {
+                "ID": "TXT_UEBRIGESEK",
+                "DE": "Übrige Einnahmen",
+                "FR": "Autres revenus",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 1,
+              "Ident": "VMERTRAEGE",
+              "Name": {
+                "ID": "TXT_VMERTRAEGE",
+                "DE": "Vermögenserträge",
+                "FR": "Revenus des titres",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 1,
+              "Ident": "BETEILIGUNG",
+              "Name": {
+                "ID": "TXT_BETEILIGUNG",
+                "DE": "davon aus Beteiligungen",
+                "FR": "part en participations",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "KKPRAEMIEN",
+              "Name": {
+                "ID": "TXT_KKPRAEMIEN",
+                "DE": "Krankenkassenprämien",
+                "FR": "Primes d'assurance maladie",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 11520,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "IPVEXTRA",
+              "Name": {
+                "ID": "TXT_IPVEXTRA",
+                "DE": "Individuelle Prämienverbilligung",
+                "FR": "Réduction de prime individuelle",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "PRAEMIEN3A",
+              "Name": {
+                "ID": "TXT_PRAEMIEN3A",
+                "DE": "Beiträge an Säule 3a",
+                "FR": "Contributions pilier 3a",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "VERPFLEGUNG_P1",
+              "Name": {
+                "ID": "TXT_VERPFLEGUNG_P1",
+                "DE": "Verpflegungskosten",
+                "FR": "Frais de restauration",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "FAHRKOSTEN_P1",
+              "Name": {
+                "ID": "TXT_FAHRKOSTEN_P1",
+                "DE": "Fahrkosten",
+                "FR": "Frais de déplacement",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "BERUFSKOSTEN_P1",
+              "Name": {
+                "ID": "TXT_BERUFSKOSTEN_P1",
+                "DE": "Übrige Berufsauslagen",
+                "FR": "Autres frais professionnels",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "BERUFSAUSLAGEN_NE_P1",
+              "Name": {
+                "ID": "TXT_BERUFSAUSLAGEN_NE_P1",
+                "DE": "Berufsauslagen Nebenerwerb",
+                "FR": "Frais prof. revenu compl.",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "BERUFSAUSLAGEN_NE_P2",
+              "Name": {
+                "ID": "TXT_BERUFSAUSLAGEN_NE_P2",
+                "DE": "Berufsauslagen Nebenerwerb Lebenspartner",
+                "FR": "Frais prof. revenu compl. partenaire",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "KINDBETREUUNGSKOSTEN",
+              "Name": {
+                "ID": "TXT_KINDBETREUUNGSKOSTEN",
+                "DE": "Kinderfremdbetreuungskosten",
+                "FR": "Frais de garde par des tiers des enfants",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "MIETAUSGABEN",
+              "Name": {
+                "ID": "TXT_MIETAUSGABEN",
+                "DE": "Mietausgaben",
+                "FR": "Frais de location",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 36140,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "SCHULDZINSEN",
+              "Name": {
+                "ID": "TXT_SCHULDZINSEN",
+                "DE": "Schuldzinsen",
+                "FR": "Intérêts des dettes",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "IMMOUNTERHALT",
+              "Name": {
+                "ID": "TXT_IMMOUNTERHALT",
+                "DE": "Unterhaltskosten Immobilien",
+                "FR": "Frais d'entretient d'immeubles",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 2,
+              "Ident": "UEBRIGEABZUEGE",
+              "Name": {
+                "ID": "TXT_UEBRIGEABZUEGE",
+                "DE": "Übrige Abzüge",
+                "FR": "Autres déductions",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            },
+            {
+              "Main": 3,
+              "Ident": "NETTO_VM",
+              "Name": {
+                "ID": "TXT_NETTO_VM",
+                "DE": "Reinvermögen",
+                "FR": "Fortune nette",
+                "IT": "",
+                "EN": ""
+              },
+              "Value": 0,
+              "Show": true
+            }
+          ]
+        },
+        "response": {
+          "response": {
+            "IncomeTaxFed": 2343,
+            "IncomeTaxCanton": 12154,
+            "IncomeTaxCity": 6479,
+            "IncomeTaxChurch": 0,
+            "FortuneTaxCanton": 0,
+            "FortuneTaxCity": 0,
+            "FortuneTaxChurch": 0,
+            "PersonalTax": 0,
+            "TotalTax": 20976,
+            "TaxCredit": 0,
+            "TotalNetTax": 20976,
+            "IncomeSimpleTaxFed": 2343,
+            "IncomeSimpleTaxCanton": 8254,
+            "IncomeSimpleTaxCity": 8254,
+            "FortuneSimpleTaxCanton": 0,
+            "FortuneSimpleTaxCity": 0,
+            "Location": {
+              "TaxLocationID": 100000000,
+              "CantonID": 23,
+              "BfsID": 5586,
+              "BfsName": "Lausanne",
+              "ZipCode": "1000",
+              "City": "Lausanne",
+              "Canton": "VD"
+            },
+            "AssertiveIncomeFed": 119071,
+            "AssertiveIncomeCanton": 125851,
+            "AssertiveFortuneCanton": 0,
+            "TaxableIncomeFed": 119071,
+            "TaxableIncomeCanton": 125851,
+            "TaxableFortuneCanton": 0,
+            "TaxFreedomDay": 49,
+            "MarginalTaxRate": 25.5,
+            "MarginalTaxRateVM": 0,
+            "IncomeP1": {
+              "GrossIncome": 161000,
+              "AIOContribution": 8533,
+              "ALVContribution": 1630,
+              "NBUContribution": 593,
+              "BVGContribution": 5673,
+              "NetIncome": 144571
+            },
+            "IncomeP2": {
+              "GrossIncome": 0,
+              "AIOContribution": 0,
+              "ALVContribution": 0,
+              "NBUContribution": 0,
+              "BVGContribution": 0,
+              "NetIncome": 0
+            },
+            "InfoFed": [
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_201",
+                  "DE": "Einkommen aus Erwerbstätigkeit",
+                  "FR": "Revenus d'une activité professionnelle",
+                  "IT": "Redditi da attività lucrativa",
+                  "EN": "Earned income"
+                },
+                "Entry": {
+                  "ID": "TXT_1",
+                  "DE": "Unselbständiger Erwerb Nettolohn",
+                  "FR": "Revenu net salarié",
+                  "IT": "Salario netto da attività lucrativa dipendente",
+                  "EN": "Disposable income from gainful employment"
+                },
+                "Value": 144571,
+                "Fed": 0,
+                "Canton": 0
+              },
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_204",
+                  "DE": "Berufsauslagen",
+                  "FR": "Frais professionnels",
+                  "IT": "Spese professionali",
+                  "EN": "Professional expenses"
+                },
+                "Entry": {
+                  "ID": "TXT_30",
+                  "DE": "Übrige Berufsauslagen Haupterwerb",
+                  "FR": "Autres frais prof.  revenu principal",
+                  "IT": "Altre spese professionali att principale",
+                  "EN": "Deduction for gainful employment"
+                },
+                "Value": -4000,
+                "Fed": 0,
+                "Canton": 0
+              },
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_205",
+                  "DE": "Vorsorge- und Versicherungbeiträge",
+                  "FR": "Cotisations de prévoyance et assurance",
+                  "IT": "Contributi previdenziali e assicurativi",
+                  "EN": "Pension plan and insurance contributions"
+                },
+                "Entry": {
+                  "ID": "TXT_49",
+                  "DE": "Abzug private Versicherungen / Sparzinsen",
+                  "FR": "Déduction ass. privées, intérêt épargne",
+                  "IT": "Deduzione ass private / interessi di rispamio",
+                  "EN": "Additional deduction for private insurance contributions and savings interest"
+                },
+                "Value": -5100,
+                "Fed": 0,
+                "Canton": 0
+              },
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_208",
+                  "DE": "Sozialabzüge",
+                  "FR": "Déductions sociales",
+                  "IT": "Deduzioni sociali",
+                  "EN": "Welfare deductions"
+                },
+                "Entry": {
+                  "ID": "TXT_53",
+                  "DE": "Kindersozialabzug",
+                  "FR": "Déduction sociale enfants",
+                  "IT": "Deduzione sociale per i figli",
+                  "EN": "Special deduction for children"
+                },
+                "Value": -13600,
+                "Fed": 0,
+                "Canton": 0
+              },
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_208",
+                  "DE": "Sozialabzüge",
+                  "FR": "Déductions sociales",
+                  "IT": "Deduzioni sociali",
+                  "EN": "Welfare deductions"
+                },
+                "Entry": {
+                  "ID": "TXT_57",
+                  "DE": "Abzug verheiratete Steuerpflichtige",
+                  "FR": "Déduction contribuables mariés",
+                  "IT": "Deduzione per contribuenti coniugati",
+                  "EN": "Personal deduction for married tax payers"
+                },
+                "Value": -2800,
+                "Fed": 0,
+                "Canton": 0
+              },
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_220",
+                  "DE": "Total Einkommen",
+                  "FR": "Total revenus",
+                  "IT": "Totale reddito",
+                  "EN": "Total income"
+                },
+                "Entry": {
+                  "ID": "TXT_54",
+                  "DE": "Massgebendes Einkommen",
+                  "FR": "Revenu pris en considération",
+                  "IT": "Reddito determinante",
+                  "EN": "Decisive income"
+                },
+                "Value": 119071,
+                "Fed": 0,
+                "Canton": 0
+              }
+            ],
+            "InfoCanton": [
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_201",
+                  "DE": "Einkommen aus Erwerbstätigkeit",
+                  "FR": "Revenus d'une activité professionnelle",
+                  "IT": "Redditi da attività lucrativa",
+                  "EN": "Earned income"
+                },
+                "Entry": {
+                  "ID": "TXT_1",
+                  "DE": "Unselbständiger Erwerb Nettolohn",
+                  "FR": "Revenu net salarié",
+                  "IT": "Salario netto da attività lucrativa dipendente",
+                  "EN": "Disposable income from gainful employment"
+                },
+                "Value": 144571,
+                "Fed": 0,
+                "Canton": 0
+              },
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_204",
+                  "DE": "Berufsauslagen",
+                  "FR": "Frais professionnels",
+                  "IT": "Spese professionali",
+                  "EN": "Professional expenses"
+                },
+                "Entry": {
+                  "ID": "TXT_30",
+                  "DE": "Übrige Berufsauslagen Haupterwerb",
+                  "FR": "Autres frais prof.  revenu principal",
+                  "IT": "Altre spese professionali att principale",
+                  "EN": "Deduction for gainful employment"
+                },
+                "Value": -4000,
+                "Fed": 0,
+                "Canton": 0
+              },
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_205",
+                  "DE": "Vorsorge- und Versicherungbeiträge",
+                  "FR": "Cotisations de prévoyance et assurance",
+                  "IT": "Contributi previdenziali e assicurativi",
+                  "EN": "Pension plan and insurance contributions"
+                },
+                "Entry": {
+                  "ID": "TXT_459",
+                  "DE": "Abzug private Versicherungen",
+                  "FR": "Déduction ass. privées",
+                  "IT": "Deduzione assic. private",
+                  "EN": "Additional deduction for private insurance contributions"
+                },
+                "Value": -11520,
+                "Fed": 0,
+                "Canton": 0
+              },
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_208",
+                  "DE": "Sozialabzüge",
+                  "FR": "Déductions sociales",
+                  "IT": "Deduzioni sociali",
+                  "EN": "Welfare deductions"
+                },
+                "Entry": {
+                  "ID": "TXT_462",
+                  "DE": "Abzug Verheiratete oder Alleinerzieher",
+                  "FR": "Déduction mariés ou parents isolés",
+                  "IT": "Deduzioni persone sposate o famiglie monoparentali",
+                  "EN": "Additional deduction for married persons or single-parent families"
+                },
+                "Value": -3200,
+                "Fed": 0,
+                "Canton": 0
+              },
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_220",
+                  "DE": "Total Einkommen",
+                  "FR": "Total revenus",
+                  "IT": "Totale reddito",
+                  "EN": "Total income"
+                },
+                "Entry": {
+                  "ID": "TXT_54",
+                  "DE": "Massgebendes Einkommen",
+                  "FR": "Revenu pris en considération",
+                  "IT": "Reddito determinante",
+                  "EN": "Decisive income"
+                },
+                "Value": 125851,
+                "Fed": 0,
+                "Canton": 0
+              }
+            ],
+            "InfoBoth": [
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_201",
+                  "DE": "Einkommen aus Erwerbstätigkeit",
+                  "FR": "Revenus d'une activité professionnelle",
+                  "IT": "Redditi da attività lucrativa",
+                  "EN": "Earned income"
+                },
+                "Entry": {
+                  "ID": "TXT_1",
+                  "DE": "Unselbständiger Erwerb Nettolohn",
+                  "FR": "Revenu net salarié",
+                  "IT": "Salario netto da attività lucrativa dipendente",
+                  "EN": "Disposable income from gainful employment"
+                },
+                "Value": 0,
+                "Fed": 144571,
+                "Canton": 144571
+              },
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_204",
+                  "DE": "Berufsauslagen",
+                  "FR": "Frais professionnels",
+                  "IT": "Spese professionali",
+                  "EN": "Professional expenses"
+                },
+                "Entry": {
+                  "ID": "TXT_30",
+                  "DE": "Übrige Berufsauslagen Haupterwerb",
+                  "FR": "Autres frais prof.  revenu principal",
+                  "IT": "Altre spese professionali att principale",
+                  "EN": "Deduction for gainful employment"
+                },
+                "Value": 0,
+                "Fed": -4000,
+                "Canton": -4000
+              },
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_205",
+                  "DE": "Vorsorge- und Versicherungbeiträge",
+                  "FR": "Cotisations de prévoyance et assurance",
+                  "IT": "Contributi previdenziali e assicurativi",
+                  "EN": "Pension plan and insurance contributions"
+                },
+                "Entry": {
+                  "ID": "TXT_49",
+                  "DE": "Abzug private Versicherungen / Sparzinsen",
+                  "FR": "Déduction ass. privées, intérêt épargne",
+                  "IT": "Deduzione ass private / interessi di rispamio",
+                  "EN": "Additional deduction for private insurance contributions and savings interest"
+                },
+                "Value": 0,
+                "Fed": -5100,
+                "Canton": 0
+              },
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_205",
+                  "DE": "Vorsorge- und Versicherungbeiträge",
+                  "FR": "Cotisations de prévoyance et assurance",
+                  "IT": "Contributi previdenziali e assicurativi",
+                  "EN": "Pension plan and insurance contributions"
+                },
+                "Entry": {
+                  "ID": "TXT_459",
+                  "DE": "Abzug private Versicherungen",
+                  "FR": "Déduction ass. privées",
+                  "IT": "Deduzione assic. private",
+                  "EN": "Additional deduction for private insurance contributions"
+                },
+                "Value": 0,
+                "Fed": 0,
+                "Canton": -11520
+              },
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_208",
+                  "DE": "Sozialabzüge",
+                  "FR": "Déductions sociales",
+                  "IT": "Deduzioni sociali",
+                  "EN": "Welfare deductions"
+                },
+                "Entry": {
+                  "ID": "TXT_53",
+                  "DE": "Kindersozialabzug",
+                  "FR": "Déduction sociale enfants",
+                  "IT": "Deduzione sociale per i figli",
+                  "EN": "Special deduction for children"
+                },
+                "Value": 0,
+                "Fed": -13600,
+                "Canton": 0
+              },
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_208",
+                  "DE": "Sozialabzüge",
+                  "FR": "Déductions sociales",
+                  "IT": "Deduzioni sociali",
+                  "EN": "Welfare deductions"
+                },
+                "Entry": {
+                  "ID": "TXT_57",
+                  "DE": "Abzug verheiratete Steuerpflichtige",
+                  "FR": "Déduction contribuables mariés",
+                  "IT": "Deduzione per contribuenti coniugati",
+                  "EN": "Personal deduction for married tax payers"
+                },
+                "Value": 0,
+                "Fed": -2800,
+                "Canton": 0
+              },
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_208",
+                  "DE": "Sozialabzüge",
+                  "FR": "Déductions sociales",
+                  "IT": "Deduzioni sociali",
+                  "EN": "Welfare deductions"
+                },
+                "Entry": {
+                  "ID": "TXT_462",
+                  "DE": "Abzug Verheiratete oder Alleinerzieher",
+                  "FR": "Déduction mariés ou parents isolés",
+                  "IT": "Deduzioni persone sposate o famiglie monoparentali",
+                  "EN": "Additional deduction for married persons or single-parent families"
+                },
+                "Value": 0,
+                "Fed": 0,
+                "Canton": -3200
+              },
+              {
+                "Main": 1,
+                "Group": {
+                  "ID": "TXT_220",
+                  "DE": "Total Einkommen",
+                  "FR": "Total revenus",
+                  "IT": "Totale reddito",
+                  "EN": "Total income"
+                },
+                "Entry": {
+                  "ID": "TXT_54",
+                  "DE": "Massgebendes Einkommen",
+                  "FR": "Revenu pris en considération",
+                  "IT": "Reddito determinante",
+                  "EN": "Decisive income"
+                },
+                "Value": 0,
+                "Fed": 119071,
+                "Canton": 125851
+              }
+            ],
+            "TaxRates": {
+              "IncomeRateCanton": 155,
+              "IncomeRateCity": 78.5,
+              "IncomeRateProtestant": 0,
+              "IncomeRateRoman": 0,
+              "IncomeRateChrist": 0,
+              "FortuneRateCanton": 155,
+              "FortuneRateCity": 78.5,
+              "FortuneRateProtestant": 0,
+              "FortuneRateRoman": 0,
+              "FortuneRateChrist": 0,
+              "ProfitTaxRateCanton": 0,
+              "ProfitTaxRateCity": 0,
+              "ProfitTaxRateChurch": 0,
+              "CapitalTaxRateCanton": 0,
+              "CapitalTaxRateCity": 0,
+              "CapitalTaxRateChurch": 0
+            },
+            "Diagnosis": ""
+          }
+        },
+        "provenance": {
+          "url": "https://swisstaxcalculator.estv.admin.ch/delegate/ost-integration/v1/lg-proxy/operation/c3b67379_ESTV/API_calculateDetailedTaxes",
+          "retrievedAt": "2026-10-29T23:12:57.767Z",
+          "status": 200,
+          "anonymous": true,
+          "requestSha256": "02bf078841d9616b4e532c6d65d17433cc3b05ba42b4b0419334f9b1593d135b",
+          "responseSha256": "29ac5ad51ef2838fe52778531ca7fa883d1e189b7a160593f178b50e929098bc",
+          "requestBytes": 4592,
+          "responseBytes": 8839,
+          "sourceFrozenCase": "estv-2026-12",
+          "changedAxis": "Revenue1: 140000 -> 161000",
+          "requestFileSha256": "9d69a75bccc0f933780a8fe1a066e122a080a173c54b8ada62460d0fa09e9031",
+          "requestFileBytes": 4593,
+          "requestSerialization": "raw file has one trailing newline; requestSha256/requestBytes refer to transmitted JSON without newline"
+        }
+      }
+    }
+  ]
+}
