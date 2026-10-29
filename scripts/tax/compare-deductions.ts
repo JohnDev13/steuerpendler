@@ -1,14 +1,14 @@
 // Diagnostic: ESTV canton deduction lines vs engine deductions across the deductions-grid probe for one canton.
-// Usage: npx tsx --tsconfig scripts/tax/tsconfig.json scripts/tax/compare-deductions.ts XX [profile]
+// Usage: npx tsx --tsconfig scripts/tax/tsconfig.json scripts/tax/compare-deductions.ts XX [profile] [probe name]
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { calculateTaxableAmount } from '../../vendor/swisstaxcalculator/lib/taxes/income';
 import { dineroToNumber } from '../../vendor/swisstaxcalculator/lib/utils/dinero';
 import { loadSources, makeInput, ROOT } from './build';
-const [canton, profile] = process.argv.slice(2);
+const [canton, profile, probe = 'deductions-grid'] = process.argv.slice(2);
 const sources = await loadSources();
-const cases = (await readFile(resolve(ROOT, 'tests/reference/estv-2026-probes/deductions-grid.jsonl'), 'utf8')).trimEnd().split('\n').map(l => JSON.parse(l))
-  .filter(c => c.canton === canton && (!profile || `${c.civil[0]}${c.kids}` === profile));
+const cases = (await readFile(resolve(ROOT, `tests/reference/estv-2026-probes/${probe}.jsonl`), 'utf8')).trimEnd().split('\n').map(l => JSON.parse(l))
+  .filter(c => c.income >= 40000 && c.canton === canton && (!profile || profile === 'all' || `${c.civil[0]}${c.kids}` === profile));
 for (const c of cases) {
   const loc = sources.locations.find(l => l.BfsID === c.bfs)!;
   const t = await calculateTaxableAmount(makeInput(loc, c.civil === 'married' ? 'm' : 's', c.kids, c.income, c.church));
