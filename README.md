@@ -14,12 +14,12 @@ no backend, cookies or analytics.
 ## How the numbers are made
 
 **Tax.** The vendored open-source engine [`swisstaxcalculator`](https://github.com/devbrains-com/swisstaxcalculator)
-with ESTV 2026 data and 24 recorded patches (`vendor/swisstaxcalculator/STEUERPENDLER-PATCHES.md`) generates
+with ESTV 2026 data and 25 recorded patches (`vendor/swisstaxcalculator/STEUERPENDLER-PATCHES.md`) generates
 one profile per civil status and number of children. The browser evaluates the tariffs exactly between the
 CHF 1,000 grid rows. Assumptions: gross employment income, age 35, no wealth, ESTV standard deductions,
 married couples with one income. Checked against 29 frozen cases from the official ESTV calculator:
 27 match within tolerance; the remaining two cases (VD, VS) fail. A broader 650-case sample passes
-604 cases, but covers only one Gemeinde per canton. Estimates for VS, VD and JU are withheld; JU's
+606 cases (VD 6/25), but covers only one Gemeinde per canton. Estimates for VS, VD and JU are withheld; JU's
 parish-rate issue is not settled by its sampled cases. Neither check grants official ESTV approval.
 
 **Commute.** `scripts/travel/matrix.py` scans every connection of the official Swiss GTFS timetable

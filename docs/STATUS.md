@@ -24,7 +24,7 @@ keep it short and update it in the same PR that changes what it describes.
 | Tax on-grid, 500 cases vs engine (`src/tax.ts`) | pass, max CHF 0 | `npm run tax:test` |
 | Tax off-grid, 300 cases vs engine | pass, max CHF 0 | `npm run tax:test` |
 | Tax vs official ESTV, 29 frozen cases | 27 pass, 2 fail (VD, VS; ratchet: may only improve) | `npm run tax:official` |
-| Tax vs broad official sample, 650 cases (26 capitals × 6 profiles × 4 incomes + church) | 604 pass (ratchet); every canton 25/25 except VS, VD | `npx tsx --tsconfig scripts/tax/tsconfig.json scripts/tax/sample.ts --fail` |
+| Tax vs broad official sample, 650 cases (26 capitals × 6 profiles × 4 incomes + church) | 606 pass (up from 604 before #78); VD 6/25, VS 0/25, every other canton 25/25 | `npx tsx --tsconfig scripts/tax/tsconfig.json scripts/tax/sample.ts --fail` |
 | Canton × profile more than 5 % off ESTV is withheld | enforced by test (`src/withheld.ts`) | `npm test` |
 | Travel vs SBB, 30 pairs, ± 3 min | pass: 29 within 3 min, Wollerau consistent (SBB 38 min > cap) | `python3 scripts/travel/compare_reference.py --require-complete` |
 | Unit, release, map, content, e2e | pass | see CI |
@@ -36,8 +36,13 @@ travel) and the approval flags stay false; the preview uses `availability.matrix
 Tax tables were refreshed from ESTV on 29 Oct 2026 (new tariffs for JU, NW, SZ, TI, VD, VS; six data corrections
 became unnecessary). The 650-case sample exposed low-income deductions, cantonal married and single-parent
 deduction rules, tax reductions per child (e.g. BL), and the still-unresolved VD family quotient. Supported rules were
-added canton by canton (vendor patches 20–24); the remaining gaps are the three quarantined cantons
-(JU parish rates of merged municipalities — its deductions now match —, VD quotient familial, VS rebates and coefficients).
+added canton by canton (vendor patches 20–25). Patch 25 models the VD family deduction on declaration code 650:
+2026 indexed thresholds from the VD deduction table, with completed-tranche semantics from the VD 2025 instructions
+and corroborating anonymous 2026 ESTV captures (see vendor patch log and `tests/reference/vd-family-2026.json`).
+The frozen VD family's taxable-income stage now matches, but its total still differs by CHF 2,413; VD passes only
+6/25 broad sample cases (versus 4/25 before #78). Remaining gaps are the three quarantined cantons:
+JU parish rates of merged municipalities (its deductions now match), VD quotient familial plus housing/modest-income
+relief, and VS rebates/coefficient rules. A passing Lausanne income stage is not all-Gemeinde acceptance.
 GE left the quarantine once its 12 % cantonal reduction and 1 % home-care levy were modelled.
 
 ## CI and deployment
