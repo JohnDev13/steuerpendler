@@ -38,7 +38,8 @@
     "station": "Target",
     "targetStops": 2,
     "rows": 4,
-    "directRows": 4
+    "directRows": 4,
+    "tripRuleDecisions": {}
    }
   }
  },

@@ -58,7 +58,7 @@ def main(argv: list[str] | None = None) -> int:
         (args.out / "to" / f"{workplace}.json").write_text(json.dumps(content, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8")
     (args.out / "meta.json").write_text(json.dumps(meta, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     for workplace, info in meta["workplaces"].items():
-        print(f"{workplace}: {info['station']} rows={info['rows']}")
+        print(f"{workplace}: {info['station']} rows={info['rows']} rules={info.get('tripRuleDecisions', {})}")
     missing = [w for w, info in meta["workplaces"].items() if not info["rows"]]
     if missing:
         print(f"no station found for workplaces {missing}", file=sys.stderr)

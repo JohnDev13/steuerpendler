@@ -407,7 +407,7 @@ class StopResult:
 
 
 def scan(feed: Feed, targets: set[str], paths: dict[str, list[tuple[str, int]]],
-         ordered: list[tuple] | None = None, changes: bool = True) -> dict[str, StopResult]:
+         ordered: list[tuple] | None = None, changes: bool = True, stats: dict | None = None) -> dict[str, StopResult]:
     """changes=False: direct rides only (stay-seated continuations still count as one ride)."""
     connections = ordered if ordered is not None else sorted(feed.connections, key=lambda c: (-c[0], -c[1]))
     trip_best: dict[str, tuple[float, int]] = {}
@@ -448,7 +448,13 @@ def scan(feed: Feed, targets: set[str], paths: dict[str, list[tuple[str, int]]],
                 default = generic.get(other)  # None: no change possible without a rule
                 for b_dep, b_best, b_more, b_trip in boardings.get(other, ()):
                     required = specific[b_trip] if b_trip in specific else default
-                    if required is None or b_dep < arr + required:
+                    allowed = required is not None and b_dep >= arr + required
+                    if stats is not None and b_trip in specific:
+                        by_default = default is not None and b_dep >= arr + default
+                        if allowed != by_default:
+                            key = "ruleAllowed" if allowed else "ruleRejected"
+                            stats[key] = stats.get(key, 0) + 1
+                    if not allowed:
                         continue
                     if b_best < best:
                         best, transfers = b_best, b_more + 1
@@ -566,7 +572,8 @@ def build(gtfs: Path, topology: dict, workplaces: list[int], municipalities: set
         if not targets:
             summary[str(workplace)] = {"station": None, "rows": 0}
             continue
-        results = scan(feed, targets, paths, ordered)
+        decisions: dict[str, int] = {}
+        results = scan(feed, targets, paths, ordered, stats=decisions)
         rows = municipality_rows(feed, assignment, results, workplace, municipalities)
         # A separate no-change scan retains direct rides even when a transfer wins all-routes.
         direct_results = scan(feed, targets, {}, ordered, changes=False)
@@ -578,7 +585,7 @@ def build(gtfs: Path, topology: dict, workplaces: list[int], municipalities: set
         files[workplace] = {"schema": SCHEMA, "to": workplace, "station": name, "serviceDate": day.isoformat(),
                             "rows": rows, "directRows": direct_rows}
         summary[str(workplace)] = {"station": name, "targetStops": len(targets), "rows": len(rows),
-                                    "directRows": len(direct_rows)}
+                                    "directRows": len(direct_rows), "tripRuleDecisions": decisions}
     meta = {
         "schema": SCHEMA,
         "serviceDate": day.isoformat(),
