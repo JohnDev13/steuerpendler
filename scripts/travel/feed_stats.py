@@ -6,7 +6,7 @@ import matrix as m
 
 path, day = Path(sys.argv[1]), dt.date.fromisoformat(sys.argv[2])
 with zipfile.ZipFile(path) as z:
-    today = m.active_services(z, day); known = m.known_services(z)
+    today = m.active_services(z, day); known = {r["service_id"] for r in m._rows(z, "calendar.txt")} | {r["service_id"] for r in m._rows(z, "calendar_dates.txt")}
     active = {r["trip_id"] for r in m._rows(z, "trips.txt") if r["service_id"] in today}
     rules = []
     for r in m._rows(z, "transfers.txt"):
