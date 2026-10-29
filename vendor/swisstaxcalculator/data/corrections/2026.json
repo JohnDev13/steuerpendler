@@ -21,6 +21,13 @@
       "from": 155,
       "to": 147.25,
       "evidence": "estv-2026-12 Lausanne: IncomeTaxCanton 9742 / IncomeSimpleTaxCanton 6616 = 147.25% = 155% x 0.95"
+    },
+    {
+      "canton": 8,
+      "field": "IncomeRateCanton",
+      "from": 147.5,
+      "to": 130.8,
+      "evidence": "broad sample s601 Genève: IncomeTaxCanton 2651 / IncomeSimpleTaxCanton 2027 = 130.8% = 147.5% x 0.88 (12% reduction of the cantonal tax, LIPP art. 2 al. 2) + 1% (aide à domicile)"
     }
   ],
   "deductions": []
