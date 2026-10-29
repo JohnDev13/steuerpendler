@@ -407,13 +407,14 @@ class StopResult:
 
 
 def scan(feed: Feed, targets: set[str], paths: dict[str, list[tuple[str, int]]],
-         ordered: list[tuple] | None = None) -> dict[str, StopResult]:
+         ordered: list[tuple] | None = None, changes: bool = True) -> dict[str, StopResult]:
+    """changes=False: direct rides only (stay-seated continuations still count as one ride)."""
     connections = ordered if ordered is not None else sorted(feed.connections, key=lambda c: (-c[0], -c[1]))
     trip_best: dict[str, tuple[float, int]] = {}
     profiles: dict[str, Profile] = defaultdict(Profile)
     # Stops that trip-specific rules lead to keep every boarding (not only the Pareto set), so a rule that
     # rules out the best departure can fall back to the next allowed one exactly.
-    rule_stops = {to_stop for rules in feed.trip_rules.values() for to_stop, _, _ in rules}
+    rule_stops = {to_stop for rules in feed.trip_rules.values() for to_stop, _, _ in rules} if changes else set()
     boardings: dict[str, list[tuple[int, float, int, str]]] = defaultdict(list)
 
     for dep, arr, origin, stop, trip, can_board, can_alight in connections:
@@ -429,7 +430,7 @@ def scan(feed: Feed, targets: set[str], paths: dict[str, list[tuple[str, int]]],
                 if candidate < best:
                     best, transfers = candidate, more
         if can_alight:
-            rules = feed.trip_rules.get((trip, stop))
+            rules = feed.trip_rules.get((trip, stop)) if changes else None
             by_stop: dict[str, dict[str, int | None]] = defaultdict(dict)
             for to_stop, to_trip, required in rules or ():
                 by_stop[to_stop][to_trip] = required
@@ -568,7 +569,7 @@ def build(gtfs: Path, topology: dict, workplaces: list[int], municipalities: set
         results = scan(feed, targets, paths, ordered)
         rows = municipality_rows(feed, assignment, results, workplace, municipalities)
         # A separate no-change scan retains direct rides even when a transfer wins all-routes.
-        direct_results = scan(feed, targets, {}, ordered)
+        direct_results = scan(feed, targets, {}, ordered, changes=False)
         direct_rows = municipality_rows(feed, assignment, direct_results, workplace, municipalities)
         all_by_bfs = {row[0]: row for row in rows}
         if any(row[2] != 0 or row[0] not in all_by_bfs or row[1] < all_by_bfs[row[0]][1]

@@ -195,6 +195,14 @@ class TripSpecificRules(MatrixScan):
         self.assertIsNone(self.minutes(trips=trips))
         self.assertEqual(self.minutes([["X", "Y", "2", "600", "in", "y-out", ""]], trips), 20)
 
+    def test_direct_only_scan_ignores_change_rules(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "feed.zip"
+            write_feed(path, STOPS, {**self.IN, **self.OUT}, [["X", "X", "1", "", "in", "early", ""]])
+            feed = matrix.load_feed(path, DAY)
+            self.assertIn("A", matrix.scan(feed, {"T"}, matrix.footpaths(feed)))
+            self.assertNotIn("A", matrix.scan(feed, {"T"}, {}, changes=False))
+
     def test_rule_does_not_apply_to_other_trips(self):
         trips = {**self.OUT, "other": (2, [("A", "07:00:00", "07:00:00"), ("X", "07:05:00", "07:05:00")])}
         self.assertEqual(self.minutes([["X", "X", "2", "60", "in", "early", ""]], trips), 14)

@@ -19,6 +19,11 @@ concurrency:
   group: travel-evidence
   cancel-in-progress: true
 
+# bash -eo pipefail: a failing command before "| tee" must fail the step (the default shell does not).
+defaults:
+  run:
+    shell: bash
+
 jobs:
   evidence:
     runs-on: ubuntu-24.04
@@ -64,18 +69,22 @@ jobs:
           echo "::notice title=GTFS feed::$url sha256=$sha bytes=$bytes"
           unzip -l "$RUNNER_TEMP/gtfs.zip" > evidence/feed-contents.txt
       - name: Build matrix
+        id: build
         run: |
           /usr/bin/time -v python3 scripts/travel/run_matrix.py --gtfs "$RUNNER_TEMP/gtfs.zip" --date "$SERVICE_DATE" \
             --feed-url "$GTFS_URL" 2>&1 | tee evidence/matrix.log
           echo "::notice title=Matrix::$(grep -E 'rows=' evidence/matrix.log | tr '\n' ' ' | cut -c1-3500)"
           echo "::notice title=Resources::$(grep -E 'Elapsed|Maximum resident' evidence/matrix.log | tr '\n' ' ')"
+      - name: Report build failure
+        if: ${{ failure() && steps.build.outcome == 'failure' }}
+        run: echo "::error title=Build matrix::$(tail -n 40 evidence/matrix.log | tr '\n' '|' | cut -c1-3800)"
       - name: Fetch reference journeys (transport.opendata.ch)
         if: ${{ !cancelled() }}
         run: |
           python3 scripts/travel/fetch_reference.py --date "$SERVICE_DATE" 2>&1 | tee evidence/reference-fetch.log
           echo "::notice title=Reference::$(cut -c1-120 evidence/reference-fetch.log | tr '\n' '|' | cut -c1-3800)"
       - name: Compare
-        if: ${{ !cancelled() }}
+        if: ${{ steps.build.outcome == 'success' }}
         run: |
           python3 scripts/travel/compare_reference.py 2>&1 | tee evidence/compare.log || true
           echo "::notice title=Compare::$(tr '\n' '|' < evidence/compare.log | cut -c1-3800)"
