@@ -44,7 +44,7 @@ test('component comparison records amounts, absolute errors, and neutral mismatc
 
 // Ratchet: the official comparison is not yet green. The count of failing ESTV cases
 // may only go down; lower this constant in the same PR that fixes a case.
-const MAX_OFFICIAL_FAILURES = 4;
+const MAX_OFFICIAL_FAILURES = 3;
 
 test('29-case ESTV catalogue is complete, evidence-bound and does not regress', async () => {
   const report = await runOfficialComparison(ROOT);

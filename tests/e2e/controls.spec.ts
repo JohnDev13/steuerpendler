@@ -8,7 +8,7 @@ test('caps the public-transport control at 30 minutes for Aarau while keeping wa
  await page.getByRole('combobox',{name:'Arbeitsort'}).fill('Aarau');
  await page.getByRole('option',{name:'Aarau (AG)'}).click();
  await time.evaluate((input:HTMLInputElement)=>{input.value='30';input.dispatchEvent(new Event('input',{bubbles:true}));});
- await expect(page.locator('#summary')).toContainText('109 Gemeinden mit Verbindung nach Aarau bis 30 Min. · 3 weitere erreichbare Gemeinden ohne Steuerangabe');
+ await expect(page.locator('#summary')).toContainText('112 Gemeinden mit Verbindung nach Aarau bis 30 Min.');
  await expect(page.locator('#result-notice')).toContainText('Der Weg zur Haltestelle ist nicht gemessen');
 });
 
@@ -33,10 +33,10 @@ test('long result lists are paged and can be sorted by travel time',async({page}
  await page.goto('./');
  const time=page.getByLabel('Maximale Fahrzeit',{exact:true});
  await time.evaluate((input:HTMLInputElement)=>{input.value='30';input.dispatchEvent(new Event('input',{bubbles:true}));});
- await expect(page.locator('#summary')).toContainText('109 Gemeinden');
+ await expect(page.locator('#summary')).toContainText('112 Gemeinden');
  await expect(page.locator('#ranked-list tr')).toHaveCount(25);
- await page.getByRole('button',{name:'Alle 109 Gemeinden anzeigen'}).click();
- await expect(page.locator('#ranked-list tr')).toHaveCount(109);
+ await page.getByRole('button',{name:'Alle 112 Gemeinden anzeigen'}).click();
+ await expect(page.locator('#ranked-list tr')).toHaveCount(112);
  await page.getByLabel('Sortieren nach',{exact:true}).selectOption('time');
  const minutes=await page.locator('#ranked-list tr td:nth-child(4)').allTextContents();
  const values=minutes.map(text=>Number.parseInt(text,10));

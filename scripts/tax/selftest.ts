@@ -49,12 +49,13 @@ export function reconstruct(artifacts: Artifacts, sample: Sample): number {
   const row = rows[i].map((v, k) => v + (rows[i + 1][k] - v) * t);
   const rateChurch = sample.church === 'reformed' ? g[4] : sample.church === 'catholic' ? g[5] : 0;
   const precise=artifacts.profiles[`${sample.civil}-${sample.kids}`].precision?.[g[1]];
-  if(precise&&t!==0&&t!==1){const meta=artifacts.profiles[`${sample.civil}-${sample.kids}`].meta;return reconstructPrecision(precise,sample.income,[g[2],g[3],rateChurch],meta.pensionDefault,meta.budgetDefault)+(sample.church==='none'?0:precise.personalChurch[sample.church]);}
+  if(precise&&t!==0&&t!==1){const meta=artifacts.profiles[`${sample.civil}-${sample.kids}`].meta;return reconstructPrecision(precise,sample.income,[g[2],g[3],rateChurch],meta.pensionDefault,meta.budgetDefault,sample.church==='none'?0:precise.personalChurch[sample.church]);}
   // Separate monetary rounding at each final component, ties to even.
   const round=(v:number)=>{const f=Math.floor(v);return Math.abs(v-f-.5)<1e-8?(f%2===0?f:f+1):Math.round(v);};
   const r=precise?round:(v:number)=>v;
   const churchRate=precise?Math.round(rateChurch/precise.persons*100)/100*precise.persons:rateChurch;
-  const total = row[0] + r(row[1] * g[2] / 100) + r(row[1] * g[3] / 100) + r(row[1] * churchRate / 100) + row[2] + (precise && sample.church !== 'none' ? precise.personalChurch[sample.church] : 0);
+  const nonFederal = r(row[1] * g[2] / 100) + r(row[1] * g[3] / 100) + r(row[1] * churchRate / 100) + row[2] + (precise && sample.church !== 'none' ? precise.personalChurch[sample.church] : 0);
+  const total = row[0] + nonFederal - (precise ? Math.min(precise.credit, Math.max(0, nonFederal)) : 0);
   if (!Number.isFinite(total)) throw new Error('Nonfinite reconstructed total');
   return total;
 }

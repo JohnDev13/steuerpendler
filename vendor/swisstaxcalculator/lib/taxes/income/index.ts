@@ -13,6 +13,7 @@ import {
   calculateDeductionByDefinition
 } from '../deduction';
 import { getTaxDecutionTable } from '../deduction/provider';
+import { applyLateRules, cantonalReductions, cantonalRules } from '../deduction/cantonal';
 import {
   calculateTaxesCantonAndCity,
   getChurchIncomeFactor,
@@ -131,7 +132,15 @@ export const calculateTaxesIncomeAndFortune = async (taxInput: TaxInput): Promis
     progression = { bund, cantonIncome, cantonFortune, overall };
   }
 
-  const taxesTotal = dineroAddMany(
+  // Steuerpendler patch 24: cantonal tax credit per child (ESTV TaxCredit), not below 0.
+  const { credit } = cantonalReductions(
+    { cantonId: taxInput.cantonId, married: ['m', 'rp'].includes(taxInput.relationship), kids: taxInput.children },
+    await getTaxDecutionTable(taxInput.cantonId, taxInput.year, 'EINKOMMENSSTEUER')
+  );
+  const nonFederal = dineroToNumber(dineroAddMany(taxesIncomeCanton, taxesIncomeCity, taxesIncomeChurch, taxesFortuneCanton,
+    taxesFortuneCity, taxesFortuneChurch, taxesPersonnel));
+  const taxCredit = Math.min(credit, Math.max(0, nonFederal));
+  const taxesTotal = subtract(dineroAddMany(
     taxesIncomeCanton,
     taxesIncomeCity,
     taxesIncomeChurch,
@@ -140,7 +149,7 @@ export const calculateTaxesIncomeAndFortune = async (taxInput: TaxInput): Promis
     taxesFortuneChurch,
     taxesIncomeBund,
     taxesPersonnel
-  );
+  ), dineroChf(taxCredit));
 
   const result: TaxResult = {
     input: taxInput,
@@ -218,6 +227,24 @@ export const calculateTaxableAmount = async (taxInput: TaxInput) => {
     )
   );
 
+  // Steuerpendler patch 22: cantonal rules disable some ordinary deductions and add deductions that depend on the
+  // income after the ordinary ones (low-income, income-dependent married/single-parent deductions).
+  const rules = cantonalRules(
+    { cantonId: taxInput.cantonId, married: ['m', 'rp'].includes(taxInput.relationship), kids: taxInput.children },
+    deductionsIncomeCanton
+  );
+  for (const item of deductionsIncome) if (rules.disable.includes(item.id)) item.amountCanton = dineroChf(0);
+  if (rules.late.length) {
+    const before = dineroToNumber(dineroRoundMin0(subtract(
+      grossNetDetails.reduce((acc, item) => dineroAddMany(acc, dineroChf(item.netIncome)), dineroChf(0)),
+      deductionsIncome.reduce((acc, item) => dineroAddMany(acc, item.amountCanton), dineroChf(0))
+    )));
+    const ordinary = new Map<string, number>();
+    for (const item of deductionsIncome) ordinary.set(item.id, (ordinary.get(item.id) ?? 0) + dineroToNumber(item.amountCanton));
+    for (const [id, value] of applyLateRules(rules.late, before, ordinary))
+      if (value > 0) deductionsIncome.push({ id, name: id, target: '', amountCanton: dineroChf(value), amountBund: dineroChf(0) });
+  }
+
   const taxableIncomeCanton = dineroRoundMin0(
     subtract(
       grossNetDetails.reduce(
@@ -284,7 +311,15 @@ export const calculateTaxesBase = async (
     taxableFortuneCanton
   );
 
-  return { taxesIncomeBase, taxesFortuneBase };
+  // Steuerpendler patch 24: per-child reduction of the cantonal simple tax (BL).
+  const { simpleReduction } = cantonalReductions(
+    { cantonId: taxInput.cantonId, married: ['m', 'rp'].includes(taxInput.relationship), kids: taxInput.children },
+    await getTaxDecutionTable(taxInput.cantonId, taxInput.year, 'EINKOMMENSSTEUER')
+  );
+  const reducedIncomeBase = simpleReduction
+    ? dineroChf(Math.max(0, dineroToNumber(taxesIncomeBase) - simpleReduction), 5)
+    : taxesIncomeBase;
+  return { taxesIncomeBase: reducedIncomeBase, taxesFortuneBase };
 };
 
 export const calculateTaxesBund = async (
@@ -307,6 +342,8 @@ export const calculateTaxesBund = async (
     // 2025/2026 federal tax credit: CHF 263 per child, never a refund.
     taxesIncomeBund = dineroRoundMin0(subtract(taxesIncomeBund, dineroChf(263 * taxInput.children)));
   }
+  // Steuerpendler patch 23: DBG Art. 36 Abs. 3, federal tax amounts below CHF 25 are not levied.
+  if (dineroToNumber(taxesIncomeBund) < 25) taxesIncomeBund = dineroChf(0);
 
   return { taxesIncomeBund };
 };
