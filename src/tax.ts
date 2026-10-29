@@ -8,7 +8,8 @@ export type Gemeinde = readonly [name:string,canton:string,rateCanton:number,rat
 export type DeductionFormat = 'ZERO'|'STANDARDIZED'|'MAXIMUM'|'PERCENT'|'PERCENT,MAXIMUM'|'PERCENT,MINIMUM,MAXIMUM'|'STANDARDIZED,PERCENT,MAXIMUM';
 export interface DeductionOp {source:'net'|'constant'|'rent30';value:number;format:DeductionFormat;amount:number;percent:number;minimum:number;maximum:number;multiplier:number}
 export type TariffType = 'BUND'|'ZUERICH'|'FORMEL'|'FREIBURG'|'FLATTAX';
-export interface PreciseTariff {type:TariffType;split:number;table:{amount:number;percent:number;taxes:number;formula:string}[]}
+export type TariffRounding='split100'|'income100'|'exact';
+export interface PreciseTariff {type:TariffType;split:number;rounding:TariffRounding;table:{amount:number;percent:number;taxes:number;formula:string}[]}
 export interface PreciseCanton {bund:{deductions:DeductionOp[];tariff:PreciseTariff};canton:{deductions:DeductionOp[];tariff:PreciseTariff};personal:number;kids:number;persons:number}
 export interface TaxProfile {meta:{year:number;incomes:{from:number;step:number;count:number};pensionDefault?:PensionDefault;budgetDefault?:BudgetDefault;[key:string]:unknown};cantons:Record<string,number[][]>;precision?:Record<string,PreciseCanton>}
 // Integer ties-to-even, matching the engine's monetary rounding, not display rounding.
@@ -34,7 +35,7 @@ function validatePrecision(value:unknown):value is PreciseCanton {
   if(!part||!Array.isArray(part.deductions)||!part.tariff)return false;
   for(const op of part.deductions)if(!op||!['net','constant','rent30'].includes(op.source)||!deductionFormats.has(op.format)||![op.value,op.amount,op.percent,op.minimum,op.maximum,op.multiplier].every(Number.isFinite))return false;
   const tariff=part.tariff;
-  if(!tariffTypes.has(tariff.type)||!Number.isFinite(tariff.split)||tariff.split<=0||!Array.isArray(tariff.table)||tariff.table.length===0)return false;
+  if(!tariffTypes.has(tariff.type)||!['split100','income100','exact'].includes(tariff.rounding)||!Number.isFinite(tariff.split)||tariff.split<=0||!Array.isArray(tariff.table)||tariff.table.length===0)return false;
   for(const row of tariff.table){
    if(!row||![row.amount,row.percent,row.taxes].every(Number.isFinite)||typeof row.formula!=='string')return false;
    try { formulaValue(row.formula,100000); } catch { return false; }
@@ -58,23 +59,33 @@ export function preciseBase(p:PreciseCanton,income:number,pensionDefault?:Pensio
    else if(op.format==='STANDARDIZED,PERCENT,MAXIMUM')d=Math.min(op.maximum,op.amount+floorChf(v*op.percent/100));
    deductions+=d*op.multiplier;
   }
-  const tariff=part.tariff,split=tariff.split;
-  let amount=Math.max(0,halfEven(net-deductions))* (Math.round(1/split*1e5)/1e5);
-  if(tariff.type!=='FORMEL')amount=Math.floor(amount/100)*100;
-  let type=tariff.type;
-  if(type==='ZUERICH'&&tariff.table.some(x=>x.taxes>0))type='BUND';
+  return preciseTariffTax(part.tariff,Math.max(0,halfEven(net-deductions)));
+ };
+ return [Math.max(0,halfEven(tax(p.bund))-263*p.kids),tax(p.canton),p.personal];
+}
+// Tax of one tariff for a taxable income, with the canton's rounding around splitting (vendor patch 20).
+export function preciseTariffTax(tariff:PreciseTariff,taxable:number):number {
+ const split=tariff.split,reciprocal=Math.round(1/split*1e5)/1e5,floor100=(v:number)=>Math.floor(v/100+1e-9)*100;
+ let type=tariff.type;
+ if(type==='ZUERICH'&&tariff.table.some(x=>x.taxes>0))type='BUND';
+ const rate=(v:number)=>Math.round(v*1e5)/1e5;
+ const taxOf=(amount:number)=>{
   let result=0;
-  const rate=(v:number)=>Math.round(v*1e5)/1e5;
   if(type==='FLATTAX')result=amount*rate(tariff.table[0].percent)/100;
   else if(type==='ZUERICH'){let left=amount;for(const row of tariff.table){const used=Math.min(left,row.amount);result+=used*rate(row.percent)/100;left-=used;if(!left)break;}}
   else if(type==='FREIBURG'){
    let last:PreciseTariff['table'][number]|undefined;
-   for(const row of tariff.table){if(row.amount>=amount){if(last&&last.amount!==0){const rate=last.percent+(amount-last.amount)*(row.percent-last.percent)/(row.amount-last.amount);result=amount*Math.round(rate*1e5)/1e7;}break;}last=row;}
+   for(const row of tariff.table){if(row.amount>=amount){if(last&&last.amount!==0){const r=last.percent+(amount-last.amount)*(row.percent-last.percent)/(row.amount-last.amount);result=amount*Math.round(r*1e5)/1e7;}break;}last=row;}
    if(last&&amount>tariff.table[tariff.table.length-1].amount)result=amount*rate(last.percent)/100;
   }else {let row=tariff.table[0];for(const next of tariff.table){if(next.amount>amount)break;row=next;}result=type==='FORMEL'?formulaValue(row.formula,amount):Math.round(row.taxes*100)/100+(amount-row.amount)*rate(row.percent)/100;}
-  return result*split;
+  return result;
  };
- return [Math.max(0,halfEven(tax(p.bund))-263*p.kids),tax(p.canton),p.personal];
+ if(tariff.rounding==='exact')return taxOf(taxable*reciprocal)*split;
+ const whole=floor100(taxable);
+ if(tariff.rounding==='income100')return taxOf(whole*reciprocal)*split;
+ if(split===1)return taxOf(whole);
+ const divided=floor100(whole*reciprocal);
+ return divided>0?taxOf(divided)/divided*whole:0;
 }
 export interface TaxBreakdown {bund:number;kanton:number;gemeinde:number;kirche:number;personal:number;total:number;income:number;clamped:boolean}
 export function calculateTax(profile:TaxProfile,g:Gemeinde,income:number,church:Church):TaxBreakdown {

@@ -1,8 +1,8 @@
 // A separate serialized-program interpreter for table validation. Does not call
 // the full engine, taxable-income calculator or the browser implementation.
 import { add,subtract } from 'dinero.js';
-import { dineroChf,dineroToNumber,dineroRound,dineroRoundMin0,dineroRound100Down,dineroRoundDown,multiplyDineroPercent,multiplyDineroFactor,dineroMin,dineroMax } from '../../vendor/swisstaxcalculator/lib/utils/dinero';
-import { calculateTaxesAmount } from '../../vendor/swisstaxcalculator/lib/taxes/tarif';
+import { dineroChf,dineroToNumber,dineroRound,dineroRoundMin0,dineroRoundDown,multiplyDineroPercent,multiplyDineroFactor,dineroMin,dineroMax } from '../../vendor/swisstaxcalculator/lib/utils/dinero';
+import { applyTariffRounding, calculateTaxesAmount } from '../../vendor/swisstaxcalculator/lib/taxes/tarif';
 import type { BudgetDefault, PensionDefault, PreciseCanton } from '../../src/tax';
 import { calculateBvg2026Age35 } from './bvg';
 export function reconstructPrecision(p:PreciseCanton,income:number,rates:number[],pensionDefault?:PensionDefault,budgetDefault?:BudgetDefault):number {
@@ -26,9 +26,8 @@ export function reconstructPrecision(p:PreciseCanton,income:number,rates:number[
    deductions=add(deductions,multiplyDineroFactor(d,op.multiplier,1));
   }
   const t=part.tariff;
-  let amount=multiplyDineroFactor(dineroRoundMin0(subtract(net,deductions)),1/t.split,5);
-  if(t.type!=='FORMEL')amount=dineroRound100Down(amount);
-  return multiplyDineroFactor(calculateTaxesAmount(amount,{tableType:t.type,table:t.table} as any),t.split,5);
+  const taxable=dineroToNumber(dineroRoundMin0(subtract(net,deductions)));
+  return dineroChf(applyTariffRounding(t.rounding,taxable,t.split,a=>dineroToNumber(calculateTaxesAmount(dineroChf(a,5),{tableType:t.type,table:t.table} as any))),5);
  };
  const bund=dineroRoundMin0(subtract(dineroRound(base(p.bund)),dineroChf(263*p.kids)));
  const canton=base(p.canton);

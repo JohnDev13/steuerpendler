@@ -45,6 +45,11 @@ interface TaxPart {
   tariff: {
     type: TariffType
     split: number // finite and > 0
+    // How the taxable income is rounded around splitting (vendor patch 20, evidenced by the broad ESTV sample):
+    // 'split100'  X = floor100(income), y = floor100(X / split), tax = tax(y) / y * X  (tax(X) when split = 1)
+    // 'income100' X = floor100(income), tax = tax(X / split) * split                    (AG)
+    // 'exact'     tax = tax(income / split) * split                     (SO, GR, GE, UR, formula tariffs)
+    rounding: 'split100' | 'income100' | 'exact'
     table: Array<{
       amount: number
       percent: number

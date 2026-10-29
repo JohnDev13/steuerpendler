@@ -14,7 +14,7 @@ export const TAX_WITHHELD: Readonly<Record<string, readonly string[]>> = {
   s1: ['AG', 'BE', 'BL', 'BS', 'FR', 'NE', 'OW', 'SH', 'SO', 'SZ', 'TG', 'TI', 'UR', 'ZG'],
   s2: ['AG', 'BE', 'BL', 'BS', 'FR', 'NE', 'OW', 'SH', 'SO', 'SZ', 'TG', 'TI', 'UR', 'ZG'],
   s3: ['AG', 'BE', 'BL', 'BS', 'FR', 'NE', 'OW', 'SH', 'SO', 'SZ', 'TG', 'TI', 'UR', 'ZG'],
-  m0: ['BE', 'FR', 'GR', 'LU', 'NE', 'OW', 'SH', 'SZ', 'UR'],
+  m0: ['BE', 'FR', 'LU', 'NE', 'OW', 'SH', 'SZ', 'UR'],
   m1: ['AG', 'BE', 'BL', 'FR', 'LU', 'NE', 'OW', 'SH', 'SZ', 'TG', 'UR'],
   m2: ['AG', 'BE', 'BL', 'FR', 'LU', 'NE', 'OW', 'SH', 'SO', 'SZ', 'TG', 'UR'],
   m3: ['BE', 'BL', 'FR', 'LU', 'NE', 'OW', 'SH', 'SO', 'SZ', 'TG', 'UR'],

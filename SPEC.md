@@ -185,7 +185,7 @@ Default release scheme: retain §6 filenames and request every runtime data asse
 
 Inputs: workplace-independent profile `(civ, kids, income, church)` and Gemeinde `g`. Income is clamped to CHF 40,000–500,000 with a visible note.
 
-**Evaluation (schema v2, `src/tax.ts`).** At an exact grid income the serialized row is used. Between grid incomes the canton's precision program is evaluated exactly: gross → net, deductions, taxable income floored to CHF 100 as the tariffs require, splitting, tariff table. Linear interpolation of tax amounts is **not** permitted: the CHF 100 floor makes tax a staircase in income (steps of CHF 13–57 about every CHF 105), and a line between CHF 1,000 rows misses it by up to CHF 47, which violates §7.1. Schema-v1 profiles keep the legacy interpolation only for backwards compatibility.
+**Evaluation (schema v2, `src/tax.ts`).** At an exact grid income the serialized row is used. Between grid incomes the canton's precision program is evaluated exactly: gross → net, deductions, the canton's rounding of the taxable income around splitting (`tariff.rounding`: floor to CHF 100 before and after dividing by the splitting factor and apply that rate to the floored income — most cantons; AG floors only the income; SO, GR, GE, UR and formula tariffs do not round), tariff table. Linear interpolation of tax amounts is **not** permitted: the CHF 100 floor makes tax a staircase in income (steps of CHF 13–57 about every CHF 105), and a line between CHF 1,000 rows misses it by up to CHF 47, which violates §7.1. Schema-v1 profiles keep the legacy interpolation only for backwards compatibility.
 
 ```
 kanton   = round_half_even(base × g.rateCanton / 100)
