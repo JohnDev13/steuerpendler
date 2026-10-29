@@ -13,7 +13,7 @@
   "firstBoardStopName",
   "firstBoardSeconds"
  ],
- "absence": "unknown_unobserved",
+ "absence": "no_journey_within_cap_under_model",
  "model": {
   "access": "unmeasured_zero",
   "origins": "every GTFS stop inside the Gemeinde polygon (simplified BFS 2026 boundaries)",
@@ -22,16 +22,18 @@
   "walkSpeedMetersPerSecond": 1.2,
   "walkDetourFactor": 1.3,
   "targetComplexRadiusMeters": 300.0,
-  "frequencyTripsIgnored": 1901,
-  "routeOrTripSpecificTransferRowsIgnored": 702124
+  "frequencyTrips": 254,
+  "frequencyTripCopies": 4796,
+  "tripRulesApplied": 5949,
+  "tripRulesOtherDays": 282373
  },
  "feed": {
-  "url": "https://83025b28472d6aa2bf5ae59f3724aa78.eu.r2.cloudflarestorage.com/dx-omd-prod/resources/5ea86d92-f818-4e09-b6f7-17088eedab39/gtfs_fp2026_20261024.zip",
-  "sha256": "10a8bd19f2fa03d363171ac04db70aa6a0c12db0e3af3d2afb58e0501f751090",
-  "bytes": 291305687
+  "url": "https://83025b28472d6aa2bf5ae59f3724aa78.eu.r2.cloudflarestorage.com/dx-omd-prod/resources/424ae338-b551-4856-be2a-b255f9e8d62d/gtfs_fp2026_20261028.zip",
+  "sha256": "f4d87e846a6f6cf588fda8bc67fd78fb028f2c7778588a70710378295bafa782",
+  "bytes": 291103301
  },
- "codeRevision": "cbb462fc95da52f353fcec1a929ddc71f7f7de11",
- "connections": 458469,
+ "codeRevision": "f163efe6b7335ec47e03763fe36e433b3915fa07",
+ "connections": 460377,
  "workplaces": {
   "261": {
    "station": "Zürich HB",
