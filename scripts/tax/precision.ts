@@ -55,7 +55,7 @@ export async function compilePrecision(input:TaxInput):Promise<PreciseCanton> {
    const addBackLate=rule.addBack.flatMap(x=>lateIds.flatMap((lid,i)=>lid===x?[i]:[]));
    return {kind:rule.kind,amount:rule.kind==='fixed'?rule.amount:0,rate:'rate' in rule?rule.rate:0,max:rule.kind==='percent'?rule.max:0,
     threshold:'threshold' in rule?rule.threshold:0,base:rule.kind==='step'?rule.base:0,step:rule.kind==='step'?rule.step:0,
-    reduction:rule.kind==='step'?rule.reduction:0,addBack,addBackLate};
+    reduction:rule.kind==='step'?rule.reduction:0,bands:rule.kind==='bands'?rule.bands:[],addBack,addBackLate};
   });
   const [tariff,used]=await getTaxTarifTable(id,2026,'EINKOMMENSSTEUER',group);
   const reductions=id===0?{simpleReduction:0}:cantonalReductions({cantonId:id,married:['m','rp'].includes(input.relationship),kids:input.children},deductions);

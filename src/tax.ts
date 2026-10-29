@@ -12,7 +12,7 @@ export type TariffRounding='split100'|'income100'|'exact';
 export interface PreciseTariff {type:TariffType;split:number;rounding:TariffRounding;table:{amount:number;percent:number;taxes:number;formula:string}[]}
 // Cantonal deductions on the income after the ordinary ones (vendor patch 22). All fields numeric; unused ones 0.
 // addBack: ordinary deductions added to the basis (constant per profile); addBackLate: indices of earlier late ones.
-export interface PreciseLate {kind:'fixed'|'percent'|'linear'|'step';amount:number;rate:number;max:number;threshold:number;base:number;step:number;reduction:number;addBack:number;addBackLate:number[]}
+export interface PreciseLate {kind:'fixed'|'percent'|'linear'|'step'|'bands';amount:number;rate:number;max:number;threshold:number;base:number;step:number;reduction:number;bands:[number,number][];addBack:number;addBackLate:number[]}
 export interface PreciseCanton {bund:{deductions:DeductionOp[];tariff:PreciseTariff;late?:PreciseLate[]};canton:{deductions:DeductionOp[];tariff:PreciseTariff;late?:PreciseLate[];reduction?:number};credit:number;personal:number;personalChurch:{reformed:number;catholic:number};kids:number;persons:number}
 export interface TaxProfile {meta:{year:number;incomes:{from:number;step:number;count:number};pensionDefault?:PensionDefault;budgetDefault?:BudgetDefault;[key:string]:unknown};cantons:Record<string,number[][]>;precision?:Record<string,PreciseCanton>}
 // Integer ties-to-even, matching the engine's monetary rounding, not display rounding.
@@ -37,7 +37,7 @@ function validatePrecision(value:unknown):value is PreciseCanton {
  for(const part of [p.bund,p.canton]){
   if(!part||!Array.isArray(part.deductions)||!part.tariff)return false;
   for(const op of part.deductions)if(!op||!['net','constant','rent30'].includes(op.source)||!deductionFormats.has(op.format)||![op.value,op.amount,op.percent,op.minimum,op.maximum,op.multiplier].every(Number.isFinite))return false;
-  for(const l of part.late??[])if(!l||!['fixed','percent','linear','step'].includes(l.kind)||![l.amount,l.rate,l.max,l.threshold,l.base,l.step,l.reduction,l.addBack].every(Number.isFinite)||(l.kind==='step'&&l.step<=0)||!Array.isArray(l.addBackLate)||!l.addBackLate.every(Number.isInteger))return false;
+  for(const l of part.late??[])if(!l||!['fixed','percent','linear','step','bands'].includes(l.kind)||!Array.isArray(l.bands)||!l.bands.every(b=>Array.isArray(b)&&b.length===2&&b.every(Number.isFinite))||![l.amount,l.rate,l.max,l.threshold,l.base,l.step,l.reduction,l.addBack].every(Number.isFinite)||(l.kind==='step'&&l.step<=0)||!Array.isArray(l.addBackLate)||!l.addBackLate.every(Number.isInteger))return false;
   const tariff=part.tariff;
   if(!tariffTypes.has(tariff.type)||!['split100','income100','exact'].includes(tariff.rounding)||!Number.isFinite(tariff.split)||tariff.split<=0||!Array.isArray(tariff.table)||tariff.table.length===0)return false;
   for(const row of tariff.table){
@@ -74,7 +74,7 @@ export function applyLate(late:PreciseLate[],income:number):number {
  const done:number[]=[];let remaining=income;
  for(const l of late){
   const basis=remaining+l.addBack+l.addBackLate.reduce((s,i)=>s+done[i],0);
-  const d=l.kind==='fixed'?l.amount:l.kind==='percent'?Math.min(l.max,Math.floor(l.rate*basis+1e-9)):l.kind==='linear'?Math.max(0,Math.floor(l.rate*(l.threshold-basis)+1e-9)):Math.max(0,l.base-Math.floor(Math.max(0,basis-l.threshold)/l.step+1e-9)*l.reduction);
+  const d=l.kind==='bands'?(l.bands.find(([upTo])=>basis<=upTo)?.[1]??0):l.kind==='fixed'?l.amount:l.kind==='percent'?Math.min(l.max,Math.floor(l.rate*basis+1e-9)):l.kind==='linear'?Math.max(0,Math.floor(l.rate*(l.threshold-basis)+1e-9)):Math.max(0,l.base-Math.floor(Math.max(0,basis-l.threshold)/l.step+1e-9)*l.reduction);
   done.push(d);remaining-=d;
  }
  return Math.max(0,remaining);

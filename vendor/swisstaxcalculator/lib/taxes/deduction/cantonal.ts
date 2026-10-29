@@ -10,11 +10,13 @@ import type { TaxDeductionTable } from './types';
 //  percent: D = min(max, floor(rate x B))
 //  linear:  D = max(0, floor(rate x (threshold - B)))
 //  step:    D = max(0, base - floor(max(0, B - threshold) / step) x reduction)
+//  bands:   D = amount of the first band with B <= upTo, else 0
 export type LateRule =
   | { kind: 'fixed'; id: string; amount: number; addBack: string[] }
   | { kind: 'percent'; id: string; rate: number; max: number; addBack: string[] }
   | { kind: 'linear'; id: string; rate: number; threshold: number; addBack: string[] }
-  | { kind: 'step'; id: string; base: number; threshold: number; step: number; reduction: number; addBack: string[] };
+  | { kind: 'step'; id: string; base: number; threshold: number; step: number; reduction: number; addBack: string[] }
+  | { kind: 'bands'; id: string; bands: [upTo: number, amount: number][]; addBack: string[] };
 
 export interface Household { cantonId: number; married: boolean; kids: number }
 export interface CantonalRules { disable: string[]; late: LateRule[] }
@@ -53,6 +55,11 @@ export const cantonalRules = (h: Household, table: TaxDeductionTable): CantonalR
         addBack: [...addBack, 'SozVerheiratet_EK', 'SozAlleinerzieher_EK'] });
       return { disable: ['SozVerheiratet_EK', 'SozAlleinerzieher_EK'], late };
     }
+    case 1: // AG § 42 Abs. 1bis StG: additional social deduction on net income after the social deductions (ESTV canton sheet AG)
+      return { disable: [], late: [{ kind: 'bands', id: 'SozZusAbzugTiefeEinkommen_EK', addBack: [],
+        bands: [[14999, 12000], [19999, 7500], [24999, 3000], [29999, 2000], [34999, 1000]] }] };
+    case 6: case 22: case 25: // BS, UR, ZG: single parents get the single-parent deduction instead of the single deduction
+      return { disable: singleParent ? ['SozLedig_EK'] : [], late: [] };
     default:
       return { disable: [], late: [] };
   }
@@ -60,6 +67,7 @@ export const cantonalRules = (h: Household, table: TaxDeductionTable): CantonalR
 
 export const lateDeduction = (rule: LateRule, basis: number): number => {
   if (rule.kind === 'fixed') return rule.amount;
+  if (rule.kind === 'bands') return rule.bands.find(([upTo]) => basis <= upTo)?.[1] ?? 0;
   if (rule.kind === 'percent') return Math.min(rule.max, Math.floor(rule.rate * basis + 1e-9));
   if (rule.kind === 'linear') return Math.max(0, Math.floor(rule.rate * (rule.threshold - basis) + 1e-9));
   return Math.max(0, rule.base - Math.floor(Math.max(0, basis - rule.threshold) / rule.step + 1e-9) * rule.reduction);
