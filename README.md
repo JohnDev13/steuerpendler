@@ -14,16 +14,19 @@ no backend, cookies or analytics.
 ## How the numbers are made
 
 **Tax.** The vendored open-source engine [`swisstaxcalculator`](https://github.com/devbrains-com/swisstaxcalculator)
-with ESTV 2026 data and 19 recorded patches (`vendor/swisstaxcalculator/STEUERPENDLER-PATCHES.md`) generates
+with ESTV 2026 data and 24 recorded patches (`vendor/swisstaxcalculator/STEUERPENDLER-PATCHES.md`) generates
 one profile per civil status and number of children. The browser evaluates the tariffs exactly between the
 CHF 1,000 grid rows. Assumptions: gross employment income, age 35, no wealth, ESTV standard deductions,
 married couples with one income. Checked against 29 frozen cases from the official ESTV calculator:
-21 match within tolerance; cantons more than 5 % off are withheld (currently VS, VD, GE, JU).
+27 match within tolerance; the remaining two cases (VD, VS) fail. A broader 650-case sample passes
+604 cases, but covers only one Gemeinde per canton. Estimates for VS, VD and JU are withheld; JU's
+parish-rate issue is not settled by its sampled cases. Neither check grants official ESTV approval.
 
 **Commute.** `scripts/travel/matrix.py` scans every connection of the official Swiss GTFS timetable
 ([opentransportdata.swiss](https://opentransportdata.swiss), feed of 28 Oct 2026) for Tuesday 27 Oct 2026:
 shortest time from first boarding at any stop in the Gemeinde (06:30–08:30) to arrival at the workplace
-station, any number of changes, up to 30 minutes. CI checks it against 30 SBB reference journeys fetched
+station, any number of changes (including frequency trips and trip-specific transfer rules), up to 30 minutes.
+CI checks it against 30 SBB reference journeys fetched
 from transport.opendata.ch (29 within 3 minutes; the 30th needs over 30 minutes on SBB too). Walking to the first
 stop is not measured. Refresh with the **Travel evidence** workflow.
 

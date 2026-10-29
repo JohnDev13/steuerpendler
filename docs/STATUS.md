@@ -14,8 +14,8 @@ keep it short and update it in the same PR that changes what it describes.
   within the selected time in this timetable (access walk to the first stop: 0 min, unmeasured). The old observed-positive export and its probes are removed.
 - Walking from home to the first stop is not measured (0 min); the walk controls are disabled and say so.
 - Withheld ("Daten in Prüfung"): VS, VD, JU for every profile, plus every canton × profile that the broad
-  ESTV sample shows more than 5 % off (`src/withheld.ts`). Outside the three quarantined cantons every profile now
-  matches the sample, so nothing else is withheld.
+  ESTV sample shows more than 5 % off (`src/withheld.ts`). Outside the three quarantined cantons every sampled
+  profile matches, but the 650 cases cover only one Gemeinde per canton; this is not all-Gemeinde validation.
 
 ## Gates
 
@@ -26,18 +26,17 @@ keep it short and update it in the same PR that changes what it describes.
 | Tax vs official ESTV, 29 frozen cases | 27 pass, 2 fail (VD, VS; ratchet: may only improve) | `npm run tax:official` |
 | Tax vs broad official sample, 650 cases (26 capitals × 6 profiles × 4 incomes + church) | 604 pass (ratchet); every canton 25/25 except VS, VD | `npx tsx --tsconfig scripts/tax/tsconfig.json scripts/tax/sample.ts --fail` |
 | Canton × profile more than 5 % off ESTV is withheld | enforced by test (`src/withheld.ts`) | `npm test` |
-| Cantons > 5 % off ESTV are withheld | enforced by test | `npm test` |
 | Travel vs SBB, 30 pairs, ± 3 min | pass: 29 within 3 min, Wollerau consistent (SBB 38 min > cap) | `python3 scripts/travel/compare_reference.py --require-complete` |
 | Unit, release, map, content, e2e | pass | see CI |
 
 The green `tax-accuracy` job checks engine parity, not the independently failing ESTV gate;
-`npm run tax:official` still exits 1 (8/29 cases fail). `availability.travel` (official, audited
+`npm run tax:official` still exits 1 (2/29 cases fail: VD, VS). `availability.travel` (official, audited
 travel) and the approval flags stay false; the preview uses `availability.matrix`.
 
 Tax tables were refreshed from ESTV on 29 Oct 2026 (new tariffs for JU, NW, SZ, TI, VD, VS; six data corrections
-became unnecessary). The 650-case sample showed what the engine lacked: low-income deductions, cantonal
-married and single-parent deduction rules, tax reductions per child (e.g. BL) and the VD family quotient.
-These were added canton by canton (vendor patches 20–24); the remaining gaps are the three quarantined cantons
+became unnecessary). The 650-case sample exposed low-income deductions, cantonal married and single-parent
+deduction rules, tax reductions per child (e.g. BL), and the still-unresolved VD family quotient. Supported rules were
+added canton by canton (vendor patches 20–24); the remaining gaps are the three quarantined cantons
 (JU parish rates of merged municipalities — its deductions now match —, VD quotient familial, VS rebates and coefficients).
 GE left the quarantine once its 12 % cantonal reduction and 1 % home-care levy were modelled.
 
@@ -52,13 +51,16 @@ GE left the quarantine once its 12 % cantonal reduction and 1 % home-care levy w
   matrix, fetches the 30 SBB reference journeys, runs the gate and opens a data PR. The `travel` CI job
   re-runs the gate on every PR.
 - `.github/workflows/deploy-pages.yml` builds with `PAGES_BASE=/steuerpendler/` and deploys on each main push
-  (or manually). Pages Source is GitHub Actions; the preserved `gh-pages` branch is not the deployment source.
+  (or manually). Pages uses GitHub Actions from `main`; the former `gh-pages` branch was deleted and its
+  last tip retained as the `archive/gh-pages` tag. The Pages API may still show the old source-branch field.
 
 ## Open tasks
 
-- Walking from home to the first stop is not measured; frequency-based trips and route-/trip-specific
-  transfer rows are not modelled.
-- Model the rules of the quarantined cantons (VD, VS; JU parish rates) and lift their quarantine once their sample cases pass.
+- Walking from home to the first stop is not measured. Frequency trips and the feed's trip-pair transfer
+  rules are modelled; the matrix is still one reference day's first-board-to-arrival result, not a measured
+  residential route or service reliability claim.
+- Resolve VD and VS official mismatches and JU parish rates with source-backed, municipality-aware evidence;
+  passing one capital's sample cases alone cannot lift a canton-wide quarantine.
 - Production host (Cloudflare per SPEC §3), Impressum details (O5), commercial map rights.
 
 ## History
