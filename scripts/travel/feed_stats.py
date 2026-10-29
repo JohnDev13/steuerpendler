@@ -1,65 +1,38 @@
-"""Throwaway: summarise frequencies.txt and specific transfers.txt rows of a GTFS feed (one line per fact)."""
+"""Throwaway: for trip-pair type 2 rules active on the day, compare min_transfer_time with the scheduled gap."""
 import collections, datetime as dt, sys, zipfile
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import matrix as m
 
 path, day = Path(sys.argv[1]), dt.date.fromisoformat(sys.argv[2])
-out = []
-def say(*a): out.append(" ".join(str(x) for x in a))
 with zipfile.ZipFile(path) as z:
-    today = m.active_services(z, day)
-    trip_route, trip_service, route_type, route_name = {}, {}, {}, {}
-    for r in m._rows(z, "routes.txt"):
-        route_type[r["route_id"]] = r["route_type"]; route_name[r["route_id"]] = (r.get("agency_id"), r.get("route_short_name"))
-    for r in m._rows(z, "trips.txt"):
-        trip_route[r["trip_id"]] = r["route_id"]; trip_service[r["trip_id"]] = r["service_id"]
-    active = {t for t, s in trip_service.items() if s in today}
-    # frequencies
-    freq = list(m._rows(z, "frequencies.txt"))
-    say("FREQ rows", len(freq), "trips", len({r["trip_id"] for r in freq}))
-    say("FREQ exact_times", dict(collections.Counter(r.get("exact_times") or "0" for r in freq)))
-    act = [r for r in freq if r["trip_id"] in active]
-    say("FREQ active rows", len(act), "trips", len({r["trip_id"] for r in act}))
-    win = [r for r in act if m.gtfs_seconds(r["start_time"]) <= 9 * 3600 and m.gtfs_seconds(r["end_time"]) >= 6 * 3600]
-    say("FREQ active rows overlapping 06-09", len(win), "trips", len({r["trip_id"] for r in win}))
-    say("FREQ route types", dict(collections.Counter(route_type.get(trip_route.get(r["trip_id"]), "?") for r in win)))
-    say("FREQ routes sample", collections.Counter(route_name.get(trip_route.get(r["trip_id"])) for r in win).most_common(15))
-    say("FREQ headways", collections.Counter(r["headway_secs"] for r in win).most_common(8))
-    # transfers
-    n = 0; cls = collections.Counter(); kinds = collections.Counter(); samestop = collections.Counter()
-    stop_level = {}; specific = []
+    today = m.active_services(z, day); known = m.known_services(z)
+    active = {r["trip_id"] for r in m._rows(z, "trips.txt") if r["service_id"] in today}
+    rules = []
     for r in m._rows(z, "transfers.txt"):
-        n += 1
-        key = "".join(k[0] if r.get(k) else "-" for k in ("from_trip_id", "to_trip_id", "from_route_id", "to_route_id"))
-        t = r.get("transfer_type") or "0"
-        cls[key] += 1; kinds[(key, t)] += 1
-        if key == "----":
-            if t == "2" and r.get("min_transfer_time"): stop_level[(r["from_stop_id"], r["to_stop_id"])] = int(r["min_transfer_time"])
-        else:
-            samestop[(key, r["from_stop_id"] == r["to_stop_id"])] += 1
-            specific.append(r)
-    say("TR rows", n); say("TR classes ft tt fr tr", dict(cls)); say("TR class,type", dict(kinds)); say("TR specific same-stop", dict(samestop))
-    cmp = collections.Counter(); act_cnt = collections.Counter(); deltas = collections.Counter()
-    for r in specific:
-        t = r.get("transfer_type") or "0"
-        a = r.get("from_trip_id"); b = r.get("to_trip_id")
-        live = (not a or a in active) and (not b or b in active)
-        act_cnt[(t, live)] += 1
-        if t == "2" and r.get("min_transfer_time") and live:
-            base = stop_level.get((r["from_stop_id"], r["to_stop_id"]), m.CHANGE_SECONDS)
-            v = int(r["min_transfer_time"]); cmp["shorter" if v < base else "equal" if v == base else "longer"] += 1
-            deltas[(v - base) // 60] += 1
-    say("TR specific (type,active today)", dict(act_cnt))
-    say("TR specific type2 vs stop-level/default", dict(cmp))
-    say("TR specific type2 delta minutes", sorted(deltas.items())[:30])
-    say("TR sample", [dict((k, v) for k, v in r.items() if v) for r in specific[:3]])
-    say("TR stop-level type2 rows", len(stop_level), "min/median/max", min(stop_level.values()), sorted(stop_level.values())[len(stop_level)//2], max(stop_level.values()))
-print("\n".join(out))
-tr = [l for l in out if l.startswith("TR")]
-chunk = ""
-for line in tr:
-    if len(chunk) + len(line) > 3800:
-        print("::notice title=tr::" + chunk); chunk = ""
-    chunk += line[:1800] + " || "
-print("::notice title=tr::" + chunk)
+        if r.get("from_trip_id") and r["from_trip_id"] in active and r.get("to_trip_id") in active and r.get("transfer_type") in ("1", "2", "3"):
+            svc = r.get("service_id") or ""
+            if svc and svc in known and svc not in today:
+                continue
+            rules.append(r)
+    need = {(r["from_trip_id"], r["from_stop_id"]) for r in rules} | {(r["to_trip_id"], r["to_stop_id"]) for r in rules}
+    trips = {t for t, _ in need}
+    times = {}
+    for r in m._rows(z, "stop_times.txt"):
+        if r["trip_id"] in trips and (r["trip_id"], r["stop_id"]) in need:
+            times[(r["trip_id"], r["stop_id"])] = (m.gtfs_seconds(r["arrival_time"] or r["departure_time"]), m.gtfs_seconds(r["departure_time"] or r["arrival_time"]))
+c = collections.Counter(); d = collections.Counter(); ex = []
+for r in rules:
+    a = times.get((r["from_trip_id"], r["from_stop_id"])); b = times.get((r["to_trip_id"], r["to_stop_id"]))
+    if not a or not b: c["missing call"] += 1; continue
+    gap = b[1] - a[0]; t = r["transfer_type"]
+    if t == "3": c["type3 gap<=0" if gap <= 0 else "type3 gap>0"] += 1; continue
+    need_s = 0 if t == "1" else int(r.get("min_transfer_time") or 0)
+    if gap < 0: c[f"type{t} B departs before A arrives"] += 1
+    elif gap < need_s: c[f"type{t} gap < rule (connection impossible)"] += 1; d[(need_s - gap) // 60] += 1; ex.append((r["from_stop_id"], r["to_stop_id"], gap, need_s))
+    elif gap == need_s: c[f"type{t} gap == rule"] += 1
+    else: c[f"type{t} gap > rule"] += 1
+    if t == "2":
+        c["type2 rule<120" if need_s < 120 else "type2 rule>=120"] += 1
+line = f"rules {len(rules)} :: {dict(c)} :: impossible by minutes {sorted(d.items())} :: examples {ex[:5]}"
+print(line); print("::notice title=gap::" + line[:3900])
