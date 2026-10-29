@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
   push:
     branches: ['claude/estv-refresh']
-    paths: ['.github/workflows/estv-refresh.yml', 'scripts/tax/estv-fetch.mjs']
+    paths: ['.github/workflows/estv-refresh.yml', 'scripts/tax/estv-fetch.mjs', 'scripts/tax/estv-sample.mjs']
 
 permissions:
   contents: write
@@ -30,6 +30,8 @@ jobs:
         run: |
           node scripts/tax/estv-fetch.mjs --out "$RUNNER_TEMP/estv-fresh" | tee "$RUNNER_TEMP/fetch.log"
           echo "::notice title=ESTV::$(tr '\n' '|' < "$RUNNER_TEMP/fetch.log" | cut -c1-3900)"
+      - name: Capture broad official sample
+        run: node scripts/tax/estv-sample.mjs | tee -a "$RUNNER_TEMP/fetch.log"
       - name: Re-import tables
         run: |
           printf '%s\n' "import { importAndParseDeductions } from '~/lib/taxes/deduction/dataImporter';" \
@@ -57,7 +59,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898+github-actions[bot]@users.noreply.github.com"
           mkdir -p tests/reference/estv-2026-fresh && cp "$RUNNER_TEMP"/estv-fresh/* tests/reference/estv-2026-fresh/
-          git add -A vendor/swisstaxcalculator/data site/data tests/reference/estv-2026-fresh
+          git add -A vendor/swisstaxcalculator/data site/data tests/reference/estv-2026-fresh tests/reference/estv-2026-sample.jsonl
           git diff --cached --quiet && { echo "::notice::Nothing changed"; exit 0; }
           git commit -m "data(tax): ESTV 2026 refresh $(date -u +%F)" -m "Run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
           git push origin "HEAD:${GITHUB_REF_NAME}"
