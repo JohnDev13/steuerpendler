@@ -99,3 +99,5 @@ At exact grid points the original serialized row is selected, with component err
 The standard-default result must be visibly qualified in German: **„Dies ist eine indikative Schätzung mit ESTV-Standardannahmen, keine individuelle oder verbindliche Steuerveranlagung und keine Steuerberatung.“**
 
 Each canton program also carries `personal` (personal tax without church) and `personalChurch: {reformed, catholic}`, the church personal tax added when that church is selected (vendor patch 21).
+
+A canton program may carry `late: PreciseLate[]` (vendor patch 22): cantonal deductions evaluated in order on the taxable income after the ordinary deductions. Each has `kind` (`fixed` | `percent` | `linear` | `step`), numeric `amount`, `rate`, `max`, `threshold`, `base`, `step`, `reduction`, `addBack` (ordinary deductions added to the basis, constant per profile) and `addBackLate` (indices of earlier late deductions added to the basis). See `src/tax.ts` `applyLate`.

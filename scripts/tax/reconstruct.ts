@@ -3,7 +3,8 @@
 import { add,subtract } from 'dinero.js';
 import { dineroChf,dineroToNumber,dineroRound,dineroRoundMin0,dineroRoundDown,multiplyDineroPercent,multiplyDineroFactor,dineroMin,dineroMax } from '../../vendor/swisstaxcalculator/lib/utils/dinero';
 import { applyTariffRounding, calculateTaxesAmount } from '../../vendor/swisstaxcalculator/lib/taxes/tarif';
-import type { BudgetDefault, PensionDefault, PreciseCanton } from '../../src/tax';
+import type { BudgetDefault, PensionDefault, PreciseCanton, PreciseLate } from '../../src/tax';
+import { lateDeduction } from '../../vendor/swisstaxcalculator/lib/taxes/deduction/cantonal';
 import { calculateBvg2026Age35 } from './bvg';
 export function reconstructPrecision(p:PreciseCanton,income:number,rates:number[],pensionDefault?:PensionDefault,budgetDefault?:BudgetDefault):number {
  const gross=dineroChf(income),capped=dineroMin(gross,dineroChf(148200));
@@ -26,11 +27,19 @@ export function reconstructPrecision(p:PreciseCanton,income:number,rates:number[
    deductions=add(deductions,multiplyDineroFactor(d,op.multiplier,1));
   }
   const t=part.tariff;
-  const taxable=dineroToNumber(dineroRoundMin0(subtract(net,deductions)));
+  let taxable=dineroToNumber(dineroRoundMin0(subtract(net,deductions)));
+  const done:number[]=[];
+  for(const l of (part.late??[]) as PreciseLate[]){
+   const basis=taxable+l.addBack+l.addBackLate.reduce((s,i)=>s+done[i],0);
+   const d=lateDeduction({...l,id:'',addBack:[]} as any,basis);
+   done.push(d);taxable-=d;
+  }
+  taxable=Math.max(0,taxable);
   return dineroChf(applyTariffRounding(t.rounding,taxable,t.split,a=>dineroToNumber(calculateTaxesAmount(dineroChf(a,5),{tableType:t.type,table:t.table} as any))),5);
  };
  const bund=dineroRoundMin0(subtract(dineroRound(base(p.bund)),dineroChf(263*p.kids)));
+ const bundLevied=dineroToNumber(bund)<25?dineroChf(0):bund;
  const canton=base(p.canton);
  const churchRate=Math.round(rates[2]/p.persons*100)/100*p.persons;
- return dineroToNumber([dineroRound(multiplyDineroPercent(canton,rates[0],5)),dineroRound(multiplyDineroPercent(canton,rates[1],5)),dineroRound(multiplyDineroPercent(canton,churchRate,5)),dineroChf(p.personal)].reduce(add,bund));
+ return dineroToNumber([dineroRound(multiplyDineroPercent(canton,rates[0],5)),dineroRound(multiplyDineroPercent(canton,rates[1],5)),dineroRound(multiplyDineroPercent(canton,churchRate,5)),dineroChf(p.personal)].reduce(add,bundLevied));
 }

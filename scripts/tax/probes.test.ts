@@ -19,3 +19,26 @@ test('personal and church personal tax match ESTV in every canton (patch 21)', a
     expect(ours.personal, `${c.canton} ${c.civil} ${c.church}`).toBe(c.response.PersonalTax);
   }
 });
+
+// Cantons whose income-dependent deductions are modelled (patch 22): every deductions-grid case (6 profiles,
+// CHF 40k-140k) must match ESTV's total within the official tolerance. Extend the list as cantons are fixed.
+const GRID_EXACT = ['BE', 'LU', 'SZ', 'OW'];
+
+test('income-dependent cantonal deductions match ESTV on the whole income grid (patch 22)', async () => {
+  const gemeinden = (await data('gemeinden-2026.json')).gemeinden as Record<string, Gemeinde>;
+  const profiles: Record<string, TaxProfile> = {};
+  const failures: string[] = [];
+  let checked = 0;
+  for (const c of await load('deductions-grid')) {
+    if (!GRID_EXACT.includes(c.canton)) continue;
+    const key = `tax-2026-${c.civil[0]}-${c.kids}.json`;
+    profiles[key] ??= await data(key);
+    const ours = calculateTax(profiles[key], gemeinden[String(c.bfs)], c.income, c.church);
+    const official = c.response.TotalNetTax;
+    checked++;
+    if (Math.abs(ours.total - official) > Math.max(5, Math.abs(official) * 0.001))
+      failures.push(`${c.canton} ${c.civil} ${c.kids} ${c.income}: ${ours.total} vs ${official}`);
+  }
+  expect(checked).toBe(GRID_EXACT.length * 66);
+  expect(failures).toEqual([]);
+});

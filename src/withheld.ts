@@ -10,14 +10,14 @@ export const QUARANTINED_CANTONS: ReadonlySet<string> = new Set(['VS','JU','VD',
 // scripts/tax/sample.test.ts fails if a combination is more than 5% off without being listed here. Single
 // parents are sampled with 2 children; their 1 and 3+ entries follow that sample.
 export const TAX_WITHHELD: Readonly<Record<string, readonly string[]>> = {
-  s0: ['LU'],
-  s1: ['AG', 'BE', 'BL', 'BS', 'FR', 'NE', 'OW', 'SH', 'SZ', 'TG', 'UR', 'ZG'],
-  s2: ['AG', 'BE', 'BL', 'BS', 'FR', 'NE', 'OW', 'SH', 'SZ', 'TG', 'UR', 'ZG'],
-  s3: ['AG', 'BE', 'BL', 'BS', 'FR', 'NE', 'OW', 'SH', 'SZ', 'TG', 'UR', 'ZG'],
-  m0: ['BE', 'FR', 'LU', 'NE', 'OW', 'SH', 'SZ'],
-  m1: ['AG', 'BE', 'BL', 'FR', 'LU', 'NE', 'OW', 'SH', 'SZ', 'TG'],
-  m2: ['AG', 'BE', 'BL', 'FR', 'LU', 'NE', 'OW', 'SH', 'SZ', 'TG'],
-  m3: ['BE', 'BL', 'FR', 'LU', 'NE', 'OW', 'SH', 'SZ', 'TG'],
+  s0: [],
+  s1: ['AG', 'BL', 'BS', 'FR', 'NE', 'SH', 'TG', 'UR', 'ZG'],
+  s2: ['AG', 'BL', 'BS', 'FR', 'NE', 'SH', 'TG', 'UR', 'ZG'],
+  s3: ['AG', 'BL', 'BS', 'FR', 'NE', 'SH', 'TG', 'UR', 'ZG'],
+  m0: ['FR', 'NE', 'SH'],
+  m1: ['AG', 'BL', 'FR', 'NE', 'SH', 'TG'],
+  m2: ['AG', 'BL', 'FR', 'NE', 'SH', 'TG'],
+  m3: ['BL', 'FR', 'NE', 'SH', 'TG'],
 };
 
 export function withheldFor(civil: 's' | 'm', kids: number): ReadonlySet<string> {

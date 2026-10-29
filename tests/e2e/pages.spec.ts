@@ -48,6 +48,9 @@ test('profile controls show a clearly indicative amount for a positive Zürich r
 test('a canton x profile that differs from ESTV by more than 5% is withheld, not shown',async({page})=>{
  await page.goto('./');
  await page.getByLabel('Arbeitsort',{exact:true}).fill('Bern');await page.getByLabel('Arbeitsort',{exact:true}).press('Enter');
+ const residence=page.getByLabel('Wohngemeinde suchen',{exact:true});
+ await residence.fill('Fribourg');await residence.press('Enter');
+ await expect(page.locator('#detail h2')).toContainText('Fribourg');
  await expect(page.locator('#detail')).toContainText('CHF');  // single, no children: within 5%
  await page.getByLabel('Zivilstand',{exact:true}).selectOption('m');await page.getByLabel('Kinder',{exact:true}).selectOption('2');
  await expect(page.locator('#detail')).toContainText('Daten werden geprüft');
