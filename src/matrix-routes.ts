@@ -22,7 +22,7 @@ const record = (value: unknown): value is Record<string, unknown> => !!value && 
 
 export function validateMatrixMeta(data: unknown): MatrixMeta {
   if (!record(data)) invalid();
-  if (data.schema !== SCHEMA || data.capSeconds !== CAP_SECONDS || data.absence !== 'unknown_unobserved'
+  if (data.schema !== SCHEMA || data.capSeconds !== CAP_SECONDS || data.absence !== 'no_journey_within_cap_under_model'
     || typeof data.serviceDate !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(data.serviceDate)
     || !record(data.feed) || typeof data.feed.sha256 !== 'string' || !record(data.workplaces)) invalid();
   const meta = data as Record<string, any>;

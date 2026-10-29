@@ -18,7 +18,7 @@ def t(clock: str) -> str:
     return clock
 
 
-def write_feed(path: Path, stops, trips, transfers=(), calendar_dates=(), routes=None):
+def write_feed(path: Path, stops, trips, transfers=(), calendar_dates=(), routes=None, frequencies=()):
     """stops: [(id, name, lat, lon, parent)]; trips: {trip_id: (route_type, [(stop, arr, dep, pickup, drop)])}."""
     tables = {
         "stops.txt": [["stop_id", "stop_name", "stop_lat", "stop_lon", "parent_station"], *stops],
@@ -29,8 +29,12 @@ def write_feed(path: Path, stops, trips, transfers=(), calendar_dates=(), routes
         "routes.txt": [["route_id", "route_type"]],
         "trips.txt": [["route_id", "service_id", "trip_id"]],
         "stop_times.txt": [["trip_id", "arrival_time", "departure_time", "stop_id", "stop_sequence", "pickup_type", "drop_off_type"]],
-        "transfers.txt": [["from_stop_id", "to_stop_id", "transfer_type", "min_transfer_time", "from_trip_id", "to_trip_id"], *transfers],
+        # service_id is a non-standard column of the Swiss feed: the days on which the rule applies.
+        "transfers.txt": [["from_stop_id", "to_stop_id", "transfer_type", "min_transfer_time", "from_trip_id", "to_trip_id",
+                           "service_id"], *transfers],
     }
+    if frequencies:
+        tables["frequencies.txt"] = [["trip_id", "start_time", "end_time", "headway_secs", "exact_times"], *frequencies]
     for trip_id, (route_type, calls, *service) in trips.items():
         tables["routes.txt"].append([f"r-{trip_id}", str(route_type)])
         tables["trips.txt"].append([f"r-{trip_id}", service[0] if service else "W", trip_id])
@@ -56,10 +60,10 @@ STOPS = [
 
 
 class MatrixScan(unittest.TestCase):
-    def run_scan(self, trips, transfers=(), calendar_dates=(), stops=STOPS):
+    def run_scan(self, trips, transfers=(), calendar_dates=(), stops=STOPS, frequencies=()):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "feed.zip"
-            write_feed(path, stops, trips, transfers, calendar_dates)
+            write_feed(path, stops, trips, transfers, calendar_dates, frequencies=frequencies)
             feed = matrix.load_feed(path, DAY)
             return feed, matrix.scan(feed, {"T"}, matrix.footpaths(feed))
 
@@ -142,6 +146,96 @@ class MatrixScan(unittest.TestCase):
         self.assertIn("A", result)
 
 
+class TripSpecificRules(MatrixScan):
+    """transfers.txt rows naming from_trip_id/to_trip_id override the stop-level change time for that
+    trip pair at that stop pair (GTFS precedence); the Swiss feed adds a service_id per rule."""
+
+    IN = {"in": (2, [("A", "07:00:00", "07:00:00"), ("X", "07:05:00", "07:05:00")])}
+    OUT = {
+        "early": (2, [("X", "07:06:00", "07:06:00"), ("T", "07:10:00", "07:10:00")]),   # 1 min after arrival
+        "mid": (2, [("X", "07:08:00", "07:08:00"), ("T", "07:14:00", "07:14:00")]),     # 3 min after arrival
+        "late": (2, [("X", "07:15:00", "07:15:00"), ("T", "07:25:00", "07:25:00")]),
+    }
+
+    def minutes(self, transfers=(), trips=None):
+        _, result = self.run_scan(trips or {**self.IN, **self.OUT}, transfers=transfers)
+        return result["A"].seconds // 60 if "A" in result else None
+
+    def test_baseline_uses_the_default_change_time(self):
+        self.assertEqual(self.minutes(), 14)
+
+    def test_shorter_trip_rule_allows_a_connection_the_default_misses(self):
+        self.assertEqual(self.minutes([["X", "X", "2", "60", "in", "early", ""]]), 10)
+
+    def test_guaranteed_trip_connection_type_1(self):
+        self.assertEqual(self.minutes([["X", "X", "1", "", "in", "early", ""]]), 10)
+
+    def test_longer_trip_rule_removes_a_connection_the_default_allows(self):
+        self.assertEqual(self.minutes([["X", "X", "2", "300", "in", "mid", ""]]), 25)
+
+    def test_trip_specific_type_3_forbids_only_that_pair(self):
+        self.assertEqual(self.minutes([["X", "X", "3", "", "in", "mid", ""]]), 25)
+        self.assertEqual(self.minutes([["X", "X", "3", "", "in", "late", ""]]), 14)
+
+    def test_rule_outside_its_service_days_is_ignored(self):
+        # Service S runs only in December; the reference day is 27 October.
+        self.assertEqual(self.minutes([["X", "X", "2", "300", "in", "mid", "S"]]), 14)
+        self.assertEqual(self.minutes([["X", "X", "2", "300", "in", "mid", "W"]]), 25)
+
+    def test_restricted_best_option_falls_back_to_a_dominated_one(self):
+        # 'slow' departs before 'mid' but arrives later, so a Pareto profile drops it. When 'mid' is not
+        # allowed for this arrival, 'slow' (07:20) is the right answer, not 'bus' (07:22).
+        trips = {**self.IN, **self.OUT,
+                 "slow": (2, [("X", "07:07:30", "07:07:30"), ("T", "07:20:00", "07:20:00")]),
+                 "bus": (3, [("X", "07:09:00", "07:09:00"), ("T", "07:22:00", "07:22:00")])}
+        self.assertEqual(self.minutes([["X", "X", "2", "300", "in", "mid", ""]], trips), 20)
+
+    def test_rule_between_stops_beyond_walking_distance(self):
+        trips = {**self.IN, "y-out": (2, [("Y", "07:16:00", "07:16:00"), ("T", "07:20:00", "07:20:00")])}
+        self.assertIsNone(self.minutes(trips=trips))
+        self.assertEqual(self.minutes([["X", "Y", "2", "600", "in", "y-out", ""]], trips), 20)
+
+    def test_direct_only_scan_ignores_change_rules(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "feed.zip"
+            write_feed(path, STOPS, {**self.IN, **self.OUT}, [["X", "X", "1", "", "in", "early", ""]])
+            feed = matrix.load_feed(path, DAY)
+            self.assertIn("A", matrix.scan(feed, {"T"}, matrix.footpaths(feed)))
+            self.assertNotIn("A", matrix.scan(feed, {"T"}, {}, changes=False))
+
+    def test_scan_counts_decisions_a_rule_changed(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "feed.zip"
+            write_feed(path, STOPS, {**self.IN, **self.OUT},
+                       [["X", "X", "2", "60", "in", "early", ""], ["X", "X", "2", "300", "in", "mid", ""]])
+            feed = matrix.load_feed(path, DAY)
+            stats = {}
+            matrix.scan(feed, {"T"}, matrix.footpaths(feed), stats=stats)
+        self.assertEqual(stats, {"ruleAllowed": 1, "ruleRejected": 1})
+
+    def test_rule_does_not_apply_to_other_trips(self):
+        trips = {**self.OUT, "other": (2, [("A", "07:00:00", "07:00:00"), ("X", "07:05:00", "07:05:00")])}
+        self.assertEqual(self.minutes([["X", "X", "2", "60", "in", "early", ""]], trips), 14)
+
+
+class FrequencyTrips(MatrixScan):
+    def test_headway_trip_is_expanded_from_its_start_time(self):
+        trips = {"cab": (1300, [("A", "05:00:00", "05:00:00"), ("T", "05:04:00", "05:04:00")])}
+        _, result = self.run_scan(trips, frequencies=[["cab", "06:30:00", "07:30:00", "1800", "0"]])
+        self.assertEqual((result["A"].seconds, result["A"].transfers), (240, 0))
+        self.assertIn(result["A"].first_board, (6 * 3600 + 1800, 7 * 3600))
+
+    def test_change_onto_a_headway_trip(self):
+        trips = {"in": (2, [("A", "07:00:00", "07:00:00"), ("X", "07:05:00", "07:05:00")]),
+                 "cab": (1400, [("X", "12:00:00", "12:00:00"), ("T", "12:05:00", "12:05:00")])}
+        _, result = self.run_scan(trips, frequencies=[["cab", "07:00:00", "08:00:00", "600", "0"]])
+        self.assertEqual((result["A"].seconds, result["A"].transfers), (15 * 60, 1))  # boards 07:10
+
+    def test_end_time_is_exclusive(self):
+        trips = {"cab": (1300, [("A", "00:00:00", "00:00:00"), ("T", "00:04:00", "00:04:00")])}
+        _, result = self.run_scan(trips, frequencies=[["cab", "06:00:00", "06:30:00", "1800", "0"]])
+        self.assertNotIn("A", result)  # only 06:00, outside the window
+
 def square(cx, cy, half):
     return [[cx - half, cy - half], [cx + half, cy - half], [cx + half, cy + half], [cx - half, cy + half], [cx - half, cy - half]]
 
@@ -188,7 +282,7 @@ class MatrixBuild(unittest.TestCase):
         self.assertEqual(by_bfs[300][1:4], [900, 0, "Ypsilon"])  # bus to a stop of the station complex
         self.assertNotIn(500, by_bfs)
         self.assertEqual([row[1] for row in rows], sorted(row[1] for row in rows))
-        self.assertEqual(meta["absence"], "unknown_unobserved")
+        self.assertEqual(meta["absence"], "no_journey_within_cap_under_model")
         self.assertEqual(meta["workplaces"]["400"]["rows"], 4)
         json.dumps(meta)
 

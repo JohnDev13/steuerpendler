@@ -70,7 +70,8 @@ describe('travel matrix contract', () => {
       mutate(value);
       expect(() => validateMatrixDestination(value, 261, '2026-10-27', gemeinden)).toThrow(/Fahrplandaten/);
     }
-    expect(() => validateMatrixMeta({ ...contract.meta, absence: 'no_journey_within_cap_under_model' })).toThrow(/Fahrplandaten/);
+    // Files from the earlier model (frequency trips and trip rules omitted) must not load.
+    expect(() => validateMatrixMeta({ ...contract.meta, absence: 'unknown_unobserved' })).toThrow(/Fahrplandaten/);
     expect(() => validateMatrixMeta({ ...contract.meta, capSeconds: 3600 })).toThrow(/Fahrplandaten/);
   });
 });

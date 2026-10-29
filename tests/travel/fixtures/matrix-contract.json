@@ -14,7 +14,7 @@
    "firstBoardStopName",
    "firstBoardSeconds"
   ],
-  "absence": "unknown_unobserved",
+  "absence": "no_journey_within_cap_under_model",
   "model": {
    "access": "unmeasured_zero",
    "origins": "every GTFS stop inside the Gemeinde polygon (simplified BFS 2026 boundaries)",
@@ -23,8 +23,8 @@
    "walkSpeedMetersPerSecond": 1.2,
    "walkDetourFactor": 1.3,
    "targetComplexRadiusMeters": 300.0,
-   "frequencyTripsIgnored": 0,
-   "routeOrTripSpecificTransferRowsIgnored": 0
+   "frequencyTrips": 0,
+   "frequencyTripCopies": 0
   },
   "feed": {
    "url": "fixture",
@@ -38,7 +38,8 @@
     "station": "Target",
     "targetStops": 2,
     "rows": 4,
-    "directRows": 4
+    "directRows": 4,
+    "tripRuleDecisions": {}
    }
   }
  },
