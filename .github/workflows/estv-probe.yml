@@ -1,0 +1,35 @@
+# Captures targeted official ESTV calculations listed in scripts/tax/probes/*.json (not yet captured) and
+# commits them to the pushing claude/tax-* branch. Evidence for individual cantonal rules.
+name: ESTV probe
+
+on:
+  push:
+    branches: ['claude/tax-*']
+    paths: ['scripts/tax/probes/**']
+
+permissions:
+  contents: write
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22.23.2
+      - run: node scripts/tax/estv-probe.mjs scripts/tax/probes/*.json | tee "$RUNNER_TEMP/probe.log"
+      - run: echo "::notice title=Probe::$(tr '\n' '|' < "$RUNNER_TEMP/probe.log" | cut -c1-3900)"
+      - name: Commit captures
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898+github-actions[bot]@users.noreply.github.com"
+          git add tests/reference/estv-2026-probes
+          git diff --cached --quiet && exit 0
+          git commit -m "data(tax): ESTV probe captures" -m "Run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"

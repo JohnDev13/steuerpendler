@@ -45,6 +45,11 @@ interface TaxPart {
   tariff: {
     type: TariffType
     split: number // finite and > 0
+    // How the taxable income is rounded around splitting (vendor patch 20, evidenced by the broad ESTV sample):
+    // 'split100'  X = floor100(income), y = floor100(X / split), tax = tax(y) / y * X  (tax(X) when split = 1)
+    // 'income100' X = floor100(income), tax = tax(X / split) * split                    (AG)
+    // 'exact'     tax = tax(income / split) * split                     (SO, GR, GE, UR, formula tariffs)
+    rounding: 'split100' | 'income100' | 'exact'
     table: Array<{
       amount: number
       percent: number
@@ -92,3 +97,5 @@ At exact grid points the original serialized row is selected, with component err
 `npm run tax:test` compares the shipped serialized evaluator independently with the full vendored engine for the fixed 500 on-grid and 300 off-grid samples before display rounding. `scripts/tax/precision.test.ts` separately invokes `src/tax.ts` against the full engine for the same fixed sampler and records every input/result/error in `docs/tax/browser-parity-report.json`. Official direct ESTV verification remains pending and is not replaced by engine parity.
 
 The standard-default result must be visibly qualified in German: **„Dies ist eine indikative Schätzung mit ESTV-Standardannahmen, keine individuelle oder verbindliche Steuerveranlagung und keine Steuerberatung.“**
+
+Each canton program also carries `personal` (personal tax without church) and `personalChurch: {reformed, catholic}`, the church personal tax added when that church is selected (vendor patch 21).

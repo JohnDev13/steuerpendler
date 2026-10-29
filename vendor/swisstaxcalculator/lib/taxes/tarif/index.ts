@@ -309,6 +309,32 @@ const calculateTaxesByTypeFormel = (amount: Dinero<number>, tarif: TaxTarif) => 
   return dineroChf(Math.max(0, result));
 };
 
+// Steuerpendler patch 20: how ESTV rounds the taxable income around splitting, per canton. Evidence: the broad
+// ESTV sample (tests/reference/estv-2026-sample.jsonl, scripts/tax/sample.ts).
+//  split100  floor income to 100 (X), divide by the splitting factor, floor to 100 (y), tax = rate(y) x X
+//  income100 floor income to 100 (X), divide exactly, tax = tax(X / s) x s                               (AG)
+//  exact     no rounding, tax = tax(x / s) x s                     (SO, GR, GE, UR and formula tariffs)
+export type TariffRounding = 'split100' | 'income100' | 'exact';
+const EXACT_CANTONS = new Set([8, 10, 18, 22]); // GE, GR, SO, UR
+export const tariffRounding = (cantonId: number, tableType: string): TariffRounding =>
+  tableType === 'FORMEL' || EXACT_CANTONS.has(cantonId) ? 'exact' : cantonId === 1 ? 'income100' : 'split100';
+
+export const applyTariffRounding = (
+  rounding: TariffRounding,
+  income: number,
+  split: number,
+  taxOf: (amount: number) => number
+): number => {
+  const reciprocal = Math.round((1 / split) * 1e5) / 1e5;
+  const floor100 = (value: number) => Math.floor(value / 100 + 1e-9) * 100;
+  if (rounding === 'exact') return taxOf(income * reciprocal) * split;
+  const whole = floor100(income);
+  if (rounding === 'income100') return taxOf(whole * reciprocal) * split;
+  if (split === 1) return taxOf(whole);
+  const divided = floor100(whole * reciprocal);
+  return divided > 0 ? (taxOf(divided) / divided) * whole : 0;
+};
+
 export const calculateTaxesForTarif = async (
   cantonId: number,
   year: number,
@@ -322,24 +348,15 @@ export const calculateTaxesForTarif = async (
     tarifType,
     tarifGroup
   );
-
-  // Apply splitting if tarif includes splitting
-  if (tarifIncome.splitting > 0 && isGroupEligableForSplitting(tarifGroupUsed)) {
-    taxableIncome = multiplyDineroFactor(taxableIncome, 1 / tarifIncome.splitting, 5);
-  }
-
-  // FORMEL uses continuous formulas that expect the exact taxable income;
-  // other types use discrete brackets where rounding to 100 is required.
-  const taxableIncomeForCalc =
-    tarifIncome.tableType === 'FORMEL' ? taxableIncome : dineroRound100Down(taxableIncome);
-  const taxes = calculateTaxesAmount(taxableIncomeForCalc, tarifIncome);
-
-  // Apply splitting if tarif includes splitting
-  if (tarifIncome.splitting > 0 && isGroupEligableForSplitting(tarifGroupUsed)) {
-    return multiplyDineroFactor(taxes, tarifIncome.splitting, 5);
-  }
-
-  return taxes;
+  const split =
+    tarifIncome.splitting > 0 && isGroupEligableForSplitting(tarifGroupUsed) ? tarifIncome.splitting : 1;
+  const result = applyTariffRounding(
+    tariffRounding(cantonId, tarifIncome.tableType),
+    dineroToNumber(taxableIncome),
+    split,
+    (amount) => dineroToNumber(calculateTaxesAmount(dineroChf(amount, 5), tarifIncome))
+  );
+  return dineroChf(result, 5);
 };
 
 export const calculateProgressionForTarif = async (

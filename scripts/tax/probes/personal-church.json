@@ -1,0 +1,46 @@
+{
+ "purpose": "Personal tax and church personal tax by canton, civil status and confession (90k, no children).",
+ "cases": [
+  {
+   "bfs": [
+    261,
+    351,
+    1061,
+    1201,
+    1372,
+    1407,
+    1509,
+    1632,
+    1711,
+    2196,
+    2601,
+    2701,
+    2829,
+    2939,
+    3001,
+    3101,
+    3203,
+    3901,
+    4001,
+    4566,
+    5002,
+    5586,
+    6266,
+    6458,
+    6621,
+    6711
+   ],
+   "civil": [
+    "single",
+    "married"
+   ],
+   "kids": 0,
+   "church": [
+    "none",
+    "reformed",
+    "catholic"
+   ],
+   "income": 90000
+  }
+ ]
+}

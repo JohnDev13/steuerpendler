@@ -1,0 +1,59 @@
+{
+ "purpose": "Income-dependent deductions (low-income, married, single-parent) in 13 cantons: 6 profiles, 40k-140k.",
+ "cases": [
+  {
+   "bfs": [
+    351,
+    1061,
+    1407,
+    2196,
+    1372,
+    2939,
+    6458,
+    6711,
+    1201,
+    2701,
+    1711,
+    4001,
+    4566
+   ],
+   "civil": "single",
+   "kids": [
+    0,
+    2
+   ],
+   "church": "none",
+   "from": 40000,
+   "to": 140000,
+   "step": 10000
+  },
+  {
+   "bfs": [
+    351,
+    1061,
+    1407,
+    2196,
+    1372,
+    2939,
+    6458,
+    6711,
+    1201,
+    2701,
+    1711,
+    4001,
+    4566
+   ],
+   "civil": "married",
+   "kids": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "church": "none",
+   "from": 40000,
+   "to": 140000,
+   "step": 10000
+  }
+ ]
+}

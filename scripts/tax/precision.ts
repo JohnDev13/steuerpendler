@@ -2,7 +2,7 @@
 // No tax results, sampler cases or municipal scope constants are embedded here.
 import { calculateGrossNetDetails, taxDeductionDefinitions } from '../../vendor/swisstaxcalculator/lib/taxes/deduction';
 import { getTaxDecutionTable } from '../../vendor/swisstaxcalculator/lib/taxes/deduction/provider';
-import { getTaxTarifGroup, isGroupEligableForSplitting } from '../../vendor/swisstaxcalculator/lib/taxes/tarif';
+import { getTaxTarifGroup, isGroupEligableForSplitting, tariffRounding } from '../../vendor/swisstaxcalculator/lib/taxes/tarif';
 import { getTaxTarifTable } from '../../vendor/swisstaxcalculator/lib/taxes/tarif/provider';
 import { calculateTaxesPersonnel } from '../../vendor/swisstaxcalculator/lib/taxes/personnel';
 import { dineroToNumber } from '../../vendor/swisstaxcalculator/lib/utils/dinero';
@@ -37,7 +37,8 @@ export async function compilePrecision(input:TaxInput):Promise<PreciseCanton> {
    }
   }
   const [tariff,used]=await getTaxTarifTable(id,2026,'EINKOMMENSSTEUER',group);
-  return {deductions:ops,tariff:{type:tariff.tableType,split:tariff.splitting>0&&isGroupEligableForSplitting(used)?tariff.splitting:1,table:tariff.table}};
+  return {deductions:ops,tariff:{type:tariff.tableType,split:tariff.splitting>0&&isGroupEligableForSplitting(used)?tariff.splitting:1,rounding:tariffRounding(id,tariff.tableType),table:tariff.table}};
  };
- return {bund:await compile(0),canton:await compile(input.cantonId),personal:dineroToNumber(calculateTaxesPersonnel(input)),kids:input.children,persons:input.persons.length};
+ const personal=(confession:'other'|'protestant'|'roman')=>dineroToNumber(calculateTaxesPersonnel({...input,persons:input.persons.map(p=>({...p,confession}))}));
+ return {bund:await compile(0),canton:await compile(input.cantonId),personal:personal('other'),personalChurch:{reformed:personal('protestant')-personal('other'),catholic:personal('roman')-personal('other')},kids:input.children,persons:input.persons.length};
 }
