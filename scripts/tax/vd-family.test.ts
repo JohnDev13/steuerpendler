@@ -47,6 +47,16 @@ test('VD completed-tranche bands cover boundary francs, every shipped household,
 
 test('retained 160k and 161k captures exercise adjacent VD completed tranches', async () => {
   const fixture = JSON.parse(await readFile(resolve(ROOT, 'tests/reference/vd-family-2026.json'), 'utf8'));
+  expect(fixture.captures.map((capture: any) => capture.grossIncome).sort((a: number, b: number) => a - b)).toEqual([90000, 160000, 161000]);
+  for (const capture of fixture.captures) for (const kind of ['budget', 'tax']) {
+    const retained = capture[kind];
+    for (const payload of ['request', 'response']) {
+      const bytes = JSON.stringify(retained[payload]);
+      const prefix = payload === 'request' ? 'request' : 'response';
+      expect(Buffer.byteLength(bytes, 'utf8'), `${capture.grossIncome} ${kind} ${payload} bytes`).toBe(retained.provenance[`${prefix}Bytes`]);
+      expect(createHash('sha256').update(bytes).digest('hex'), `${capture.grossIncome} ${kind} ${payload} SHA-256`).toBe(retained.provenance[`${prefix}Sha256`]);
+    }
+  }
   const expected = new Map([[160000, { basis: 128139, family: 3300, taxable: 124839, sha: '27842572d0fc27dd05717cad30dbb3f60c7afa3b4c9fa385d640cb8f43fd397f' }],
     [161000, { basis: 129051, family: 3200, taxable: 125851, sha: '29ac5ad51ef2838fe52778531ca7fa883d1e189b7a160593f178b50e929098bc' }]]);
   const sources = await loadSources();
