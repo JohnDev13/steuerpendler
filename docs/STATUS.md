@@ -24,7 +24,7 @@ keep it short and update it in the same PR that changes what it describes.
 | Tax on-grid, 500 cases vs engine (`src/tax.ts`) | pass, max CHF 0 | `npm run tax:test` |
 | Tax off-grid, 300 cases vs engine | pass, max CHF 0 | `npm run tax:test` |
 | Tax vs official ESTV, 29 frozen cases | 26 pass, 3 fail (VD, GE, VS; ratchet: may only improve) | `npm run tax:official` |
-| Tax vs broad official sample, 650 cases (26 capitals × 6 profiles × 4 incomes + church) | 564 pass (ratchet); every canton 25/25 except the quarantined VS, VD, GE, JU | `npx tsx --tsconfig scripts/tax/tsconfig.json scripts/tax/sample.ts --fail` |
+| Tax vs broad official sample, 650 cases (26 capitals × 6 profiles × 4 incomes + church) | 585 pass (ratchet); every canton 25/25 except VS, VD, GE | `npx tsx --tsconfig scripts/tax/tsconfig.json scripts/tax/sample.ts --fail` |
 | Canton × profile more than 5 % off ESTV is withheld | enforced by test (`src/withheld.ts`) | `npm test` |
 | Cantons > 5 % off ESTV are withheld | enforced by test | `npm test` |
 | Travel vs SBB, 30 pairs, ± 3 min | pass: 29 within 3 min, Wollerau consistent (SBB 38 min > cap) | `python3 scripts/travel/compare_reference.py --require-complete` |
@@ -38,7 +38,7 @@ Tax tables were refreshed from ESTV on 29 Oct 2026 (new tariffs for JU, NW, SZ, 
 became unnecessary). The 650-case sample showed what the engine lacked: low-income deductions, cantonal
 married and single-parent deduction rules, tax reductions per child (e.g. BL) and the VD family quotient.
 These were added canton by canton (vendor patches 20–24); the remaining gaps are the four quarantined cantons
-(JU parish rates, GE cantonal reduction, VD quotient familial, VS rebates and coefficients).
+(JU parish rates of merged municipalities — its deductions now match —, GE cantonal reduction, VD quotient familial, VS rebates and coefficients).
 
 ## CI and deployment
 

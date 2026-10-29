@@ -148,6 +148,18 @@ export const taxDeductionDefinitions: TaxDeductionDefinition[] = [
   { id: 'KKLedig_EK', rule: (t) => t.relationship === 's', input: (t, _, table) => [{ amount: pooledAdultPremiums(t, table) }] },
   { id: 'KKVerheiratet_EK', rule: (t) => ['m', 'rp'].includes(t.relationship), input: (t, _, table) => [{ amount: pooledAdultPremiums(t, table) }] },
   { id: 'KKProMinderjKind_EK', rule: (t) => t.children > 0, input: perChildFlat },
+  // JU publishes married premium caps by pillar 2/3a status: a one-earner couple is "one person without
+  // contributions" (deductions grid: 7,590 for every married JU case), a two-earner couple "both with".
+  {
+    id: 'KKSparzVerhEineOhneBVGS3a_EK',
+    rule: (t) => ['m', 'rp'].includes(t.relationship) && t.persons.filter((p) => p.income > 0).length < 2,
+    input: (t, _, table) => [{ amount: pooledAdultPremiums(t, table) }]
+  },
+  {
+    id: 'KKSparzVerhBeideMitBVGS3a_EK',
+    rule: (t) => ['m', 'rp'].includes(t.relationship) && t.persons.filter((p) => p.income > 0).length >= 2,
+    input: (t, _, table) => [{ amount: pooledAdultPremiums(t, table) }]
+  },
   { id: 'KKPrivVersLedig_EK', rule: (t) => t.relationship === 's', input: (t, _, table) => [{ amount: pooledAdultPremiums(t, table) }] },
   { id: 'KKPrivVersVerheiratet_EK', rule: (t) => ['m', 'rp'].includes(t.relationship), input: (t, _, table) => [{ amount: pooledAdultPremiums(t, table) }] },
   { id: 'KKPrivVersProKind_EK', rule: (t) => t.children > 0, input: perChildFlat },
@@ -204,13 +216,14 @@ export const taxDeductionDefinitions: TaxDeductionDefinition[] = [
   })),
   {
     id: 'SozKinderAnzahl1Oder2_EK',
-    rule: (taxInput) => taxInput.children > 0,
+    // JU: from three children on, every child gets the higher amount (deductions grid m3: 3 x 6,400).
+    rule: (taxInput) => taxInput.children > 0 && !(taxInput.cantonId === 11 && taxInput.children > 2),
     input: (taxInput) => [{ multiplier: Math.min(taxInput.children, 2) }]
   },
   {
     id: 'SozKinderAnzahlUeber2_EK',
     rule: (taxInput) => taxInput.children > 2,
-    input: (taxInput) => [{ multiplier: taxInput.children - 2 }]
+    input: (taxInput) => [{ multiplier: taxInput.cantonId === 11 ? taxInput.children : taxInput.children - 2 }]
   },
   {
     id: 'SozZusKinderabzugAbAnzahl3_EK',

@@ -83,7 +83,7 @@ export const cantonalRules = (h: Household, table: TaxDeductionTable): CantonalR
       // (ESTV Steuermäppchen 'bescheidenes Einkommen' 2025; basis before the child deductions)
       return { disable: [], late: [{ kind: 'step', id: 'SozBeschEK_EK', base: h.married || singleParent ? 7050 : 3525,
         threshold: h.married || singleParent ? 25200 : 16800, step: 800, reduction: 150, roundUp: true, addBack: ['SozKind_EK'] }] };
-    case 6: case 22: case 25: // BS, UR, ZG: single parents get the single-parent deduction instead of the single deduction
+    case 6: case 11: case 22: case 25: // BS, JU, UR, ZG: single parents get the single-parent deduction instead of the single deduction
       return { disable: singleParent ? ['SozLedig_EK'] : [], late: [] };
     default:
       return { disable: [], late: [] };
