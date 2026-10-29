@@ -11,16 +11,19 @@ assumed zero and labelled unmeasured. Times are exact seconds from the timetable
 Algorithm: reverse profile Connection Scan (Dibbelt, Pajor, Strasser, Wagner 2013), one scan per
 destination over the connections departing in [06:30, 09:00].
 
-Changes between vehicles:
-- transfers.txt type 2 stop-pair rows give the minimum change time;
+Changes between vehicles (GTFS precedence: trip-pair rule > stop-pair rule > default):
+- transfers.txt rows with from_trip_id/to_trip_id set the change time for that trip pair at that stop
+  pair: type 1 guaranteed (0 s), type 2 min_transfer_time, type 3 forbidden, type 4 stay seated
+  (no change counted). The Swiss feed adds a service_id per rule; rules not valid on the day are dropped;
+- otherwise transfers.txt stop-pair rows: type 2 minimum change time, type 3 forbidden;
 - otherwise CHANGE_SECONDS (120 s) at the same stop or between stops of the same parent station;
-- short walks between other stops within WALK_RADIUS_M, at WALK_SPEED_MPS with WALK_DETOUR;
-- transfers.txt type 3 stop-pair rows forbid a change;
-- transfers.txt type 4 trip-pair rows are stay-seated continuations (no change counted).
-Route- or trip-specific type 0-3 rows are not modelled; this is recorded in the output metadata.
+- short walks between other stops within WALK_RADIUS_M, at WALK_SPEED_MPS with WALK_DETOUR.
+Route-specific rule rows fail the build (not present in the Swiss feed).
 
-A missing Gemeinde/destination result remains **unknown** until feed completeness, origin-stop coverage
-and transfer rules have been independently checked. The scan emits bounded positives only.
+Headway-based trips (frequencies.txt) are expanded into one trip per departure from start_time.
+
+Every connection departing in the window is scanned, so a Gemeinde without a result has no journey of at
+most 30 minutes from a stop inside it under this model (access walk to the first stop: 0 s, unmeasured).
 """
 from __future__ import annotations
 
@@ -170,6 +173,11 @@ def active_services(archive: zipfile.ZipFile, day: dt.date) -> set[str]:
     return services
 
 
+def known_services(archive: zipfile.ZipFile) -> set[str]:
+    return ({row["service_id"] for row in _rows(archive, "calendar.txt")}
+            | {row["service_id"] for row in _rows(archive, "calendar_dates.txt")})
+
+
 @dataclass
 class Stop:
     stop_id: str
@@ -190,6 +198,8 @@ class Feed:
     forbidden: set[tuple[str, str]]
     in_seat: dict[str, list[str]]
     notes: dict = field(default_factory=dict)
+    # (from_trip, from_stop) -> [(to_stop, to_trip, required seconds or None if forbidden)]
+    trip_rules: dict = field(default_factory=dict)
 
 
 def load_feed(path: Path, day: dt.date, horizon_end: int = WINDOW_END + CAP_SECONDS) -> Feed:
@@ -210,9 +220,13 @@ def load_feed(path: Path, day: dt.date, horizon_end: int = WINDOW_END + CAP_SECO
                 continue
             trip_route_type[row["trip_id"]] = route_type.get(row["route_id"], 3)
 
-        frequency_trips = {row["trip_id"] for row in _rows(archive, "frequencies.txt")}
-        for trip in frequency_trips:
-            trip_offset.pop(trip, None)
+        # Headway-based trips (frequencies.txt): stop_times are a template; one copy runs every headway_secs
+        # from start_time (inclusive) to end_time (exclusive). exact_times 0 and 1 expand the same way.
+        frequencies: dict[str, list[tuple[int, int, int]]] = defaultdict(list)
+        for row in _rows(archive, "frequencies.txt"):
+            if row["trip_id"] in trip_offset:
+                frequencies[row["trip_id"]].append((gtfs_seconds(row["start_time"]), gtfs_seconds(row["end_time"]),
+                                                    int(row["headway_secs"])))
 
         stops: dict[str, Stop] = {}
         for row in _rows(archive, "stops.txt"):
@@ -224,6 +238,7 @@ def load_feed(path: Path, day: dt.date, horizon_end: int = WINDOW_END + CAP_SECO
                                          row.get("parent_station") or row["stop_id"])
 
         calls: dict[str, list[tuple]] = defaultdict(list)
+        templates: dict[str, list[tuple]] = defaultdict(list)
         lo, hi = WINDOW_START - 3600, horizon_end + 3600
         for row in _rows(archive, "stop_times.txt"):
             offset = trip_offset.get(row["trip_id"])
@@ -231,10 +246,29 @@ def load_feed(path: Path, day: dt.date, horizon_end: int = WINDOW_END + CAP_SECO
                 continue
             arr = gtfs_seconds(row["arrival_time"] or row["departure_time"]) + offset
             dep = gtfs_seconds(row["departure_time"] or row["arrival_time"]) + offset
+            call = (int(row["stop_sequence"]), arr, dep, row["stop_id"],
+                    row.get("pickup_type") or "0", row.get("drop_off_type") or "0")
+            if row["trip_id"] in frequencies:
+                templates[row["trip_id"]].append(call)
+                continue
             if dep < lo or arr > hi:
                 continue
-            calls[row["trip_id"]].append((int(row["stop_sequence"]), arr, dep, row["stop_id"],
-                                          row.get("pickup_type") or "0", row.get("drop_off_type") or "0"))
+            calls[row["trip_id"]].append(call)
+        expanded = 0
+        for trip, template in templates.items():
+            template.sort()
+            first = template[0][2]
+            for start, end, headway in frequencies[trip]:
+                for departure in range(start + trip_offset[trip], end + trip_offset[trip], max(headway, 1)):
+                    shift = departure - first
+                    copy = [(seq, arr + shift, dep + shift, stop, pick, drop) for seq, arr, dep, stop, pick, drop in template]
+                    copy = [c for c in copy if not (c[2] < lo or c[1] > hi)]
+                    if len(copy) < 2:
+                        continue
+                    name = f"{trip}@{departure}"
+                    calls[name] = copy
+                    trip_route_type[name] = trip_route_type[trip]
+                    expanded += 1
 
         connections = []
         trip_last_stop, trip_first_stop = {}, {}
@@ -252,16 +286,34 @@ def load_feed(path: Path, day: dt.date, horizon_end: int = WINDOW_END + CAP_SECO
         min_change: dict[tuple[str, str], int] = {}
         forbidden: set[tuple[str, str]] = set()
         in_seat: dict[str, list[str]] = defaultdict(list)
-        ignored_specific = 0
+        trip_rules: dict[tuple[str, str], list[tuple]] = defaultdict(list)
+        services = known_services(archive)
+        counts = defaultdict(int)
         for row in _rows(archive, "transfers.txt"):
             kind = row.get("transfer_type") or "0"
-            specific = any(row.get(key) for key in ("from_route_id", "to_route_id", "from_trip_id", "to_trip_id"))
-            if kind == "4":
-                if row.get("from_trip_id") and row.get("to_trip_id"):
-                    in_seat[row["from_trip_id"]].append(row["to_trip_id"])
+            from_trip, to_trip = row.get("from_trip_id") or "", row.get("to_trip_id") or ""
+            route_only = (row.get("from_route_id") or row.get("to_route_id")) and not (from_trip and to_trip)
+            if route_only or bool(from_trip) != bool(to_trip):
+                # Not present in the Swiss feed; fail closed rather than silently ignore a rule class.
+                raise MatrixError(f"transfers.txt rule class not modelled: {dict(row)}")
+            service = row.get("service_id") or ""
+            if service and service in services and service not in today:
+                counts["tripRulesOtherDays"] += 1
                 continue
-            if specific:
-                ignored_specific += 1
+            if service and service not in services:
+                counts["tripRulesUnknownServiceApplied"] += 1
+            if kind == "4":
+                if from_trip and to_trip:
+                    in_seat[from_trip].append(to_trip)
+                continue
+            if from_trip:
+                if from_trip not in trip_offset or to_trip not in trip_offset:
+                    continue
+                if kind == "0":
+                    continue  # recommended: same as the stop-level rule
+                required = None if kind == "3" else 0 if kind == "1" else int(row.get("min_transfer_time") or CHANGE_SECONDS)
+                trip_rules[(from_trip, row["from_stop_id"])].append((row["to_stop_id"], to_trip, required))
+                counts["tripRulesApplied"] += 1
                 continue
             pair = (row["from_stop_id"], row["to_stop_id"])
             if kind == "3":
@@ -271,9 +323,9 @@ def load_feed(path: Path, day: dt.date, horizon_end: int = WINDOW_END + CAP_SECO
             elif kind in ("0", "1"):
                 min_change.setdefault(pair, 0 if kind == "1" else CHANGE_SECONDS)
 
+    notes = {"frequencyTrips": len(frequencies), "frequencyTripCopies": expanded, **dict(sorted(counts.items()))}
     return Feed(stops, connections, trip_route_type, trip_last_stop, trip_first_stop, min_change, forbidden,
-                dict(in_seat), {"frequencyTripsIgnored": len(frequency_trips),
-                                "routeOrTripSpecificTransferRowsIgnored": ignored_specific})
+                dict(in_seat), notes, dict(trip_rules))
 
 
 def footpaths(feed: Feed) -> dict[str, list[tuple[str, int]]]:
@@ -359,6 +411,10 @@ def scan(feed: Feed, targets: set[str], paths: dict[str, list[tuple[str, int]]],
     connections = ordered if ordered is not None else sorted(feed.connections, key=lambda c: (-c[0], -c[1]))
     trip_best: dict[str, tuple[float, int]] = {}
     profiles: dict[str, Profile] = defaultdict(Profile)
+    # Stops that trip-specific rules lead to keep every boarding (not only the Pareto set), so a rule that
+    # rules out the best departure can fall back to the next allowed one exactly.
+    rule_stops = {to_stop for rules in feed.trip_rules.values() for to_stop, _, _ in rules}
+    boardings: dict[str, list[tuple[int, float, int, str]]] = defaultdict(list)
 
     for dep, arr, origin, stop, trip, can_board, can_alight in connections:
         best, transfers = trip_best.get(trip, (INF, 0))
@@ -373,19 +429,36 @@ def scan(feed: Feed, targets: set[str], paths: dict[str, list[tuple[str, int]]],
                 if candidate < best:
                     best, transfers = candidate, more
         if can_alight:
+            rules = feed.trip_rules.get((trip, stop))
+            by_stop: dict[str, dict[str, int | None]] = defaultdict(dict)
+            for to_stop, to_trip, required in rules or ():
+                by_stop[to_stop][to_trip] = required
             for other, seconds in paths.get(stop, ()):
+                if other in by_stop:
+                    continue
                 profile = profiles.get(other)
                 if profile is None:
                     continue
                 candidate, more = profile.earliest(arr + seconds)
                 if candidate < best:
                     best, transfers = candidate, more + 1
+            generic = dict(paths.get(stop, ()))
+            for other, specific in by_stop.items():
+                default = generic.get(other)  # None: no change possible without a rule
+                for b_dep, b_best, b_more, b_trip in boardings.get(other, ()):
+                    required = specific[b_trip] if b_trip in specific else default
+                    if required is None or b_dep < arr + required:
+                        continue
+                    if b_best < best:
+                        best, transfers = b_best, b_more + 1
         if best == INF:
             continue
         if best < trip_best.get(trip, (INF, 0))[0]:
             trip_best[trip] = (best, transfers)
         if can_board:
             profiles[origin].add(dep, best, transfers)
+            if origin in rule_stops:
+                boardings[origin].append((dep, best, transfers, trip))
 
     results: dict[str, StopResult] = {}
     for stop_id, profile in profiles.items():
@@ -511,7 +584,7 @@ def build(gtfs: Path, topology: dict, workplaces: list[int], municipalities: set
         "firstBoardWindow": ["06:30:00", "08:30:00"],
         "capSeconds": CAP_SECONDS,
         "rowFormat": ["homeBfs", "transitSeconds", "transfers", "firstBoardStopName", "firstBoardSeconds"],
-        "absence": "unknown_unobserved",
+        "absence": "no_journey_within_cap_under_model",
         "model": {
             "access": "unmeasured_zero",
             "origins": "every GTFS stop inside the Gemeinde polygon (simplified BFS 2026 boundaries)",
