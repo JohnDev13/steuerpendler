@@ -57,7 +57,7 @@ export const calculateTaxesIncomeAndFortune = async (taxInput: TaxInput): Promis
     taxableFortuneCanton
   );
 
-  const {
+  let {
     taxesIncomeCanton,
     taxesIncomeCity,
     taxesIncomeChurch,
@@ -72,6 +72,13 @@ export const calculateTaxesIncomeAndFortune = async (taxInput: TaxInput): Promis
   );
 
   const taxesPersonnel = calculateTaxesPersonnel(taxInput);
+  // Steuerpendler patch 24: per-child reduction of the cantonal tax only (NE), and the tax credit below.
+  const reductions = cantonalReductions(
+    { cantonId: taxInput.cantonId, married: ['m', 'rp'].includes(taxInput.relationship), kids: taxInput.children },
+    await getTaxDecutionTable(taxInput.cantonId, taxInput.year, 'EINKOMMENSSTEUER')
+  );
+  if (reductions.cantonReduction)
+    taxesIncomeCanton = dineroChf(Math.max(0, dineroToNumber(taxesIncomeCanton) - reductions.cantonReduction));
 
   let progression: TaxProgressionResult | undefined;
   if (taxInput.includeProgression) {
@@ -132,11 +139,7 @@ export const calculateTaxesIncomeAndFortune = async (taxInput: TaxInput): Promis
     progression = { bund, cantonIncome, cantonFortune, overall };
   }
 
-  // Steuerpendler patch 24: cantonal tax credit per child (ESTV TaxCredit), not below 0.
-  const { credit } = cantonalReductions(
-    { cantonId: taxInput.cantonId, married: ['m', 'rp'].includes(taxInput.relationship), kids: taxInput.children },
-    await getTaxDecutionTable(taxInput.cantonId, taxInput.year, 'EINKOMMENSSTEUER')
-  );
+  const { credit } = reductions;
   const nonFederal = dineroToNumber(dineroAddMany(taxesIncomeCanton, taxesIncomeCity, taxesIncomeChurch, taxesFortuneCanton,
     taxesFortuneCity, taxesFortuneChurch, taxesPersonnel));
   const taxCredit = Math.min(credit, Math.max(0, nonFederal));

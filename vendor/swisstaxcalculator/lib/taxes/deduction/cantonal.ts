@@ -9,13 +9,13 @@ import type { TaxDeductionTable } from './types';
 //  fixed:   D = amount
 //  percent: D = min(max, floor(rate x B))
 //  linear:  D = max(0, floor(rate x (threshold - B)))
-//  step:    D = max(0, base - floor(max(0, B - threshold) / step) x reduction)
+//  step:    D = max(min, base - floor(max(0, B - threshold) / step) x reduction)  (ceil if roundUp; min default 0)
 //  bands:   D = amount of the first band with B <= upTo, else 0
 export type LateRule =
   | { kind: 'fixed'; id: string; amount: number; addBack: string[] }
   | { kind: 'percent'; id: string; rate: number; max: number; addBack: string[] }
   | { kind: 'linear'; id: string; rate: number; threshold: number; addBack: string[] }
-  | { kind: 'step'; id: string; base: number; threshold: number; step: number; reduction: number; addBack: string[] }
+  | { kind: 'step'; id: string; base: number; threshold: number; step: number; reduction: number; roundUp?: boolean; min?: number; addBack: string[] }
   | { kind: 'bands'; id: string; bands: [upTo: number, amount: number][]; addBack: string[] };
 
 export interface Household { cantonId: number; married: boolean; kids: number }
@@ -58,6 +58,31 @@ export const cantonalRules = (h: Household, table: TaxDeductionTable): CantonalR
     case 1: // AG § 42 Abs. 1bis StG: additional social deduction on net income after the social deductions (ESTV canton sheet AG)
       return { disable: [], late: [{ kind: 'bands', id: 'SozZusAbzugTiefeEinkommen_EK', addBack: [],
         bands: [[14999, 12000], [19999, 7500], [24999, 3000], [29999, 2000], [34999, 1000]] }] };
+    case 7: { // FR LICD art. 36 (ESTV canton sheet FR, Feb 2026). Child deduction 8,600 (9,600 from the 3rd child),
+      // -100 per child for each started CHF 1,000 of net income above 62,700 + 10,100 per further child, min 7,100 / 8,100.
+      // Modest income: 4,100 (single without children) / 5,100 up to 20,300 / 24,300, then -200 per started CHF 1,000.
+      // Both on net income before social deductions.
+      const late: LateRule[] = [];
+      if (h.kids > 0) {
+        const first = Math.min(h.kids, 2), further = Math.max(0, h.kids - 2);
+        late.push({ kind: 'step', id: 'SozKind_EK', base: 8600 * first + 9600 * further, min: 7100 * first + 8100 * further,
+          threshold: 62700 + 10100 * (h.kids - 1), step: 1000, reduction: 100 * h.kids, roundUp: true, addBack: [] });
+      }
+      const dependants = h.married || h.kids > 0;
+      late.push({ kind: 'step', id: 'SozBeschEK_EK', base: dependants ? 5100 : 4100, threshold: dependants ? 24300 : 20300,
+        step: 1000, reduction: 200, roundUp: true, addBack: ['SozKind_EK'] });
+      return { disable: ['SozKinderAnzahl1Oder2_EK', 'SozKinderAnzahlUeber2_EK'], late };
+    }
+    case 13: // NE: 2,100 single (also single parents) / 3,800 married, -100 / -200 per started CHF 1,000 above 26,000 / 48,000
+      // (ESTV Steuermäppchen 'bescheidenes Einkommen' 2025); basis net income after professional expenses only
+      return { disable: [], late: [{ kind: 'step', id: 'SozBeschEK_EK', base: h.married ? 3800 : 2100, threshold: h.married ? 48000 : 26000,
+        step: 1000, reduction: h.married ? 200 : 100, roundUp: true,
+        addBack: ['KKSparLedigMitBVGS3a_EK', 'KKSparzVerhMitBVGS3a_EK', 'KKSparProKind_EK', 'SozKinderAlterUnter4_EK',
+          'SozKinderAlterZwischen4und13_EK', 'SozKinderAlterUeber14_EK'] }] };
+    case 17: // SH: 3,525 single / 7,050 married or single parent up to net income 16,800 / 25,200, then -150 per started CHF 800
+      // (ESTV Steuermäppchen 'bescheidenes Einkommen' 2025; basis before the child deductions)
+      return { disable: [], late: [{ kind: 'step', id: 'SozBeschEK_EK', base: h.married || singleParent ? 7050 : 3525,
+        threshold: h.married || singleParent ? 25200 : 16800, step: 800, reduction: 150, roundUp: true, addBack: ['SozKind_EK'] }] };
     case 6: case 22: case 25: // BS, UR, ZG: single parents get the single-parent deduction instead of the single deduction
       return { disable: singleParent ? ['SozLedig_EK'] : [], late: [] };
     default:
@@ -70,7 +95,8 @@ export const lateDeduction = (rule: LateRule, basis: number): number => {
   if (rule.kind === 'bands') return rule.bands.find(([upTo]) => basis <= upTo)?.[1] ?? 0;
   if (rule.kind === 'percent') return Math.min(rule.max, Math.floor(rule.rate * basis + 1e-9));
   if (rule.kind === 'linear') return Math.max(0, Math.floor(rule.rate * (rule.threshold - basis) + 1e-9));
-  return Math.max(0, rule.base - Math.floor(Math.max(0, basis - rule.threshold) / rule.step + 1e-9) * rule.reduction);
+  const steps = Math.max(0, basis - rule.threshold) / rule.step;
+  return Math.max(rule.min ?? 0, rule.base - (rule.roundUp ? Math.ceil(steps - 1e-9) : Math.floor(steps + 1e-9)) * rule.reduction);
 };
 
 // Applies the late rules in order to the income after the ordinary deductions. `ordinary` holds the canton amounts
@@ -90,11 +116,15 @@ export const applyLateRules = (rules: LateRule[], income: number, ordinary: Map<
 // Steuerpendler patch 24: per-child reductions after the tariff. Evidence: deductions-grid probe and broad sample.
 //  simpleReduction: subtracted from the cantonal simple tax before the multipliers, not below 0 (BL 750 per child,
 //                   table StErmässigungProKind_EK)
+//  cantonReduction: subtracted from the cantonal tax (after the cantonal multiplier) only, not below 0 (NE 200 per child)
 //  credit:          subtracted from the cantonal, communal, church and personal tax, not below 0 (ESTV TaxCredit:
 //                   SH 320, TG 100 per child)
-export const cantonalReductions = (h: Household, table: TaxDeductionTable): { simpleReduction: number; credit: number } => {
-  if (h.cantonId === 5) return { simpleReduction: h.kids * amount(table, 'StErmässigungProKind_EK'), credit: 0 };
-  if (h.cantonId === 17) return { simpleReduction: 0, credit: 320 * h.kids };
-  if (h.cantonId === 20) return { simpleReduction: 0, credit: 100 * h.kids };
-  return { simpleReduction: 0, credit: 0 };
+export interface Reductions { simpleReduction: number; cantonReduction: number; credit: number }
+export const cantonalReductions = (h: Household, table: TaxDeductionTable): Reductions => {
+  const none = { simpleReduction: 0, cantonReduction: 0, credit: 0 };
+  if (h.cantonId === 5) return { ...none, simpleReduction: h.kids * amount(table, 'StErmässigungProKind_EK') };
+  if (h.cantonId === 13) return { ...none, cantonReduction: 200 * h.kids };
+  if (h.cantonId === 17) return { ...none, credit: 320 * h.kids };
+  if (h.cantonId === 20) return { ...none, credit: 100 * h.kids };
+  return none;
 };

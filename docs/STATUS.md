@@ -14,8 +14,8 @@ keep it short and update it in the same PR that changes what it describes.
   within the selected time in this timetable (access walk to the first stop: 0 min, unmeasured). The old observed-positive export and its probes are removed.
 - Walking from home to the first stop is not measured (0 min); the walk controls are disabled and say so.
 - Withheld ("Daten in Prüfung"): VS, VD, GE, JU for every profile, plus every canton × profile that the broad
-  ESTV sample shows more than 5 % off (`src/withheld.ts`). Single without children is shown everywhere except
-  LU, VS, VD, GE, JU; most other profiles are withheld in many cantons until their rules are modelled.
+  ESTV sample shows more than 5 % off (`src/withheld.ts`). Outside the four quarantined cantons every profile now
+  matches the sample, so nothing else is withheld.
 
 ## Gates
 
@@ -24,7 +24,7 @@ keep it short and update it in the same PR that changes what it describes.
 | Tax on-grid, 500 cases vs engine (`src/tax.ts`) | pass, max CHF 0 | `npm run tax:test` |
 | Tax off-grid, 300 cases vs engine | pass, max CHF 0 | `npm run tax:test` |
 | Tax vs official ESTV, 29 frozen cases | 26 pass, 3 fail (VD, GE, VS; ratchet: may only improve) | `npm run tax:official` |
-| Tax vs broad official sample, 650 cases (26 capitals × 6 profiles × 4 incomes + church) | 512 pass (ratchet) | `npx tsx --tsconfig scripts/tax/tsconfig.json scripts/tax/sample.ts --fail` |
+| Tax vs broad official sample, 650 cases (26 capitals × 6 profiles × 4 incomes + church) | 564 pass (ratchet); every canton 25/25 except the quarantined VS, VD, GE, JU | `npx tsx --tsconfig scripts/tax/tsconfig.json scripts/tax/sample.ts --fail` |
 | Canton × profile more than 5 % off ESTV is withheld | enforced by test (`src/withheld.ts`) | `npm test` |
 | Cantons > 5 % off ESTV are withheld | enforced by test | `npm test` |
 | Travel vs SBB, 30 pairs, ± 3 min | pass: 29 within 3 min, Wollerau consistent (SBB 38 min > cap) | `python3 scripts/travel/compare_reference.py --require-complete` |
@@ -35,9 +35,10 @@ The green `tax-accuracy` job checks engine parity, not the independently failing
 travel) and the approval flags stay false; the preview uses `availability.matrix`.
 
 Tax tables were refreshed from ESTV on 29 Oct 2026 (new tariffs for JU, NW, SZ, TI, VD, VS; six data corrections
-became unnecessary). The 650-case sample shows what the engine still lacks: low-income deductions, cantonal
+became unnecessary). The 650-case sample showed what the engine lacked: low-income deductions, cantonal
 married and single-parent deduction rules, tax reductions per child (e.g. BL) and the VD family quotient.
-These are being added canton by canton; each fix lowers the sample ratchet and un-withholds combinations.
+These were added canton by canton (vendor patches 20–24); the remaining gaps are the four quarantined cantons
+(JU parish rates, GE cantonal reduction, VD quotient familial, VS rebates and coefficients).
 
 ## CI and deployment
 
@@ -56,7 +57,7 @@ These are being added canton by canton; each fix lowers the sample ratchet and u
 
 - Walking from home to the first stop is not measured; frequency-based trips and route-/trip-specific
   transfer rows are not modelled.
-- Model the missing cantonal tax rules found by the 650-case sample (see Gates).
+- Model the rules of the quarantined cantons (JU, GE, VD, VS) and lift their quarantine once their sample cases pass.
 - Production host (Cloudflare per SPEC §3), Impressum details (O5), commercial map rights.
 
 ## History

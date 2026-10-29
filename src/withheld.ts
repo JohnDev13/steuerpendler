@@ -11,13 +11,13 @@ export const QUARANTINED_CANTONS: ReadonlySet<string> = new Set(['VS','JU','VD',
 // parents are sampled with 2 children; their 1 and 3+ entries follow that sample.
 export const TAX_WITHHELD: Readonly<Record<string, readonly string[]>> = {
   s0: [],
-  s1: ['FR', 'NE'],
-  s2: ['FR', 'NE'],
-  s3: ['FR', 'NE'],
-  m0: ['FR', 'NE', 'SH'],
-  m1: ['FR', 'NE', 'SH'],
-  m2: ['FR', 'NE'],
-  m3: ['FR', 'NE'],
+  s1: [],
+  s2: [],
+  s3: [],
+  m0: [],
+  m1: [],
+  m2: [],
+  m3: [],
 };
 
 export function withheldFor(civil: 's' | 'm', kids: number): ReadonlySet<string> {
