@@ -27,6 +27,23 @@ const amount = (table: TaxDeductionTable, id: string) => {
   return row.amount;
 };
 
+// VD 2026 family deduction (art. 42a(3)): completed tranches on declaration code 650.
+// The thresholds come from the indexed 2026 table; the completed-tranche mechanism is documented
+// by the 2025 instructions and corroborated by the retained 2026 ESTV captures.
+const vdFamilyBands = (familyAmount: number, firstThreshold: number, secondThreshold: number): [number, number][] => {
+  const bands: [number, number][] = [];
+  for (let tranche = 0; tranche < 18; tranche++) {
+    const deduction = familyAmount - 100 * tranche;
+    if (deduction > 0) bands.push([firstThreshold + 2100 * (tranche + 1) - 1, deduction]);
+  }
+  for (let tranche = 0; ; tranche++) {
+    const deduction = familyAmount - 1800 - 100 * tranche;
+    if (deduction <= 0) break;
+    bands.push([secondThreshold + 1000 * (tranche + 1) - 1, deduction]);
+  }
+  return bands;
+};
+
 export const cantonalRules = (h: Household, table: TaxDeductionTable): CantonalRules => {
   const singleParent = !h.married && h.kids > 0;
   switch (h.cantonId) {
@@ -83,6 +100,12 @@ export const cantonalRules = (h: Household, table: TaxDeductionTable): CantonalR
       // (ESTV Steuermäppchen 'bescheidenes Einkommen' 2025; basis before the child deductions)
       return { disable: [], late: [{ kind: 'step', id: 'SozBeschEK_EK', base: h.married || singleParent ? 7050 : 3525,
         threshold: h.married || singleParent ? 25200 : 16800, step: 800, reduction: 150, roundUp: true, addBack: ['SozKind_EK'] }] };
+    case 23: { // VD: family deduction after ordinary deductions (declaration code 650), once per household
+      const familyAmount = h.married ? 1300 + 1000 * h.kids : h.kids > 0 ? 2800 + 1000 * h.kids : 0;
+      const late: LateRule[] = familyAmount > 0 ? [{ kind: 'bands', id: 'SozFamAbzug_EK', addBack: [],
+        bands: vdFamilyBands(familyAmount, amount(table, 'SozFamAbzugSchwellwertAus1_EK'), amount(table, 'SozFamAbzugSchwellwertAus2_EK')) }] : [];
+      return { disable: ['SozVerheiratet_EK', 'SozKindAlleinerzieher_EK', 'SozKind_EK'], late };
+    }
     case 6: case 11: case 22: case 25: // BS, JU, UR, ZG: single parents get the single-parent deduction instead of the single deduction
       return { disable: singleParent ? ['SozLedig_EK'] : [], late: [] };
     default:
