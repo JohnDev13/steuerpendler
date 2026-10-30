@@ -1,0 +1,9 @@
+{
+ "purpose": "VS single low-income deduction: the step edges (Sion, single without church, CHF 25 steps around each edge seen in vs-gemeinden).",
+ "cases": [
+  { "bfs": 6266, "civil": "single", "kids": 0, "church": "none", "from": 39500, "to": 40000, "step": 25 },
+  { "bfs": 6266, "civil": "single", "kids": 0, "church": "none", "from": 41500, "to": 42000, "step": 25 },
+  { "bfs": 6266, "civil": "single", "kids": 0, "church": "none", "from": 43500, "to": 44000, "step": 25 },
+  { "bfs": 6266, "civil": "single", "kids": 0, "church": "none", "from": 45000, "to": 45500, "step": 25 }
+ ]
+}
