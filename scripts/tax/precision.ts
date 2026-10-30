@@ -3,7 +3,7 @@
 import { calculateDeductionByDefinition, calculateGrossNetDetails, taxDeductionDefinitions } from '../../vendor/swisstaxcalculator/lib/taxes/deduction';
 import { cantonalReductions, cantonalRules } from '../../vendor/swisstaxcalculator/lib/taxes/deduction/cantonal';
 import { getTaxDecutionTable } from '../../vendor/swisstaxcalculator/lib/taxes/deduction/provider';
-import { getTaxTarifGroup, isGroupEligableForSplitting, tariffRounding } from '../../vendor/swisstaxcalculator/lib/taxes/tarif';
+import { getTaxTarifGroup, householdQuotient, isGroupEligableForSplitting, tariffRounding } from '../../vendor/swisstaxcalculator/lib/taxes/tarif';
 import { getTaxTarifTable } from '../../vendor/swisstaxcalculator/lib/taxes/tarif/provider';
 import { churchOnTaxableIncome } from '../../vendor/swisstaxcalculator/lib/taxes/factor';
 import { calculateTaxesPersonnel } from '../../vendor/swisstaxcalculator/lib/taxes/personnel';
@@ -54,13 +54,14 @@ export async function compilePrecision(input:TaxInput):Promise<PreciseCanton> {
     addBack+=va;
    }
    const addBackLate=rule.addBack.flatMap(x=>lateIds.flatMap((lid,i)=>lid===x?[i]:[]));
-   return {kind:rule.kind,amount:rule.kind==='fixed'?rule.amount:0,rate:'rate' in rule?rule.rate:0,max:rule.kind==='percent'?rule.max:0,
-    threshold:'threshold' in rule?rule.threshold:0,base:rule.kind==='step'?rule.base:0,step:rule.kind==='step'?rule.step:0,
-    reduction:rule.kind==='step'?rule.reduction:0,roundUp:rule.kind==='step'&&rule.roundUp?1:0,min:rule.kind==='step'?rule.min??0:0,bands:rule.kind==='bands'?rule.bands:[],addBack,addBackLate};
+   return {kind:rule.kind,amount:rule.kind==='fixed'?rule.amount:0,rate:'rate' in rule?rule.rate:0,max:rule.kind==='percent'||rule.kind==='rent'?rule.max:0,
+    threshold:'threshold' in rule?rule.threshold:rule.kind==='rent'?rule.cap:0,base:rule.kind==='step'?rule.base:0,step:rule.kind==='step'?rule.step:0,
+    reduction:rule.kind==='step'?rule.reduction:0,roundUp:rule.kind==='step'&&rule.roundUp?1:0,min:rule.kind==='step'?rule.min??0:0,...(rule.kind==='step'&&rule.ceiling?{ceiling:rule.ceiling}:{}),bands:rule.kind==='bands'?rule.bands:[],addBack,addBackLate};
   });
   const [tariff,used]=await getTaxTarifTable(id,2026,'EINKOMMENSSTEUER',group);
+  const quotient=id===0?undefined:householdQuotient(id,['m','rp'].includes(input.relationship),input.children);
   const reductions=id===0?{simpleReduction:0,cantonReduction:0,credit:0}:cantonalReductions({cantonId:id,married:['m','rp'].includes(input.relationship),kids:input.children},deductions);
-  return {deductions:ops,...(late.length?{late}:{}),...(reductions.simpleReduction?{reduction:reductions.simpleReduction}:{}),tariff:{type:tariff.tableType,split:tariff.splitting>0&&isGroupEligableForSplitting(used)?tariff.splitting:1,rounding:tariffRounding(id,tariff.tableType),table:tariff.table}};
+  return {deductions:ops,...(late.length?{late}:{}),...(reductions.simpleReduction?{reduction:reductions.simpleReduction}:{}),tariff:quotient?{type:tariff.tableType,split:quotient.split,rounding:'quotient',q0:quotient.q0,cap:quotient.cap,table:tariff.table}:{type:tariff.tableType,split:tariff.splitting>0&&isGroupEligableForSplitting(used)?tariff.splitting:1,rounding:tariffRounding(id,tariff.tableType),table:tariff.table}};
  };
  const personal=(confession:'other'|'protestant'|'roman')=>dineroToNumber(calculateTaxesPersonnel({...input,persons:input.persons.map(p=>({...p,confession}))}));
  const cantonTable=await getTaxDecutionTable(input.cantonId,2026,'EINKOMMENSSTEUER');

@@ -1,0 +1,10 @@
+{
+ "purpose": "VD modest-income deduction (code 695): where it stops for the remaining profiles, CHF 250 steps across the end of each phase-out (Lausanne).",
+ "cases": [
+  { "bfs": 5586, "civil": "single", "kids": 0, "church": "none", "from": 58000, "to": 64000, "step": 250 },
+  { "bfs": 5586, "civil": "single", "kids": 1, "church": "none", "from": 83000, "to": 90000, "step": 250 },
+  { "bfs": 5586, "civil": "married", "kids": 0, "church": "none", "from": 83000, "to": 90000, "step": 250 },
+  { "bfs": 5586, "civil": "married", "kids": 1, "church": "none", "from": 97000, "to": 104000, "step": 250 },
+  { "bfs": 5586, "civil": "married", "kids": 3, "church": "none", "from": 123000, "to": 131000, "step": 250 }
+ ]
+}

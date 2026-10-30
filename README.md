@@ -14,12 +14,12 @@ no backend, cookies or analytics.
 ## How the numbers are made
 
 **Tax.** The vendored open-source engine [`swisstaxcalculator`](https://github.com/devbrains-com/swisstaxcalculator)
-with ESTV 2026 data and 27 recorded patches (`vendor/swisstaxcalculator/STEUERPENDLER-PATCHES.md`) generates
+with ESTV 2026 data and 30 recorded patches (`vendor/swisstaxcalculator/STEUERPENDLER-PATCHES.md`) generates
 one profile per civil status and number of children. The browser evaluates the tariffs exactly between the
 CHF 1,000 grid rows. Assumptions: gross employment income, age 35, no wealth, ESTV standard deductions,
 married couples with one income. Checked against 29 frozen cases from the official ESTV calculator:
-27 match within tolerance; the remaining two cases (VD, VS) fail. A broader 650-case sample passes
-606 cases (VD 6/25) at one Gemeinde per canton; a further 1,834 ESTV results check every Gemeinde the site can
+28 match within tolerance; the remaining case (VS) fails. A broader 650-case sample passes
+625 cases (all except VS) at one Gemeinde per canton; a further 1,834 ESTV results check every Gemeinde the site can
 show (all 726 within 30 minutes of a workplace, two profiles each) and all match. Estimates for VS, VD and JU are withheld; JU's
 parish-rate issue is not settled by its sampled cases. Neither check grants official ESTV approval.
 

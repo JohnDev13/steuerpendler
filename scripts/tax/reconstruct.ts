@@ -1,7 +1,7 @@
 // A separate serialized-program interpreter for table validation. Does not call
 // the full engine, taxable-income calculator or the browser implementation.
 import { add,subtract } from 'dinero.js';
-import { dineroChf,dineroToNumber,dineroRound,dineroRoundMin0,dineroRoundDown,multiplyDineroPercent,multiplyDineroFactor,dineroMin,dineroMax } from '../../vendor/swisstaxcalculator/lib/utils/dinero';
+import { dineroChf,dineroToNumber,dineroRound,dineroRoundHalfUp,dineroRoundMin0,dineroRoundDown,multiplyDineroPercent,multiplyDineroFactor,dineroMin,dineroMax } from '../../vendor/swisstaxcalculator/lib/utils/dinero';
 import { applyTariffRounding, calculateTaxesAmount } from '../../vendor/swisstaxcalculator/lib/taxes/tarif';
 import type { BudgetDefault, PensionDefault, PreciseCanton, PreciseLate } from '../../src/tax';
 import { lateDeduction } from '../../vendor/swisstaxcalculator/lib/taxes/deduction/cantonal';
@@ -9,7 +9,7 @@ import { calculateBvg2026Age35 } from './bvg';
 export function reconstructPrecision(p:PreciseCanton,income:number,rates:number[],pensionDefault?:PensionDefault,budgetDefault?:BudgetDefault,personalChurch=0,churchOnTaxable=false,personalOverride?:number):number {
  let cantonTaxable=0;
  const gross=dineroChf(income),capped=dineroMin(gross,dineroChf(148200));
- const social=subtract(subtract(subtract(gross,dineroRound(multiplyDineroPercent(gross,5.3,1))),dineroRound(multiplyDineroPercent(capped,1.1,1))),dineroRound(multiplyDineroPercent(capped,.4,1)));
+ const social=subtract(subtract(subtract(gross,dineroRoundHalfUp(multiplyDineroPercent(gross,5.3,1))),dineroRoundHalfUp(multiplyDineroPercent(capped,1.1,1))),dineroRoundHalfUp(multiplyDineroPercent(capped,.4,1)));
  const net=pensionDefault==='ESTV2026Age35'?subtract(social,dineroChf(calculateBvg2026Age35(income))):social;
  const base=(part:PreciseCanton['bund'])=>{
   let deductions=dineroChf(0);
@@ -32,12 +32,12 @@ export function reconstructPrecision(p:PreciseCanton,income:number,rates:number[
   const done:number[]=[];
   for(const l of (part.late??[]) as PreciseLate[]){
    const basis=taxable+l.addBack+l.addBackLate.reduce((s,i)=>s+done[i],0);
-   const d=lateDeduction({...l,id:'',roundUp:l.roundUp===1,addBack:[]} as any,basis);
+   const d=lateDeduction({...l,id:'',roundUp:l.roundUp===1,cap:l.threshold,addBack:[]} as any,basis,dineroToNumber(net));
    done.push(d);taxable-=d;
   }
   taxable=Math.max(0,taxable);
   if(part===p.canton)cantonTaxable=taxable;
-  return dineroChf(applyTariffRounding(t.rounding,taxable,t.split,a=>dineroToNumber(calculateTaxesAmount(dineroChf(a,5),{tableType:t.type,table:t.table} as any))),5);
+  return dineroChf(applyTariffRounding(t.rounding,taxable,t.split,a=>dineroToNumber(calculateTaxesAmount(dineroChf(a,5),{tableType:t.type,table:t.table} as any)),t.rounding==='quotient'?{q0:t.q0??t.split,cap:t.cap??0}:undefined),5);
  };
  const bund=dineroRoundMin0(subtract(dineroRound(base(p.bund)),dineroChf(263*p.kids)));
  const bundLevied=dineroToNumber(bund)<25?dineroChf(0):bund;

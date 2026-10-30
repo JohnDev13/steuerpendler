@@ -1,0 +1,9 @@
+{
+ "purpose": "VD: where the modest-income deduction stops (s3, m2, s2 near the end of the phase-out, CHF 250 steps) and the family-quotient cap at high incomes (all 8 profiles, 220k-500k).",
+ "cases": [
+  { "bfs": 5586, "civil": "single", "kids": 3, "church": "none", "from": 110000, "to": 115000, "step": 250 },
+  { "bfs": 5586, "civil": "married", "kids": 2, "church": "none", "from": 110000, "to": 115000, "step": 250 },
+  { "bfs": 5586, "civil": "single", "kids": 2, "church": "none", "from": 100000, "to": 105000, "step": 250 },
+  { "bfs": 5586, "civil": ["single", "married"], "kids": [0, 1, 2, 3], "church": "none", "from": 220000, "to": 500000, "step": 20000 }
+ ]
+}

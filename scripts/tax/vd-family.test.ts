@@ -28,19 +28,22 @@ test('frozen estv-2026-12 applies the VD 2026 family deduction in the real engin
 test('VD completed-tranche bands cover boundary francs, every shipped household, and the zero floor', async () => {
   const table = await getTaxDecutionTable(23, 2026, 'EINKOMMENSSTEUER');
   const ruleFor = (married: boolean, kids: number) => cantonalRules({ cantonId: 23, married, kids }, table);
-  const deduction = (basis: number) => lateDeduction(ruleFor(true, 2).late[0], basis);
-  expect([[126400, 3300], [126401, 3300], [128499, 3300], [128500, 3200],
-    [164199, 1600], [164200, 1500], [164201, 1500], [165199, 1500], [165200, 1400],
-    [179199, 100], [179200, 0]]).toSatisfy((cases: number[][]) => cases.every(([basis, expected]) => deduction(basis) === expected));
+  const family = (rules: ReturnType<typeof ruleFor>) => rules.late.find(rule => rule.id === 'SozFamAbzug_EK')!;
+  const deduction = (basis: number) => lateDeduction(family(ruleFor(true, 2)), basis);
+  // Patch 28: CHF 100 per completed CHF 2,000 above 126,400 and per CHF 1,000 above 164,200, fractions added before one
+  // floor (all 280 Lausanne ESTV grid cases; #78's CHF 2,100 tranches were CHF 100 too high in 32 of them).
+  expect([[126400, 3300], [126401, 3300], [128399, 3300], [128400, 3200],
+    [164199, 1500], [164200, 1500], [164299, 1500], [164300, 1400],
+    [178299, 100], [178300, 0]]).toSatisfy((cases: number[][]) => cases.every(([basis, expected]) => deduction(basis) === expected));
 
   for (const married of [false, true]) for (let kids = 0; kids <= 3; kids++) {
     const rules = ruleFor(married, kids);
-    expect(rules.disable).toEqual(['SozVerheiratet_EK', 'SozKindAlleinerzieher_EK', 'SozKind_EK']);
-    const family = married ? 1300 + 1000 * kids : kids > 0 ? 2800 + 1000 * kids : 0;
-    expect(rules.late).toHaveLength(family > 0 ? 1 : 0);
-    if (family > 0) {
-      expect(lateDeduction(rules.late[0], 126400)).toBe(family);
-      expect(lateDeduction(rules.late[0], 500000)).toBe(0);
+    expect(rules.disable).toEqual(['SozVerheiratet_EK', 'SozKindAlleinerzieher_EK', 'SozKind_EK', 'SozminderjKinder_EK']);
+    const amount = married ? 1300 + 1000 * kids : kids > 0 ? 2800 + 1000 * kids : 0;
+    expect(rules.late.map(rule => rule.id)).toEqual(['VdLogement_EK', 'VdModeste_EK', ...(amount > 0 ? ['SozFamAbzug_EK'] : [])]);
+    if (amount > 0) {
+      expect(lateDeduction(family(rules), 126400)).toBe(amount);
+      expect(lateDeduction(family(rules), 500000)).toBe(0);
     }
   }
 });
