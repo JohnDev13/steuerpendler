@@ -1,17 +1,79 @@
 [
  {
-  "file": "_de_en_Erl_uterungen_zu_den_Pr_miendaten.xlsx_fr_it_.xls",
-  "url": "https://opendata.bagnet.ch/?r=/download&path=L1ByYWVtaWVuL0VybMOkdXRlcnVuZ2VuIHp1IGRlbiBQcsOkbWllbmRhdGVuLnhsc3g%3D",
-  "sha256": "cffea26d28a735e6cc624beec1618dae95f88891ff81a90d87590148cfa03727",
-  "bytes": 21815,
-  "gzipped": false
+  "file": "2027-Praemien_CH.csv.gz",
+  "source": "https://opendata.bagnet.ch/?r=/download&path=L1ByYWVtaWVuL1Byw6RtaWVuX0NILmNzdg%3D%3D",
+  "sha256": "957fef82f47eb8d8243e01be17699d864b98a741c466f5d07015c6e91fecfdaa",
+  "bytes": 25832930,
+  "gzipped": true
  },
  {
-  "file": "_de_en_Archiv_Praemien_2026.zip_fr_it_.zip",
-  "url": "https://opendata.bagnet.ch/?r=/download&path=L1ByYWVtaWVuL0FyY2hpdl9QcmFlbWllbl8yMDI2LnppcA%3D%3D",
+  "file": "2027-Tarife.csv.gz",
+  "source": "https://opendata.bagnet.ch/?r=/download&path=L1ByYWVtaWVuL1RhcmlmZS5jc3Y%3D",
+  "sha256": "7a1eb22bd9ac96fea83b6d0a383c4779c8a5a6ac681d5f30c0991a26e64160a7",
+  "bytes": 32464,
+  "gzipped": true
+ },
+ {
+  "file": "2027-Einzugsgebiete.csv.gz",
+  "source": "https://opendata.bagnet.ch/?r=/download&path=L1ByYWVtaWVuL0Vpbnp1Z3NnZWJpZXRlLmNzdg%3D%3D",
+  "sha256": "54415ac58e23b88ddc5211ed459b16234b7990d6d411785d351aebf65d322cb5",
+  "bytes": 212607,
+  "gzipped": true
+ },
+ {
+  "file": "2027-Eingeschr.-Taet.gebiete.csv.gz",
+  "source": "https://opendata.bagnet.ch/?r=/download&path=L1ByYWVtaWVuL0Vpbmdlc2Noci4tVMOkdC5nZWJpZXRlLmNzdg%3D%3D",
+  "sha256": "7337336e54c0304145fd6dce98f24dced1b3ff7e5ceda82bdf7425f0140485fd",
+  "bytes": 2751,
+  "gzipped": true
+ },
+ {
+  "file": "2027-Versichertenbestand_CH.csv.gz",
+  "source": "https://opendata.bagnet.ch/?r=/download&path=L1ByYWVtaWVuL1ZlcnNpY2hlcnRlbmJlc3RhbmRfQ0guY3N2",
+  "sha256": "f58ccae6b4924ff41b43ede5e26cdc8464616a443cff36fc0ac4ad3638c52c71",
+  "bytes": 16743,
+  "gzipped": true
+ },
+ {
+  "file": "Archiv_Praemien_2026.zip (not stored)",
+  "source": "https://opendata.bagnet.ch/?r=/download&path=L1ByYWVtaWVuL0FyY2hpdl9QcmFlbWllbl8yMDI2LnppcA%3D%3D",
   "sha256": "01ef32ab0bd8e25ee01ebd3d1d601487ca21f1569b55da3edcf9f9170f99dc78",
-  "bytes": 31923906,
-  "gzipped": false
+  "bytes": 31923906
+ },
+ {
+  "file": "2026-Eingeschr.-Taet.gebiete.csv.gz",
+  "source": "https://opendata.bagnet.ch/?r=/download&path=L1ByYWVtaWVuL0FyY2hpdl9QcmFlbWllbl8yMDI2LnppcA%3D%3D :: Eingeschr.-Tät.gebiete.csv",
+  "sha256": "7cd27c305d78776b4a580c572612f27b6780d68fe7de9dcf950d304071a305ce",
+  "bytes": 4504,
+  "gzipped": true
+ },
+ {
+  "file": "2026-Einzugsgebiete.csv.gz",
+  "source": "https://opendata.bagnet.ch/?r=/download&path=L1ByYWVtaWVuL0FyY2hpdl9QcmFlbWllbl8yMDI2LnppcA%3D%3D :: Einzugsgebiete.csv",
+  "sha256": "d8d492f2821d321f380fb92066c17f367090aea139f6ca58a083fb2659488e54",
+  "bytes": 209347,
+  "gzipped": true
+ },
+ {
+  "file": "2026-Praemien_CH.csv.gz",
+  "source": "https://opendata.bagnet.ch/?r=/download&path=L1ByYWVtaWVuL0FyY2hpdl9QcmFlbWllbl8yMDI2LnppcA%3D%3D :: Prämien_CH.csv",
+  "sha256": "1c6022adc79cff55e67562840e32754e434edebce419cc7c257cbba77e142ce5",
+  "bytes": 22545492,
+  "gzipped": true
+ },
+ {
+  "file": "2026-Tarife.csv.gz",
+  "source": "https://opendata.bagnet.ch/?r=/download&path=L1ByYWVtaWVuL0FyY2hpdl9QcmFlbWllbl8yMDI2LnppcA%3D%3D :: Tarife.csv",
+  "sha256": "d1a24efef70e3324aede09f3c809f6357b6bb9d4debf3929227bd5e98a31c1d7",
+  "bytes": 20552,
+  "gzipped": true
+ },
+ {
+  "file": "2026-Versichertenbestand_CH.csv.gz",
+  "source": "https://opendata.bagnet.ch/?r=/download&path=L1ByYWVtaWVuL0FyY2hpdl9QcmFlbWllbl8yMDI2LnppcA%3D%3D :: Versichertenbestand_CH.csv",
+  "sha256": "9898bcc6620e63ee2c2613f6fd65adb2288f7eb0c88f76808f7c3d8644eb4557",
+  "bytes": 15880,
+  "gzipped": true
  },
  {
   "file": "praemienregionen-2026.xlsx",
