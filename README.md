@@ -19,7 +19,8 @@ one profile per civil status and number of children. The browser evaluates the t
 CHF 1,000 grid rows. Assumptions: gross employment income, age 35, no wealth, ESTV standard deductions,
 married couples with one income. Checked against 29 frozen cases from the official ESTV calculator:
 27 match within tolerance; the remaining two cases (VD, VS) fail. A broader 650-case sample passes
-606 cases (VD 6/25), but covers only one Gemeinde per canton. Estimates for VS, VD and JU are withheld; JU's
+606 cases (VD 6/25) at one Gemeinde per canton; a further 1,834 ESTV results check every Gemeinde the site can
+show (all 726 within 30 minutes of a workplace, two profiles each) and all match. Estimates for VS, VD and JU are withheld; JU's
 parish-rate issue is not settled by its sampled cases. Neither check grants official ESTV approval.
 
 **Commute.** `scripts/travel/matrix.py` scans every connection of the official Swiss GTFS timetable

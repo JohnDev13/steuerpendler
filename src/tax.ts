@@ -4,7 +4,8 @@ export type CivilStatus = 's' | 'm';
 export type PensionDefault = 'ESTV2026Age35';
 export type BudgetDefault = 'ESTV2026Age35';
 export type Church = 'none' | 'reformed' | 'catholic';
-export type Gemeinde = readonly [name:string,canton:string,rateCanton:number,rateGemeinde:number,rateReformed:number,rateCatholic:number];
+// Optional 7th field (vendor patch 27): personal tax per person in this Gemeinde [without church, reformed extra, catholic extra].
+export type Gemeinde = readonly [name:string,canton:string,rateCanton:number,rateGemeinde:number,rateReformed:number,rateCatholic:number,personal?:readonly [number,number,number]];
 export type DeductionFormat = 'ZERO'|'STANDARDIZED'|'MAXIMUM'|'PERCENT'|'PERCENT,MAXIMUM'|'PERCENT,MINIMUM,MAXIMUM'|'STANDARDIZED,PERCENT,MAXIMUM';
 export interface DeductionOp {source:'net'|'constant'|'rent30';value:number;format:DeductionFormat;amount:number;percent:number;minimum:number;maximum:number;multiplier:number}
 export type TariffType = 'BUND'|'ZUERICH'|'FORMEL'|'FREIBURG'|'FLATTAX';
@@ -13,7 +14,7 @@ export interface PreciseTariff {type:TariffType;split:number;rounding:TariffRoun
 // Cantonal deductions on the income after the ordinary ones (vendor patch 22). All fields numeric; unused ones 0.
 // addBack: ordinary deductions added to the basis (constant per profile); addBackLate: indices of earlier late ones.
 export interface PreciseLate {kind:'fixed'|'percent'|'linear'|'step'|'bands';amount:number;rate:number;max:number;threshold:number;base:number;step:number;reduction:number;roundUp:number;min:number;bands:[number,number][];addBack:number;addBackLate:number[]}
-export interface PreciseCanton {bund:{deductions:DeductionOp[];tariff:PreciseTariff;late?:PreciseLate[]};canton:{deductions:DeductionOp[];tariff:PreciseTariff;late?:PreciseLate[];reduction?:number};credit:number;cantonReduction:number;personal:number;personalChurch:{reformed:number;catholic:number};kids:number;persons:number}
+export interface PreciseCanton {bund:{deductions:DeductionOp[];tariff:PreciseTariff;late?:PreciseLate[]};canton:{deductions:DeductionOp[];tariff:PreciseTariff;late?:PreciseLate[];reduction?:number};credit:number;cantonReduction:number;personal:number;personalChurch:{reformed:number;catholic:number};churchTaxable?:('reformed'|'catholic')[];kids:number;persons:number}
 export interface TaxProfile {meta:{year:number;incomes:{from:number;step:number;count:number};pensionDefault?:PensionDefault;budgetDefault?:BudgetDefault;[key:string]:unknown};cantons:Record<string,number[][]>;precision?:Record<string,PreciseCanton>}
 // Integer ties-to-even, matching the engine's monetary rounding, not display rounding.
 // ESTV rounds percentage deductions down to whole francs.
@@ -34,6 +35,7 @@ function validatePrecision(value:unknown):value is PreciseCanton {
  if(!value||typeof value!=='object')return false;
  const p=value as PreciseCanton;
  if(!Number.isFinite(p.credit)||p.credit<0||!Number.isFinite(p.cantonReduction)||p.cantonReduction<0||(p.canton&&p.canton.reduction!==undefined&&!(Number.isFinite(p.canton.reduction)&&p.canton.reduction>=0))||!Number.isFinite(p.personal)||!p.personalChurch||!Number.isFinite(p.personalChurch.reformed)||!Number.isFinite(p.personalChurch.catholic)||!Number.isInteger(p.kids)||p.kids<0||p.kids>3||!Number.isInteger(p.persons)||p.persons<1||p.persons>2)return false;
+ if(p.churchTaxable!==undefined&&!(Array.isArray(p.churchTaxable)&&p.churchTaxable.every(c=>c==='reformed'||c==='catholic')))return false;
  for(const part of [p.bund,p.canton]){
   if(!part||!Array.isArray(part.deductions)||!part.tariff)return false;
   for(const op of part.deductions)if(!op||!['net','constant','rent30'].includes(op.source)||!deductionFormats.has(op.format)||![op.value,op.amount,op.percent,op.minimum,op.maximum,op.multiplier].every(Number.isFinite))return false;
@@ -47,11 +49,12 @@ function validatePrecision(value:unknown):value is PreciseCanton {
  }
  return true;
 }
-export function preciseBase(p:PreciseCanton,income:number,pensionDefault?:PensionDefault,budgetDefault?:BudgetDefault):[number,number,number] {
+// Returns [federal tax, cantonal simple tax, personal tax, cantonal taxable income].
+export function preciseBase(p:PreciseCanton,income:number,pensionDefault?:PensionDefault,budgetDefault?:BudgetDefault):[number,number,number,number] {
  const gross=Math.round(income*100)/100;
  const pension=pensionDefault==='ESTV2026Age35'?calculateBvg2026Age35(gross):0;
  const net=gross-halfEven(gross*.053)-halfEven(Math.min(gross,148200)*.011)-halfEven(Math.min(gross,148200)*.004)-pension;
- const tax=(part:PreciseCanton['bund'])=>{
+ const taxable=(part:PreciseCanton['bund'])=>{
   let deductions=0;
   for(const op of part.deductions){const estimatedRent=Math.round(net*.25/10)*10;const v=op.source==='net'?net:op.source==='rent30'&&budgetDefault==='ESTV2026Age35'?estimatedRent*.3:op.value;let d=0;
    if(op.format==='ZERO')d=0;
@@ -63,11 +66,13 @@ export function preciseBase(p:PreciseCanton,income:number,pensionDefault?:Pensio
    else if(op.format==='STANDARDIZED,PERCENT,MAXIMUM')d=Math.min(op.maximum,op.amount+floorChf(v*op.percent/100));
    deductions+=d*op.multiplier;
   }
-  return preciseTariffTax(part.tariff,applyLate(part.late??[],Math.max(0,halfEven(net-deductions))));
+  return applyLate(part.late??[],Math.max(0,halfEven(net-deductions)));
  };
+ const tax=(part:PreciseCanton['bund'],x=taxable(part))=>preciseTariffTax(part.tariff,x);
+ const cantonTaxable=taxable(p.canton);
  const bund=Math.max(0,halfEven(tax(p.bund))-263*p.kids);
  // DBG Art. 36 Abs. 3: federal amounts below CHF 25 are not levied (vendor patch 23).
- return [bund<25?0:bund,Math.max(0,tax(p.canton)-(p.canton.reduction??0)),p.personal];
+ return [bund<25?0:bund,Math.max(0,tax(p.canton,cantonTaxable)-(p.canton.reduction??0)),p.personal,cantonTaxable];
 }
 // Late cantonal deductions in order (vendor patch 22); returns the taxable income.
 export function applyLate(late:PreciseLate[],income:number):number {
@@ -112,11 +117,13 @@ export function calculateTax(profile:TaxProfile,g:Gemeinde,income:number,church:
  const table=profile.cantons[g[1]];
  if (!table || !table[i] || !table[i+1]) throw new Error('Steuertabelle für diesen Kanton fehlt.');
  const precise=profile.precision?.[g[1]];
- const row=precise&&t!==0&&t!==1?preciseBase(precise,clampedIncome,profile.meta.pensionDefault,profile.meta.budgetDefault):table[i].map((v,k)=>v+(table[i+1][k]-v)*t);
+ // BL reformed church tax is levied on the cantonal taxable income (vendor patch 26): always the exact program.
+ const onTaxable=!!precise?.churchTaxable?.includes(church as 'reformed'|'catholic');
+ const row=precise&&(onTaxable||(t!==0&&t!==1))?preciseBase(precise,clampedIncome,profile.meta.pensionDefault,profile.meta.budgetDefault):table[i].map((v,k)=>v+(table[i+1][k]-v)*t);
  const rate=church==='reformed'?g[4]:church==='catholic'?g[5]:0;
  const round=precise?halfEven:(x:number)=>x;
  const churchRate=precise?Math.round(rate/precise.persons*100)/100*precise.persons:rate;
- const bund=row[0],kanton=Math.max(0,round(row[1]*g[2]/100)-(precise?precise.cantonReduction:0)),gemeinde=round(row[1]*g[3]/100),kirche=round(row[1]*churchRate/100),personal=row[2]+(precise&&church!=='none'?precise.personalChurch[church]:0);
+ const bund=row[0],kanton=Math.max(0,round(row[1]*g[2]/100)-(precise?precise.cantonReduction:0)),gemeinde=round(row[1]*g[3]/100),kirche=round((onTaxable?row[3]:row[1])*churchRate/100),personal=g[6]&&precise?precise.persons*(g[6][0]+(church==='reformed'?g[6][1]:church==='catholic'?g[6][2]:0)):row[2]+(precise&&church!=='none'?precise.personalChurch[church]:0);
  // Cantonal tax credit per child (vendor patch 24), not below 0.
  const credit=precise?Math.min(precise.credit,Math.max(0,kanton+gemeinde+kirche+personal)):0;
  const total=bund+kanton+gemeinde+kirche+personal-credit;
@@ -155,7 +162,7 @@ export class TaxRepository {
   return this.once('gemeinden-2026.json',data=>{
    const values=(data as {gemeinden?:Record<string,unknown>})?.gemeinden;
    if(!values||!Object.keys(values).length) throw new Error('Gemeindedaten fehlen.');
-   for(const [id,row] of Object.entries(values)) if(!/^\d+$/.test(id)||!Array.isArray(row)||row.length!==6||typeof row[0]!=='string'||typeof row[1]!=='string'||!row.slice(2).every(Number.isFinite)) throw new Error('Ungültiges Gemeindeformat.');
+   for(const [id,row] of Object.entries(values)) if(!/^\d+$/.test(id)||!Array.isArray(row)||!((row.length===6||(row.length===7&&Array.isArray(row[6])&&row[6].length===3&&row[6].every((v:unknown)=>Number.isFinite(v)&&(v as number)>=0)))&&typeof row[0]==='string'&&typeof row[1]==='string'&&row.slice(2,6).every(Number.isFinite))) throw new Error('Ungültiges Gemeindeformat.');
    return values as Record<string,Gemeinde>;
   });
  }

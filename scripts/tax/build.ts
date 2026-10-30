@@ -9,12 +9,13 @@ import type { TaxFactors } from '../../vendor/swisstaxcalculator/lib/taxes/facto
 import { calculateBvg2026Age35 } from './bvg';
 import { calculateGrossNetDetails } from '../../vendor/swisstaxcalculator/lib/taxes/deduction';
 import { churchIncomeRateOnSimpleTax } from '../../vendor/swisstaxcalculator/lib/taxes/factor';
+import { getGemeindePersonalTax } from '../../vendor/swisstaxcalculator/lib/taxes/personnel';
 import { correctFactors } from '../../vendor/swisstaxcalculator/lib/taxes/corrections';
 import { estimateAnnualRent2026FixedProfile } from './estv-budget';
 
 export const ROOT = fileURLToPath(new URL('../../', import.meta.url));
 export const SOURCE = { repository: 'https://github.com/devbrains-com/swisstaxcalculator', commit: '43064402b1e52dbbc34dded6a305d7d536737c73', year: 2026 } as const;
-export type Gemeinde = [name: string, canton: string, rateCanton: number, rateGemeinde: number, rateReformed: number, rateCatholic: number];
+export type Gemeinde = [name: string, canton: string, rateCanton: number, rateGemeinde: number, rateReformed: number, rateCatholic: number, personal?: [number, number, number]];
 export interface Sources { locations: TaxLocation[]; factors: Map<number, TaxFactors> }
 export const metadata = () => ({ year: 2026, source: SOURCE, officialVerification: 'pending', assumptions: 'scripts/tax/README.md' });
 
@@ -85,7 +86,8 @@ export function buildGemeinden(sources: Sources) {
     const church = (rate: number) => churchIncomeRateOnSimpleTax(loc.CantonID, rate, f);
     const rates = [f.IncomeRateCanton, f.IncomeRateCity, church(f.IncomeRateProtestant), church(f.IncomeRateRoman)];
     if (!rates.every(Number.isFinite)) throw new Error(`Invalid rate for ${loc.BfsID}`);
-    gemeinden[loc.BfsID] = [loc.BfsName, loc.Canton, ...rates] as Gemeinde;
+    const local = getGemeindePersonalTax(2026, loc.BfsID);
+    gemeinden[loc.BfsID] = (local ? [loc.BfsName, loc.Canton, ...rates, [local.amount, local.protestant, local.roman]] : [loc.BfsName, loc.Canton, ...rates]) as Gemeinde;
   }
   return { meta: metadata(), gemeinden };
 }

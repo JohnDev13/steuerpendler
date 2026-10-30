@@ -1,0 +1,630 @@
+{
+ "note": "Steuerpendler patch 27: personal tax per person by Gemeinde (amount without church; protestant/roman = church personal tax per person). Derived by scripts/tax/personal.ts from official ESTV captures in tests/reference/estv-2026-probes; do not edit by hand.",
+ "year": 2026,
+ "gemeinden": {
+  "2401": {
+   "name": "Egerkingen",
+   "amount": 70,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2402": {
+   "name": "Härkingen",
+   "amount": 50,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2403": {
+   "name": "Kestenholz",
+   "amount": 30,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2404": {
+   "name": "Neuendorf",
+   "amount": 50,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2405": {
+   "name": "Niederbuchsiten",
+   "amount": 50,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2406": {
+   "name": "Oberbuchsiten",
+   "amount": 50,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2407": {
+   "name": "Oensingen",
+   "amount": 30,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2408": {
+   "name": "Wolfwil",
+   "amount": 30,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2421": {
+   "name": "Aedermannsdorf",
+   "amount": 30,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2422": {
+   "name": "Balsthal",
+   "amount": 30,
+   "protestant": 0,
+   "roman": 5
+  },
+  "2424": {
+   "name": "Herbetswil",
+   "amount": 60,
+   "protestant": 0,
+   "roman": 10
+  },
+  "2425": {
+   "name": "Holderbank (SO)",
+   "amount": 50,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2426": {
+   "name": "Laupersdorf",
+   "amount": 30,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2427": {
+   "name": "Matzendorf",
+   "amount": 50,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2428": {
+   "name": "Mümliswil-Ramiswil",
+   "amount": 60,
+   "protestant": 0,
+   "roman": 10
+  },
+  "2430": {
+   "name": "Welschenrohr-Gänsbrunnen",
+   "amount": 60,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2445": {
+   "name": "Biezwil",
+   "amount": 50,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2455": {
+   "name": "Lüterkofen-Ichertswil",
+   "amount": 50,
+   "protestant": 8,
+   "roman": 0
+  },
+  "2457": {
+   "name": "Messen",
+   "amount": 60,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2461": {
+   "name": "Schnottwil",
+   "amount": 40,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2463": {
+   "name": "Unterramsern",
+   "amount": 50,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2464": {
+   "name": "Lüsslingen-Nennigkofen",
+   "amount": 50,
+   "protestant": 8,
+   "roman": 0
+  },
+  "2465": {
+   "name": "Buchegg",
+   "amount": 30,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2471": {
+   "name": "Bättwil",
+   "amount": 50,
+   "protestant": 0,
+   "roman": 10
+  },
+  "2472": {
+   "name": "Büren (SO)",
+   "amount": 30,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2473": {
+   "name": "Dornach",
+   "amount": 30,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2474": {
+   "name": "Gempen",
+   "amount": 30,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2475": {
+   "name": "Hochwald",
+   "amount": 30,
+   "protestant": 0,
+   "roman": 20
+  },
+  "2476": {
+   "name": "Hofstetten-Flüh",
+   "amount": 30,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2477": {
+   "name": "Metzerlen-Mariastein",
+   "amount": 40,
+   "protestant": 0,
+   "roman": 10
+  },
+  "2478": {
+   "name": "Nuglar-St. Pantaleon",
+   "amount": 50,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2479": {
+   "name": "Rodersdorf",
+   "amount": 30,
+   "protestant": 0,
+   "roman": 10
+  },
+  "2480": {
+   "name": "Seewen",
+   "amount": 30,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2481": {
+   "name": "Witterswil",
+   "amount": 40,
+   "protestant": 0,
+   "roman": 10
+  },
+  "2491": {
+   "name": "Hauenstein-Ifenthal",
+   "amount": 30,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2492": {
+   "name": "Kienberg",
+   "amount": 50,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2493": {
+   "name": "Lostorf",
+   "amount": 30,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2495": {
+   "name": "Niedergösgen",
+   "amount": 30,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2497": {
+   "name": "Obergösgen",
+   "amount": 30,
+   "protestant": 0,
+   "roman": 10
+  },
+  "2499": {
+   "name": "Stüsslingen",
+   "amount": 30,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2500": {
+   "name": "Trimbach",
+   "amount": 80,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2501": {
+   "name": "Winznau",
+   "amount": 42,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2502": {
+   "name": "Wisen (SO)",
+   "amount": 60,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2503": {
+   "name": "Erlinsbach (SO)",
+   "amount": 30,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2511": {
+   "name": "Aeschi (SO)",
+   "amount": 30,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2513": {
+   "name": "Biberist",
+   "amount": 30,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2514": {
+   "name": "Bolken",
+   "amount": 60,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2516": {
+   "name": "Deitingen",
+   "amount": 30,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2517": {
+   "name": "Derendingen",
+   "amount": 80,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2518": {
+   "name": "Etziken",
+   "amount": 30,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2519": {
+   "name": "Gerlafingen",
+   "amount": 80,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2523": {
+   "name": "Horriwil",
+   "amount": 50,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2524": {
+   "name": "Hüniken",
+   "amount": 40,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2525": {
+   "name": "Kriegstetten",
+   "amount": 50,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2526": {
+   "name": "Lohn-Ammannsegg",
+   "amount": 40,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2527": {
+   "name": "Luterbach",
+   "amount": 40,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2528": {
+   "name": "Obergerlafingen",
+   "amount": 50,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2530": {
+   "name": "Recherswil",
+   "amount": 30,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2532": {
+   "name": "Subingen",
+   "amount": 50,
+   "protestant": 0,
+   "roman": 10
+  },
+  "2534": {
+   "name": "Zuchwil",
+   "amount": 50,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2535": {
+   "name": "Drei Höfe",
+   "amount": 50,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2541": {
+   "name": "Balm bei Günsberg",
+   "amount": 50,
+   "protestant": 10,
+   "roman": 5
+  },
+  "2542": {
+   "name": "Bellach",
+   "amount": 30,
+   "protestant": 10,
+   "roman": 10
+  },
+  "2543": {
+   "name": "Bettlach",
+   "amount": 40,
+   "protestant": 0,
+   "roman": 5
+  },
+  "2544": {
+   "name": "Feldbrunnen-St. Niklaus",
+   "amount": 50,
+   "protestant": 10,
+   "roman": 12
+  },
+  "2545": {
+   "name": "Flumenthal",
+   "amount": 80,
+   "protestant": 10,
+   "roman": 20
+  },
+  "2546": {
+   "name": "Grenchen",
+   "amount": 80,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2547": {
+   "name": "Günsberg",
+   "amount": 50,
+   "protestant": 10,
+   "roman": 5
+  },
+  "2548": {
+   "name": "Hubersdorf",
+   "amount": 60,
+   "protestant": 10,
+   "roman": 20
+  },
+  "2549": {
+   "name": "Kammersrohr",
+   "amount": 50,
+   "protestant": 10,
+   "roman": 5
+  },
+  "2550": {
+   "name": "Langendorf",
+   "amount": 50,
+   "protestant": 10,
+   "roman": 6
+  },
+  "2551": {
+   "name": "Lommiswil",
+   "amount": 30,
+   "protestant": 10,
+   "roman": 6
+  },
+  "2553": {
+   "name": "Oberdorf (SO)",
+   "amount": 30,
+   "protestant": 10,
+   "roman": 6
+  },
+  "2554": {
+   "name": "Riedholz",
+   "amount": 30,
+   "protestant": 10,
+   "roman": 5
+  },
+  "2555": {
+   "name": "Rüttenen",
+   "amount": 50,
+   "protestant": 10,
+   "roman": 0
+  },
+  "2556": {
+   "name": "Selzach",
+   "amount": 40,
+   "protestant": 10,
+   "roman": 6
+  },
+  "2571": {
+   "name": "Boningen",
+   "amount": 40,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2572": {
+   "name": "Däniken",
+   "amount": 60,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2573": {
+   "name": "Dulliken",
+   "amount": 30,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2574": {
+   "name": "Eppenberg-Wöschnau",
+   "amount": 50,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2575": {
+   "name": "Fulenbach",
+   "amount": 30,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2576": {
+   "name": "Gretzenbach",
+   "amount": 50,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2578": {
+   "name": "Gunzgen",
+   "amount": 30,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2579": {
+   "name": "Hägendorf",
+   "amount": 30,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2580": {
+   "name": "Kappel (SO)",
+   "amount": 30,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2581": {
+   "name": "Olten",
+   "amount": 80,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2582": {
+   "name": "Rickenbach (SO)",
+   "amount": 30,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2583": {
+   "name": "Schönenwerd",
+   "amount": 50,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2584": {
+   "name": "Starrkirch-Wil",
+   "amount": 50,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2585": {
+   "name": "Walterswil (SO)",
+   "amount": 40,
+   "protestant": 0,
+   "roman": 20
+  },
+  "2586": {
+   "name": "Wangen bei Olten",
+   "amount": 30,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2601": {
+   "name": "Solothurn",
+   "amount": 50,
+   "protestant": 10,
+   "roman": 20
+  },
+  "2611": {
+   "name": "Bärschwil",
+   "amount": 50,
+   "protestant": 10,
+   "roman": 20
+  },
+  "2612": {
+   "name": "Beinwil (SO)",
+   "amount": 50,
+   "protestant": 10,
+   "roman": 10
+  },
+  "2613": {
+   "name": "Breitenbach",
+   "amount": 80,
+   "protestant": 10,
+   "roman": 10
+  },
+  "2614": {
+   "name": "Büsserach",
+   "amount": 30,
+   "protestant": 10,
+   "roman": 10
+  },
+  "2615": {
+   "name": "Erschwil",
+   "amount": 70,
+   "protestant": 10,
+   "roman": 0
+  },
+  "2616": {
+   "name": "Fehren",
+   "amount": 50,
+   "protestant": 10,
+   "roman": 10
+  },
+  "2617": {
+   "name": "Grindel",
+   "amount": 80,
+   "protestant": 10,
+   "roman": 10
+  },
+  "2618": {
+   "name": "Himmelried",
+   "amount": 40,
+   "protestant": 10,
+   "roman": 20
+  },
+  "2619": {
+   "name": "Kleinlützel",
+   "amount": 45,
+   "protestant": 0,
+   "roman": 0
+  },
+  "2620": {
+   "name": "Meltingen",
+   "amount": 50,
+   "protestant": 10,
+   "roman": 20
+  },
+  "2621": {
+   "name": "Nunningen",
+   "amount": 70,
+   "protestant": 10,
+   "roman": 20
+  },
+  "2622": {
+   "name": "Zullwil",
+   "amount": 60,
+   "protestant": 10,
+   "roman": 20
+  }
+ }
+}

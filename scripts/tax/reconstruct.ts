@@ -6,7 +6,8 @@ import { applyTariffRounding, calculateTaxesAmount } from '../../vendor/swisstax
 import type { BudgetDefault, PensionDefault, PreciseCanton, PreciseLate } from '../../src/tax';
 import { lateDeduction } from '../../vendor/swisstaxcalculator/lib/taxes/deduction/cantonal';
 import { calculateBvg2026Age35 } from './bvg';
-export function reconstructPrecision(p:PreciseCanton,income:number,rates:number[],pensionDefault?:PensionDefault,budgetDefault?:BudgetDefault,personalChurch=0):number {
+export function reconstructPrecision(p:PreciseCanton,income:number,rates:number[],pensionDefault?:PensionDefault,budgetDefault?:BudgetDefault,personalChurch=0,churchOnTaxable=false,personalOverride?:number):number {
+ let cantonTaxable=0;
  const gross=dineroChf(income),capped=dineroMin(gross,dineroChf(148200));
  const social=subtract(subtract(subtract(gross,dineroRound(multiplyDineroPercent(gross,5.3,1))),dineroRound(multiplyDineroPercent(capped,1.1,1))),dineroRound(multiplyDineroPercent(capped,.4,1)));
  const net=pensionDefault==='ESTV2026Age35'?subtract(social,dineroChf(calculateBvg2026Age35(income))):social;
@@ -35,6 +36,7 @@ export function reconstructPrecision(p:PreciseCanton,income:number,rates:number[
    done.push(d);taxable-=d;
   }
   taxable=Math.max(0,taxable);
+  if(part===p.canton)cantonTaxable=taxable;
   return dineroChf(applyTariffRounding(t.rounding,taxable,t.split,a=>dineroToNumber(calculateTaxesAmount(dineroChf(a,5),{tableType:t.type,table:t.table} as any))),5);
  };
  const bund=dineroRoundMin0(subtract(dineroRound(base(p.bund)),dineroChf(263*p.kids)));
@@ -42,6 +44,6 @@ export function reconstructPrecision(p:PreciseCanton,income:number,rates:number[
  const unreduced=base(p.canton);
  const canton=p.canton.reduction?dineroChf(Math.max(0,dineroToNumber(unreduced)-p.canton.reduction),5):unreduced;
  const churchRate=Math.round(rates[2]/p.persons*100)/100*p.persons;
- const nonFederal=dineroToNumber([dineroChf(Math.max(0,dineroToNumber(dineroRound(multiplyDineroPercent(canton,rates[0],5)))-(p.cantonReduction??0))),dineroRound(multiplyDineroPercent(canton,rates[1],5)),dineroRound(multiplyDineroPercent(canton,churchRate,5)),dineroChf(p.personal+personalChurch)].reduce(add,dineroChf(0)));
+ const nonFederal=dineroToNumber([dineroChf(Math.max(0,dineroToNumber(dineroRound(multiplyDineroPercent(canton,rates[0],5)))-(p.cantonReduction??0))),dineroRound(multiplyDineroPercent(canton,rates[1],5)),dineroRound(multiplyDineroPercent(churchOnTaxable?dineroChf(cantonTaxable):canton,churchRate,5)),dineroChf(personalOverride??p.personal+personalChurch)].reduce(add,dineroChf(0)));
  return dineroToNumber(bundLevied)+nonFederal-Math.min(p.credit??0,Math.max(0,nonFederal));
 }

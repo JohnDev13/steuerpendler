@@ -27,6 +27,11 @@ export const churchIncomeRateOnSimpleTax = (cantonId: number, rate: number, fact
   return rate;
 };
 
+// Steuerpendler patch 26: the BL reformed church tax is a percentage of the cantonal taxable income, not of
+// the simple tax (gemeinden-reachable probe: all 70 reachable BL Gemeinden, e.g. Liestal 0.55% x 78,182 = 430).
+export const churchOnTaxableIncome = (cantonId: number, confession: TaxConfession | undefined) =>
+  cantonId === 5 && confession === 'protestant';
+
 export const getChurchFortuneFactor = (confession: TaxConfession, factors: TaxFactors) => {
   switch (confession) {
     case 'christ':
@@ -44,7 +49,8 @@ export const calculateTaxesCantonAndCity = async (
   taxInput: TaxInput,
   taxesIncomeBase: DineroChf,
   taxesIncomeBaseChurch: DineroChf,
-  taxesFortuneBase: DineroChf
+  taxesFortuneBase: DineroChf,
+  taxableIncomeCanton?: DineroChf
 ) => {
   const factor = await getTaxFactors(taxInput);
 
@@ -59,7 +65,9 @@ export const calculateTaxesCantonAndCity = async (
     dineroAddMany(
       ...taxInput.persons.map((person) =>
         multiplyDineroPercent(
-          taxesIncomeBaseChurch,
+          churchOnTaxableIncome(taxInput.cantonId, person.confession) && taxableIncomeCanton
+            ? taxableIncomeCanton
+            : taxesIncomeBaseChurch,
           churchIncomeRateOnSimpleTax(taxInput.cantonId, getChurchIncomeFactor(person.confession, factor), factor) /
             taxInput.persons.length,
           2

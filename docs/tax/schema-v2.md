@@ -6,7 +6,7 @@ Status: integrated engineering contract under SPEC §20, amending §6.1/§7 only
 
 The 461 original rows per canton/profile remain the exact CHF 40,000–500,000 grid authority. Linear interpolation between those rows cannot reproduce taxable-income CHF 100 floors, deduction thresholds, tariff steps, or engine monetary rounding. Schema v2 therefore adds a compact declarative `precision` program used only between grid points. Exact grid inputs and schema-v1 profiles retain the original interpolation/table behaviour.
 
-All eight profiles remain present (`s|m` × children `0..3`), with all 26 cantons. `gemeinden-2026.json` remains the authentic 2,110-row authority and is unchanged.
+All eight profiles remain present (`s|m` × children `0..3`), with all 26 cantons. `gemeinden-2026.json` remains the authentic 2,110-row authority. A row may carry an optional seventh field `[amount, reformed, catholic]`: the personal tax per person in that Gemeinde without church and the church personal tax per person (vendor patch 27, SO); it replaces the profile's `personal`/`personalChurch` for that Gemeinde.
 
 ## Profile contract
 
@@ -98,7 +98,7 @@ At exact grid points the original serialized row is selected, with component err
 
 The standard-default result must be visibly qualified in German: **„Dies ist eine indikative Schätzung mit ESTV-Standardannahmen, keine individuelle oder verbindliche Steuerveranlagung und keine Steuerberatung.“**
 
-Each canton program also carries `personal` (personal tax without church) and `personalChurch: {reformed, catholic}`, the church personal tax added when that church is selected (vendor patch 21).
+Each canton program also carries `personal` (personal tax without church) and `personalChurch: {reformed, catholic}`, the church personal tax added when that church is selected (vendor patch 21). Optional `churchTaxable: ('reformed'|'catholic')[]` marks church taxes levied on the cantonal taxable income instead of the simple tax (vendor patch 26, BL reformed); `preciseBase` returns `[federal, simple tax, personal, cantonal taxable income]`, and the browser always evaluates such a church with the exact program.
 
 A canton program may carry `late: PreciseLate[]` (vendor patch 22): cantonal deductions evaluated in order on the taxable income after the ordinary deductions. Each has `kind` (`fixed` | `percent` | `linear` | `step` | `bands`), numeric `amount`, `rate`, `max`, `threshold`, `base`, `step`, `reduction`, `roundUp` (1: a started step counts), `min` (floor of a `step` deduction), `bands` (`[upTo, amount]` pairs, first match), `addBack` (ordinary deductions added to the basis, constant per profile) and `addBackLate` (indices of earlier late deductions added to the basis). See `src/tax.ts` `applyLate`.
 

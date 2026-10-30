@@ -1,5 +1,6 @@
 // Compares the shipped browser tax calculation with the ESTV results for every reachable Gemeinde
-// (tests/reference/estv-2026-probes/gemeinden-reachable.jsonl, captured by the ESTV probe workflow).
+// (tests/reference/estv-2026-probes/gemeinden-reachable.jsonl) and the SO/BL follow-up captures,
+// all captured by the ESTV probe workflow.
 // Usage: npx tsx --tsconfig scripts/tax/tsconfig.json scripts/tax/gemeinden.ts [--fail] [--canton XX]
 import { readFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
@@ -9,10 +10,14 @@ import { officialTolerance } from './official';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 export const COMPONENTS = ['federal', 'canton', 'city', 'church', 'personal'] as const;
+export const GEMEINDE_PROBES = ['gemeinden-reachable', 'so-personal-bl-church', 'so-personal-rest'];
 
 export async function runGemeinden(root = ROOT) {
-  const text = await readFile(resolve(root, 'tests/reference/estv-2026-probes/gemeinden-reachable.jsonl'), 'utf8');
-  const cases = text.trimEnd().split('\n').map(line => JSON.parse(line));
+  const cases = [];
+  for (const probe of GEMEINDE_PROBES) {
+    const text = await readFile(resolve(root, 'tests/reference/estv-2026-probes', `${probe}.jsonl`), 'utf8');
+    cases.push(...text.trimEnd().split('\n').map(line => JSON.parse(line)));
+  }
   const data = async (file: string) => JSON.parse(await readFile(resolve(root, 'site/data', file), 'utf8'));
   const gemeinden = (await data('gemeinden-2026.json')).gemeinden as Record<string, Gemeinde>;
   const profiles: Record<string, TaxProfile> = {};
