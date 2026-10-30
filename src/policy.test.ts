@@ -7,6 +7,6 @@ it('withholds every unverified canton in a public preview, without marking suspi
 it('always quarantines both known-problem cantons even when global approval is true',async()=>{
  vi.stubGlobal('__DATA_RELEASE__',{});
  const {QUARANTINED_CANTONS}=await import('./config');
- expect([...withheldCantons(['ZH','JU','VS','VD','GE'],true,QUARANTINED_CANTONS)].sort()).toEqual(['JU','VD','VS']);
+ expect([...withheldCantons(['ZH','JU','VS','VD','GE'],true,QUARANTINED_CANTONS)].sort()).toEqual(['JU','VD']);
  vi.unstubAllGlobals();
 });

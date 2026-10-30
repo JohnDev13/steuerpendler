@@ -31,8 +31,10 @@ export const importAndParseTarifs = (year: number) => {
   const tarifs = loadTarifsJson(year);
   console.log(`Loaded ${tarifs.length} tarif tables`);
 
+  // Steuerpendler patch 31: communal tariffs (Target GEMEINDE, e.g. VS) go to <canton>-gemeinde.json instead of being
+  // dropped as duplicates of the cantonal table of the same group and tax type.
   const tarifsByCanton = tarifs.reduce((acc, tarifRaw) => {
-    const canton = getCantonID(tarifRaw);
+    const canton = tarifRaw.Target === 'GEMEINDE' ? `${tarifRaw.Location.CantonID}-gemeinde` : getCantonID(tarifRaw);
     if (canton === -1) return acc;
 
     if (!acc[canton]) {
@@ -56,7 +58,7 @@ export const importAndParseTarifs = (year: number) => {
     }
 
     return acc;
-  }, {} as Record<number, TaxTarif[]>);
+  }, {} as Record<number | string, TaxTarif[]>);
   for (const canton in tarifsByCanton) {
     const tarifs = tarifsByCanton[canton];
     saveTarifsJson(year, canton, tarifs);

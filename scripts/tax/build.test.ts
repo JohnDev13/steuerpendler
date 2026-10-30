@@ -115,10 +115,11 @@ test('generator joins all 2110 authentic BFS IDs with (corrected) income-rate co
     const church = (rate: number) => churchIncomeRateOnSimpleTax(loc.CantonID, rate, f);
     expect(output.gemeinden[loc.BfsID].slice(0, 6)).toEqual([loc.BfsName, loc.Canton,
       f.IncomeRateCanton, f.IncomeRateCity, church(f.IncomeRateProtestant), church(f.IncomeRateRoman)]);
-    // Only SO Gemeinden carry per-person personal taxes (patch 27).
-    expect(output.gemeinden[loc.BfsID].length).toBe(loc.Canton === 'SO' ? 7 : 6);
+    // SO Gemeinden carry per-person personal taxes (patch 27), VS Gemeinden their communal index (patch 31).
+    expect(output.gemeinden[loc.BfsID].length).toBe(loc.Canton === 'VS' ? 8 : loc.Canton === 'SO' ? 7 : 6);
   }
   expect(output.gemeinden[2473][6]).toEqual([30, 0, 0]);   // Dornach (ESTV: single reformed 30, married catholic 60)
+  expect(output.gemeinden[6266].slice(6)).toEqual([null, 176]);   // Sion: no per-Gemeinde personal tax, index 176 %
   // Corrections from data/corrections/2026.json reach the output (patch 19).
   expect(output.gemeinden[4021].slice(2, 4)).toEqual([103, 89]);
   expect(output.gemeinden[2701].slice(2, 4)).toEqual([50, 50]);

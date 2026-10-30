@@ -21,7 +21,7 @@ export async function loadArtifacts(directory = `${ROOT}site/data`): Promise<Art
   const { gemeinden } = await read('gemeinden-2026.json');
   if (!gemeinden || Object.keys(gemeinden).length !== 2110) throw new Error('Expected 2110 generated Gemeinden');
   for (const [id, row] of Object.entries(gemeinden) as [string, Gemeinde][]) {
-    if (!/^\d+$/.test(id) || !Array.isArray(row) || !((row.length===6||(row.length===7&&Array.isArray(row[6])&&row[6].length===3&&row[6].every((v: unknown)=>Number.isFinite(v)&&(v as number)>=0)))&&typeof row[0]==='string'&&typeof row[1]==='string'&&row.slice(2,6).every(Number.isFinite))) throw new Error(`Invalid Gemeinde ${id}`);
+    if (!/^\d+$/.test(id) || !Array.isArray(row) || !((row.length===6||((row.length===7||row.length===8)&&(row[6]===null||(Array.isArray(row[6])&&row[6].length===3&&row[6].every((v: unknown)=>Number.isFinite(v)&&(v as number)>=0)))&&(row.length===7||(Number.isInteger(row[7])&&row[7]>=100))))&&typeof row[0]==='string'&&typeof row[1]==='string'&&row.slice(2,6).every(Number.isFinite))) throw new Error(`Invalid Gemeinde ${id}`);
   }
   const profiles: Record<string, Profile> = {};
   for (const civil of ['s', 'm']) for (let kids = 0; kids <= 3; kids++) {
@@ -50,8 +50,9 @@ export function reconstruct(artifacts: Artifacts, sample: Sample): number {
   const rateChurch = sample.church === 'reformed' ? g[4] : sample.church === 'catholic' ? g[5] : 0;
   const precise=artifacts.profiles[`${sample.civil}-${sample.kids}`].precision?.[g[1]];
   const personalOverride=g[6]&&precise?precise.persons*(g[6][0]+(sample.church==='reformed'?g[6][1]:sample.church==='catholic'?g[6][2]:0)):undefined;
+  const communalIndex=precise?.communal?g[7]:undefined;
   const onTaxable=!!precise?.churchTaxable?.includes(sample.church as 'reformed'|'catholic');
-  if(precise&&(onTaxable||(t!==0&&t!==1))){const meta=artifacts.profiles[`${sample.civil}-${sample.kids}`].meta;return reconstructPrecision(precise,sample.income,[g[2],g[3],rateChurch],meta.pensionDefault,meta.budgetDefault,sample.church==='none'?0:precise.personalChurch[sample.church],onTaxable,personalOverride);}
+  if(precise&&(onTaxable||communalIndex!==undefined||(t!==0&&t!==1))){const meta=artifacts.profiles[`${sample.civil}-${sample.kids}`].meta;return reconstructPrecision(precise,sample.income,[g[2],g[3],rateChurch],meta.pensionDefault,meta.budgetDefault,sample.church==='none'?0:precise.personalChurch[sample.church],onTaxable,personalOverride,communalIndex);}
   // Separate monetary rounding at each final component, ties to even.
   const round=(v:number)=>{const f=Math.floor(v);return Math.abs(v-f-.5)<1e-8?(f%2===0?f:f+1):Math.round(v);};
   const r=precise?round:(v:number)=>v;

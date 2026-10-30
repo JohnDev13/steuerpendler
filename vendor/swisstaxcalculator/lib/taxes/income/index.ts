@@ -5,7 +5,8 @@ import {
   dineroRoundMin0,
   dineroChf,
   DineroChf,
-  dineroRound
+  dineroRound,
+  multiplyDineroPercent
 } from '~/lib/utils/dinero';
 import {
   calculateGrossNetDetails,
@@ -13,7 +14,8 @@ import {
   calculateDeductionByDefinition
 } from '../deduction';
 import { getTaxDecutionTable } from '../deduction/provider';
-import { applyLateRules, cantonalReductions, cantonalRules } from '../deduction/cantonal';
+import { applyLateRules, cantonalReductions, cantonalRules, percentRebate } from '../deduction/cantonal';
+import { churchOnCommunalTax } from '../factor';
 import {
   calculateTaxesCantonAndCity,
   getChurchIncomeFactor,
@@ -80,6 +82,18 @@ export const calculateTaxesIncomeAndFortune = async (taxInput: TaxInput): Promis
   );
   if (reductions.cantonReduction)
     taxesIncomeCanton = dineroChf(Math.max(0, dineroToNumber(taxesIncomeCanton) - reductions.cantonReduction));
+  if (reductions.rebate) {
+    const canton = dineroToNumber(taxesIncomeCanton), city = dineroToNumber(taxesIncomeCity);
+    taxesIncomeCanton = dineroRound(dineroChf(Math.max(reductions.rebate.minimum,
+      canton - percentRebate(reductions.rebate.canton, canton, taxInput.children)), 5));
+    taxesIncomeCity = dineroRound(dineroChf(Math.max(0, city - percentRebate(reductions.rebate.city, city, taxInput.children)), 5));
+  }
+  // Steuerpendler patch 31: the VS church tax is a percentage of the communal tax (after the rebate).
+  if (churchOnCommunalTax(taxInput.cantonId)) {
+    const factor = await getTaxFactors(taxInput);
+    taxesIncomeChurch = dineroRound(dineroAddMany(...taxInput.persons.map((person) =>
+      multiplyDineroPercent(taxesIncomeCity, getChurchIncomeFactor(person.confession, factor) / taxInput.persons.length, 2))));
+  }
 
   let progression: TaxProgressionResult | undefined;
   if (taxInput.includeProgression) {

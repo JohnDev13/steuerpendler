@@ -1,4 +1,6 @@
-import { DineroChf, dineroRound, multiplyDineroPercent, dineroAddMany } from '~/lib/utils/dinero';
+import { DineroChf, dineroChf, dineroRound, dineroToNumber, multiplyDineroPercent, dineroAddMany } from '~/lib/utils/dinero';
+import { applyTariffRounding, calculateTaxesAmount } from '../tarif';
+import { getCommunalIncomeTarif, getCommunalIndex } from '../tarif/provider';
 import { getTaxFactors } from './provider';
 import { TaxFactors } from './types';
 import { TaxConfession, TaxInput } from '../typesClient';
@@ -32,6 +34,8 @@ export const churchIncomeRateOnSimpleTax = (cantonId: number, rate: number, fact
 export const churchOnTaxableIncome = (cantonId: number, confession: TaxConfession | undefined) =>
   cantonId === 5 && confession === 'protestant';
 
+export const churchOnCommunalTax = (cantonId: number) => cantonId === 24;
+
 export const getChurchFortuneFactor = (confession: TaxConfession, factors: TaxFactors) => {
   switch (confession) {
     case 'christ':
@@ -57,9 +61,18 @@ export const calculateTaxesCantonAndCity = async (
   const taxesIncomeCanton = dineroRound(
     multiplyDineroPercent(taxesIncomeBase, factor.IncomeRateCanton, 5)
   );
-  const taxesIncomeCity = dineroRound(
+  let taxesIncomeCity = dineroRound(
     multiplyDineroPercent(taxesIncomeBase, factor.IncomeRateCity, 5)
   );
+  // Steuerpendler patch 31: VS communes tax with the communal tariff on the income de-indexed by the commune's own
+  // index, times the communal coefficient (IncomeRateCity).
+  const communalIndex = taxInput.cantonId === 24 ? getCommunalIndex(taxInput.year, taxInput.locationId) : undefined;
+  const communalTarif = communalIndex !== undefined ? await getCommunalIncomeTarif(taxInput.cantonId, taxInput.year) : undefined;
+  if (communalIndex !== undefined && communalTarif && taxableIncomeCanton) {
+    const simple = applyTariffRounding('index', dineroToNumber(taxableIncomeCanton), 1,
+      (amount) => dineroToNumber(calculateTaxesAmount(dineroChf(amount, 5), communalTarif)), { index: communalIndex });
+    taxesIncomeCity = dineroRound(multiplyDineroPercent(dineroChf(simple, 5), factor.IncomeRateCity, 5));
+  }
 
   const taxesIncomeChurch = dineroRound(
     dineroAddMany(

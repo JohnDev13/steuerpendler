@@ -66,8 +66,8 @@ test('a stale profile is rejected by its pinned served-byte digest',async({page}
 });
 test('methodology discloses the current ESTV comparison result',async({page})=>{
  await page.goto('pages/methode.html');
- await expect(page.locator('#grenzen + p')).toContainText('28 von 29');
- await expect(page.locator('#grenzen + p')).toContainText('1 von 29');
+ await expect(page.locator('#grenzen + p')).toContainText('29 von 29');
+ await expect(page.locator('#grenzen + p')).toContainText('0 von 29');
 });
 test('methodology identifies the Jura tax quarantine separately from Wallis',async({page})=>{
  await page.goto('pages/methode.html');
