@@ -7,7 +7,10 @@ with the source URL, SHA-256 and size of every file. Standard library only.
 from __future__ import annotations
 
 import argparse
+import csv
 import gzip
+import io
+import zipfile
 import hashlib
 import json
 import re
@@ -46,6 +49,24 @@ def store(name: str, data: bytes, url: str, manifest: list[dict]) -> None:
     print(f"::notice title=KK fetch::{path.name} {len(data)} bytes sha256={sha[:16]}")
 
 
+CSV_WANTED = ("Prämien_CH.csv", "Tarife.csv", "Einzugsgebiete.csv", "Eingeschr.-Tät.gebiete.csv", "Versichertenbestand_CH.csv")
+
+
+def year_of(data: bytes) -> str:
+    """Premium year (Geschäftsjahr) of a premium CSV."""
+    reader = csv.DictReader(io.StringIO(data.decode("utf-8-sig")))
+    return next(reader)["Geschäftsjahr"]
+
+
+def store_csv(name: str, data: bytes, source: str, manifest: list[dict]) -> None:
+    sha = hashlib.sha256(data).hexdigest()
+    path = OUT / (name + ".gz")
+    with gzip.open(path, "wb", mtime=0) as f:
+        f.write(data)
+    manifest.append({"file": path.name, "source": source, "sha256": sha, "bytes": len(data), "gzipped": True})
+    print(f"::notice title=KK fetch::{path.name} {len(data)} bytes sha256={sha[:16]}")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--years", nargs="+", default=["2026", "2027"])
@@ -57,16 +78,32 @@ def main() -> int:
                   "url": r.get("url") or r.get("download_url"), "format": r.get("format")} for r in package["resources"]]
     (OUT / "resources.json").write_text(json.dumps(resources, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     print("::notice title=KK resources::" + " | ".join(f"{r['name']}" for r in resources)[:3900])
+    by_name = {}
     for r in resources:
-        label = f"{r['name']} {urllib.parse.unquote(r['url'] or '')}"
-        wanted = re.search(r"Erl(ä|ae)uterung", label) or (
-            any(y in label for y in args.years) and not re.search(r"_EU|EU\.|CHEU|Bestand|Einzug|Eingeschr", label))
-        if not wanted or not r["url"]:
+        try:
+            name = json.loads(r["name"]).get("en") if r["name"].startswith("{") else r["name"]
+        except ValueError:
+            name = r["name"]
+        by_name[name] = r["url"]
+    # Current files (the newest premium year) and the archive of every requested older year.
+    current = {n: by_name[n] for n in CSV_WANTED if n in by_name}
+    year = year_of(get(current["Prämien_CH.csv"])) if "Prämien_CH.csv" in current else None
+    for n, url in current.items():
+        data = get(url)
+        if year in args.years:
+            store_csv(f"{year}-{n.replace('ä', 'ae').replace('Ä', 'Ae')}", data, url, manifest)
+    for y in args.years:
+        if y == year or f"Archiv_Praemien_{y}.zip" not in by_name:
             continue
-        data = get(r["url"])
-        name = re.sub(r"[^A-Za-z0-9._-]+", "_", Path(urllib.parse.unquote(urllib.parse.urlparse(r["url"]).query or r["url"])).name)
-        name = name if "." in name else re.sub(r"[^A-Za-z0-9._-]+", "_", r["name"]) + "." + (r["format"] or "bin").lower()
-        store(name, data, r["url"], manifest)
+        url = by_name[f"Archiv_Praemien_{y}.zip"]
+        blob = get(url)
+        manifest.append({"file": f"Archiv_Praemien_{y}.zip (not stored)", "source": url, "sha256": hashlib.sha256(blob).hexdigest(), "bytes": len(blob)})
+        with zipfile.ZipFile(io.BytesIO(blob)) as z:
+            for info in z.infolist():
+                fixed = info.filename.encode("cp437").decode("utf-8") if info.flag_bits & 0x800 == 0 else info.filename
+                fixed = fixed.replace("#U00e4", "ä")
+                if Path(fixed).name in CSV_WANTED:
+                    store_csv(f"{y}-{Path(fixed).name.replace('ä', 'ae')}", z.read(info), f"{url} :: {info.filename}", manifest)
     for year, url in REGION_LISTS.items():
         store(f"praemienregionen-{year}.xlsx", get(url), url, manifest)
     (OUT / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
