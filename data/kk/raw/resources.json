@@ -1,0 +1,157 @@
+[
+ {
+  "name": "{\"de\": \"\", \"en\": \"to whom it may concern.pdf\", \"fr\": \"\", \"it\": \"\"}",
+  "url": "https://opendata.bagnet.ch/?r=/download&path=L1ByYWVtaWVuL3RvIHdob20gaXQgbWF5IGNvbmNlcm4ucGRm",
+  "format": "PDF"
+ },
+ {
+  "name": "{\"de\": \"\", \"en\": \"Versichertenbestand_CH.xlsx\", \"fr\": \"\", \"it\": \"\"}",
+  "url": "https://opendata.bagnet.ch/?r=/download&path=L1ByYWVtaWVuL1ZlcnNpY2hlcnRlbmJlc3RhbmRfQ0gueGxzeA%3D%3D",
+  "format": "XLS"
+ },
+ {
+  "name": "{\"de\": \"\", \"en\": \"Versichertenbestand_CH.csv\", \"fr\": \"\", \"it\": \"\"}",
+  "url": "https://opendata.bagnet.ch/?r=/download&path=L1ByYWVtaWVuL1ZlcnNpY2hlcnRlbmJlc3RhbmRfQ0guY3N2",
+  "format": "CSV"
+ },
+ {
+  "name": "{\"de\": \"\", \"en\": \"Tarife.xlsx\", \"fr\": \"\", \"it\": \"\"}",
+  "url": "https://opendata.bagnet.ch/?r=/download&path=L1ByYWVtaWVuL1RhcmlmZS54bHN4",
+  "format": "XLS"
+ },
+ {
+  "name": "{\"de\": \"\", \"en\": \"Tarife.csv\", \"fr\": \"\", \"it\": \"\"}",
+  "url": "https://opendata.bagnet.ch/?r=/download&path=L1ByYWVtaWVuL1RhcmlmZS5jc3Y%3D",
+  "format": "CSV"
+ },
+ {
+  "name": "{\"de\": \"\", \"en\": \"Prämien_CH.csv\", \"fr\": \"\", \"it\": \"\"}",
+  "url": "https://opendata.bagnet.ch/?r=/download&path=L1ByYWVtaWVuL1Byw6RtaWVuX0NILmNzdg%3D%3D",
+  "format": "CSV"
+ },
+ {
+  "name": "{\"de\": \"\", \"en\": \"Prämien_CH.xlsx\", \"fr\": \"\", \"it\": \"\"}",
+  "url": "https://opendata.bagnet.ch/?r=/download&path=L1ByYWVtaWVuL1Byw6RtaWVuX0NILnhsc3g%3D",
+  "format": "XLS"
+ },
+ {
+  "name": "{\"de\": \"\", \"en\": \"Prämien_CHEU.xlsx\", \"fr\": \"\", \"it\": \"\"}",
+  "url": "https://opendata.bagnet.ch/?r=/download&path=L1ByYWVtaWVuL1Byw6RtaWVuX0NIRVUueGxzeA%3D%3D",
+  "format": "XLS"
+ },
+ {
+  "name": "{\"de\": \"\", \"en\": \"Prämien_EU.xlsx\", \"fr\": \"\", \"it\": \"\"}",
+  "url": "https://opendata.bagnet.ch/?r=/download&path=L1ByYWVtaWVuL1Byw6RtaWVuX0VVLnhsc3g%3D",
+  "format": "XLS"
+ },
+ {
+  "name": "{\"de\": \"\", \"en\": \"Prämien_EU.csv\", \"fr\": \"\", \"it\": \"\"}",
+  "url": "https://opendata.bagnet.ch/?r=/download&path=L1ByYWVtaWVuL1Byw6RtaWVuX0VVLmNzdg%3D%3D",
+  "format": "CSV"
+ },
+ {
+  "name": "{\"de\": \"\", \"en\": \"Erläuterungen zu den Prämiendaten.xlsx\", \"fr\": \"\", \"it\": \"\"}",
+  "url": "https://opendata.bagnet.ch/?r=/download&path=L1ByYWVtaWVuL0VybMOkdXRlcnVuZ2VuIHp1IGRlbiBQcsOkbWllbmRhdGVuLnhsc3g%3D",
+  "format": "XLS"
+ },
+ {
+  "name": "{\"de\": \"\", \"en\": \"Einzugsgebiete.xlsx\", \"fr\": \"\", \"it\": \"\"}",
+  "url": "https://opendata.bagnet.ch/?r=/download&path=L1ByYWVtaWVuL0Vpbnp1Z3NnZWJpZXRlLnhsc3g%3D",
+  "format": "XLS"
+ },
+ {
+  "name": "{\"de\": \"\", \"en\": \"Einzugsgebiete.csv\", \"fr\": \"\", \"it\": \"\"}",
+  "url": "https://opendata.bagnet.ch/?r=/download&path=L1ByYWVtaWVuL0Vpbnp1Z3NnZWJpZXRlLmNzdg%3D%3D",
+  "format": "CSV"
+ },
+ {
+  "name": "{\"de\": \"\", \"en\": \"Eingeschr.-Tät.gebiete.xlsx\", \"fr\": \"\", \"it\": \"\"}",
+  "url": "https://opendata.bagnet.ch/?r=/download&path=L1ByYWVtaWVuL0Vpbmdlc2Noci4tVMOkdC5nZWJpZXRlLnhsc3g%3D",
+  "format": "XLS"
+ },
+ {
+  "name": "{\"de\": \"\", \"en\": \"Eingeschr.-Tät.gebiete.csv\", \"fr\": \"\", \"it\": \"\"}",
+  "url": "https://opendata.bagnet.ch/?r=/download&path=L1ByYWVtaWVuL0Vpbmdlc2Noci4tVMOkdC5nZWJpZXRlLmNzdg%3D%3D",
+  "format": "CSV"
+ },
+ {
+  "name": "{\"de\": \"\", \"en\": \"Archiv_Praemien_2026.zip\", \"fr\": \"\", \"it\": \"\"}",
+  "url": "https://opendata.bagnet.ch/?r=/download&path=L1ByYWVtaWVuL0FyY2hpdl9QcmFlbWllbl8yMDI2LnppcA%3D%3D",
+  "format": "ZIP"
+ },
+ {
+  "name": "{\"fr\": \"\", \"de\": \"\", \"en\": \"Archiv_Praemien_2025.zip\", \"it\": \"\"}",
+  "url": "https://opendata.bagnet.ch/?r=/download&path=L1ByYWVtaWVuL0FyY2hpdl9QcmFlbWllbl8yMDI1LnppcA%3D%3D",
+  "format": "ZIP"
+ },
+ {
+  "name": "{\"fr\": \"\", \"de\": \"\", \"en\": \"Archiv_Praemien_2024.zip\", \"it\": \"\"}",
+  "url": "https://opendata.bagnet.ch/?r=/download&path=L1ByYWVtaWVuL0FyY2hpdl9QcmFlbWllbl8yMDI0LnppcA%3D%3D",
+  "format": "ZIP"
+ },
+ {
+  "name": "{\"fr\": \"\", \"de\": \"\", \"en\": \"Archiv_Praemien_2023.zip\", \"it\": \"\"}",
+  "url": "https://opendata.bagnet.ch/?r=/download&path=L1ByYWVtaWVuL0FyY2hpdl9QcmFlbWllbl8yMDIzLnppcA%3D%3D",
+  "format": "ZIP"
+ },
+ {
+  "name": "{\"fr\": \"\", \"de\": \"\", \"en\": \"Archiv_Praemien_2022.zip\", \"it\": \"\"}",
+  "url": "https://opendata.bagnet.ch/?r=/download&path=L1ByYWVtaWVuL0FyY2hpdl9QcmFlbWllbl8yMDIyLnppcA%3D%3D",
+  "format": "ZIP"
+ },
+ {
+  "name": "{\"fr\": \"\", \"de\": \"\", \"en\": \"Archiv_Praemien_2021.zip\", \"it\": \"\"}",
+  "url": "https://opendata.bagnet.ch/?r=/download&path=L1ByYWVtaWVuL0FyY2hpdl9QcmFlbWllbl8yMDIxLnppcA%3D%3D",
+  "format": "ZIP"
+ },
+ {
+  "name": "{\"fr\": \"\", \"de\": \"\", \"en\": \"Archiv_Praemien_2020.zip\", \"it\": \"\"}",
+  "url": "https://opendata.bagnet.ch/?r=/download&path=L1ByYWVtaWVuL0FyY2hpdl9QcmFlbWllbl8yMDIwLnppcA%3D%3D",
+  "format": "ZIP"
+ },
+ {
+  "name": "{\"fr\": \"\", \"de\": \"\", \"en\": \"Archiv_Praemien_2019.zip\", \"it\": \"\"}",
+  "url": "https://opendata.bagnet.ch/?r=/download&path=L1ByYWVtaWVuL0FyY2hpdl9QcmFlbWllbl8yMDE5LnppcA%3D%3D",
+  "format": "ZIP"
+ },
+ {
+  "name": "{\"fr\": \"\", \"de\": \"\", \"en\": \"Archiv_Praemien_2018.zip\", \"it\": \"\"}",
+  "url": "https://opendata.bagnet.ch/?r=/download&path=L1ByYWVtaWVuL0FyY2hpdl9QcmFlbWllbl8yMDE4LnppcA%3D%3D",
+  "format": "ZIP"
+ },
+ {
+  "name": "{\"fr\": \"\", \"de\": \"\", \"en\": \"Archiv_Praemien_2017.zip\", \"it\": \"\"}",
+  "url": "https://opendata.bagnet.ch/?r=/download&path=L1ByYWVtaWVuL0FyY2hpdl9QcmFlbWllbl8yMDE3LnppcA%3D%3D",
+  "format": "ZIP"
+ },
+ {
+  "name": "{\"fr\": \"\", \"de\": \"\", \"en\": \"Archiv_Praemien_2016.zip\", \"it\": \"\"}",
+  "url": "https://opendata.bagnet.ch/?r=/download&path=L1ByYWVtaWVuL0FyY2hpdl9QcmFlbWllbl8yMDE2LnppcA%3D%3D",
+  "format": "ZIP"
+ },
+ {
+  "name": "{\"fr\": \"\", \"de\": \"\", \"en\": \"Archiv_Praemien_2015.zip\", \"it\": \"\"}",
+  "url": "https://opendata.bagnet.ch/?r=/download&path=L1ByYWVtaWVuL0FyY2hpdl9QcmFlbWllbl8yMDE1LnppcA%3D%3D",
+  "format": "ZIP"
+ },
+ {
+  "name": "{\"fr\": \"\", \"de\": \"\", \"en\": \"Archiv_Praemien_2014.zip\", \"it\": \"\"}",
+  "url": "https://opendata.bagnet.ch/?r=/download&path=L1ByYWVtaWVuL0FyY2hpdl9QcmFlbWllbl8yMDE0LnppcA%3D%3D",
+  "format": "ZIP"
+ },
+ {
+  "name": "{\"fr\": \"\", \"de\": \"\", \"en\": \"Archiv_Praemien_2013.zip\", \"it\": \"\"}",
+  "url": "https://opendata.bagnet.ch/?r=/download&path=L1ByYWVtaWVuL0FyY2hpdl9QcmFlbWllbl8yMDEzLnppcA%3D%3D",
+  "format": "ZIP"
+ },
+ {
+  "name": "{\"fr\": \"\", \"de\": \"\", \"en\": \"Archiv_Praemien_2012.zip\", \"it\": \"\"}",
+  "url": "https://opendata.bagnet.ch/?r=/download&path=L1ByYWVtaWVuL0FyY2hpdl9QcmFlbWllbl8yMDEyLnppcA%3D%3D",
+  "format": "ZIP"
+ },
+ {
+  "name": "{\"fr\": \"\", \"de\": \"\", \"en\": \"Archiv_Praemien_2011.zip\", \"it\": \"\"}",
+  "url": "https://opendata.bagnet.ch/?r=/download&path=L1ByYWVtaWVuL0FyY2hpdl9QcmFlbWllbl8yMDExLnppcA%3D%3D",
+  "format": "ZIP"
+ }
+]

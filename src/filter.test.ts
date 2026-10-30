@@ -51,3 +51,14 @@ it('places surplus quantile members in the first groups',async()=>{
  for(let i=1;i<=7;i++){gs[i]=['Synthetic '+i,'ZH',100,100,0,0];acc[i]=['stop','Stop',0];totals[i]=i;rows.push([i,0]);}
  expect(filterAndRank(gs,acc,rows,{maxTime:5,maxWalk:0,countWalk:false,workplace:1},totals).map(r=>r.colorGroup)).toEqual([0,0,1,1,2,3,4]);
 });
+it('ranks by tax plus health-insurance premium and leaves out Gemeinden without a premium',async()=>{
+ const {filterAndRank}=await import('./filter');
+ const gs={...gemeinden,'4':['Delta','ZH',100,100,0,0] as const};
+ const acc={...access,'3':['three','Three',0] as const,'4':['four','Four',0] as const};
+ const options={maxTime:10,maxWalk:10,countWalk:false,workplace:1};
+ const result=filterAndRank(gs,acc,[[1,0],[2,1],[3,2],[4,3]],options,{1:100,2:200,3:300,4:50},new Set(),{1:500,2:100,3:100});
+ expect(result.map(r=>r.id)).toEqual([2,3,1]);
+ expect(result.map(r=>[r.tax,r.premium,r.total])).toEqual([[200,100,300],[300,100,400],[100,500,600]]);
+ expect(result.map(r=>r.delta)).toEqual([-300,-200,0]);
+ expect(filterAndRank(gs,acc,[[1,0],[4,3]],options,{1:100,4:50})[0]).toMatchObject({id:4,tax:50,premium:null,total:50});
+});

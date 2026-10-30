@@ -46,8 +46,27 @@ test('long result lists are paged and can be sorted by travel time',async({page}
 test('differences use a real sign before the currency and the workplace label names its canton once',async({page})=>{
  await page.goto('./');
  await expect(page.locator('#ranked-list tr').first()).toBeVisible();
- const deltas=await page.locator('#ranked-list tr td:nth-child(7)').allTextContents();
+ const deltas=await page.locator('#ranked-list tr td:nth-child(8)').allTextContents();
  expect(deltas.every(text=>/^(\+CHF|−CHF|CHF 0|—)/.test(text))).toBe(true);
  await page.getByRole('combobox',{name:'Arbeitsort'}).fill('Altdorf');
  await expect(page.getByRole('option',{name:'Altdorf (UR)',exact:true})).toBeVisible();
+});
+
+test('health-insurance premiums are added to the yearly cost and can be switched off',async({page})=>{
+ await page.goto('./');
+ await expect(page.getByLabel('Krankenkasse (Grundversicherung)',{exact:true})).toHaveValue('median');
+ await expect(page.getByLabel('Franchise',{exact:true})).toHaveValue('300');
+ await expect(page.getByLabel('Prämienjahr',{exact:true})).toHaveValue('2026');
+ const first=page.locator('#ranked-list tr').first();
+ await expect(first).toBeVisible();
+ await expect(page.locator('#cheapest')).toContainText('inkl. Krankenkasse');
+ const premium=Number((await first.locator('td:nth-child(7)').textContent())!.replace(/\D/g,''));
+ expect(premium).toBeGreaterThan(3000);
+ await expect(page.locator('#detail')).toContainText('Total inkl. Krankenkasse');
+ await page.getByLabel('Franchise',{exact:true}).selectOption('2500');
+ await expect.poll(async()=>Number((await page.locator('#ranked-list tr').first().locator('td:nth-child(7)').textContent())!.replace(/\D/g,''))).toBeLessThan(premium);
+ await page.getByLabel('Krankenkasse (Grundversicherung)',{exact:true}).selectOption('none');
+ await expect(page.locator('#cheapest')).not.toContainText('Krankenkasse');
+ await expect(page.locator('#ranked-list tr').first().locator('td:nth-child(7)')).toHaveText('—');
+ await expect(page.locator('#detail')).not.toContainText('Total inkl. Krankenkasse');
 });
