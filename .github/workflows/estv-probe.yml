@@ -3,6 +3,7 @@
 name: ESTV probe
 
 on:
+  workflow_dispatch:
   push:
     branches: ['claude/tax-*']
     paths: ['scripts/tax/probes/**']
@@ -32,4 +33,9 @@ jobs:
           git add tests/reference/estv-2026-probes
           git diff --cached --quiet && exit 0
           git commit -m "data(tax): ESTV probe captures" -m "Run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
-          git push origin "HEAD:${GITHUB_REF_NAME}"
+          # The branch may have moved during a long run: rebase onto it before pushing (retry a few times).
+          for attempt in 1 2 3; do
+            git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && exit 0
+            sleep 10
+          done
+          echo "::error title=Probe::could not push the captures"; exit 1
