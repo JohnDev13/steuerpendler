@@ -16,8 +16,8 @@ keep it short and update it in the same PR that changes what it describes.
 - Withheld ("Daten in Prüfung"): VS, VD, JU for every profile, plus every canton × profile that the broad
   ESTV sample shows more than 5 % off (`src/withheld.ts`). Outside the three quarantined cantons every sampled
   profile matches. Every Gemeinde the site can show (726, all within 30 minutes of a workplace) matches ESTV for
-  two profiles (single 90k reformed, married with 2 children 150k catholic); the other profiles are checked at the
-  capitals only.
+  four profiles (single 90k reformed; married with 2 children 150k catholic; single parent with 2 children 60k
+  without church; married without children 220k reformed); the remaining profiles are checked at the capitals only.
 
 ## Gates
 
@@ -27,7 +27,7 @@ keep it short and update it in the same PR that changes what it describes.
 | Tax off-grid, 300 cases vs engine | pass, max CHF 0 | `npm run tax:test` |
 | Tax vs official ESTV, 29 frozen cases | 28 pass, 1 fail (VS; ratchet: may only improve) | `npm run tax:official` |
 | Tax vs broad official sample, 650 cases (26 capitals × 6 profiles × 4 incomes + church) | 625 pass; VS 0/25, every other canton 25/25 | `npx tsx --tsconfig scripts/tax/tsconfig.json scripts/tax/sample.ts --fail` |
-| Tax vs ESTV in every Gemeinde the site can show: 726 reachable Gemeinden × 2 profiles, plus all 104 SO Gemeinden and BL cross-checks (1,834 cases) | 1,834 pass | `npx tsx --tsconfig scripts/tax/tsconfig.json scripts/tax/gemeinden.ts --fail` (`scripts/tax/gemeinden.test.ts`) |
+| Tax vs ESTV in every Gemeinde the site can show: 726 reachable Gemeinden × 4 profiles, plus all 104 SO Gemeinden and BL cross-checks (3,286 cases) | 3,286 pass | `npx tsx --tsconfig scripts/tax/tsconfig.json scripts/tax/gemeinden.ts --fail` (`scripts/tax/gemeinden.test.ts`) |
 | Canton × profile more than 5 % off ESTV is withheld | enforced by test (`src/withheld.ts`) | `npm test` |
 | Travel vs SBB, 30 pairs, ± 3 min | pass: 29 within 3 min, Wollerau consistent (SBB 38 min > cap) | `python3 scripts/travel/compare_reference.py --require-complete` |
 | Unit, release, map, content, e2e | pass | see CI |
