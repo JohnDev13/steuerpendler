@@ -1,0 +1,30 @@
+[
+ {
+  "file": "_de_en_Erl_uterungen_zu_den_Pr_miendaten.xlsx_fr_it_.xls",
+  "url": "https://opendata.bagnet.ch/?r=/download&path=L1ByYWVtaWVuL0VybMOkdXRlcnVuZ2VuIHp1IGRlbiBQcsOkbWllbmRhdGVuLnhsc3g%3D",
+  "sha256": "cffea26d28a735e6cc624beec1618dae95f88891ff81a90d87590148cfa03727",
+  "bytes": 21815,
+  "gzipped": false
+ },
+ {
+  "file": "_de_en_Archiv_Praemien_2026.zip_fr_it_.zip",
+  "url": "https://opendata.bagnet.ch/?r=/download&path=L1ByYWVtaWVuL0FyY2hpdl9QcmFlbWllbl8yMDI2LnppcA%3D%3D",
+  "sha256": "01ef32ab0bd8e25ee01ebd3d1d601487ca21f1569b55da3edcf9f9170f99dc78",
+  "bytes": 31923906,
+  "gzipped": false
+ },
+ {
+  "file": "praemienregionen-2026.xlsx",
+  "url": "https://www.bag.admin.ch/dam/de/sd-web/IvHRHXKH3eYG/Anhang%20EDI%20Ver.%20%C3%BCber%20die%20PrReg_Mut_2026.xlsx",
+  "sha256": "0e65f20db7e51943a9617aba5f7d05bc4dfd97e1e0ba070624b3680b3ccea236",
+  "bytes": 89980,
+  "gzipped": false
+ },
+ {
+  "file": "praemienregionen-2027.xlsx",
+  "url": "https://www.bag.admin.ch/dam/de/sd-web/Xm8w51dMKXLP/Pr%C3%A4mienregionen%20%28g%C3%BCltig%20ab%201.1.2027%29.xlsx",
+  "sha256": "9ca00b8e2a05ccbd85e27341eafadcb31b9573adc638114b56f6631bd2bdbceb",
+  "bytes": 68119,
+  "gzipped": false
+ }
+]
