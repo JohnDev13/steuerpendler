@@ -1,0 +1,14 @@
+{
+ "purpose": "VD (quotient familial, modest-income, renter and family deductions) and VS (rebates, coefficients): all 8 site profiles, CHF 30k-200k in 5k steps, capitals Lausanne and Sion.",
+ "cases": [
+  {
+   "bfs": [5586, 6266],
+   "civil": ["single", "married"],
+   "kids": [0, 1, 2, 3],
+   "church": "none",
+   "from": 30000,
+   "to": 200000,
+   "step": 5000
+  }
+ ]
+}
