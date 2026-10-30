@@ -12,6 +12,9 @@ keep it short and update it in the same PR that changes what it describes.
   any number of changes, up to 30 minutes. Frequency-based trips (cable cars, funiculars, boats) and the feed's trip-pair
   transfer rules (with their service days) are modelled; a Gemeinde without a row has no connection
   within the selected time in this timetable (access walk to the first stop: 0 min, unmeasured). The old observed-positive export and its probes are removed.
+- Health insurance: yearly household premium of the mandatory basic insurance per Gemeinde (BAG 2026/2027,
+  median standard model or cheapest offer, deductible CHF 300–2,500; `site/data/kk.json`, `scripts/kk/`).
+  Added to the tax for the ranking by default; can be switched off. No premium subsidies.
 - Walking from home to the first stop is not measured (0 min); the walk controls are disabled and say so.
 - Withheld ("Daten in Prüfung"): VD, JU for every profile, plus every canton × profile that the broad
   ESTV sample shows more than 5 % off (`src/withheld.ts`). Outside the two quarantined cantons every sampled

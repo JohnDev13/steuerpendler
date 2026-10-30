@@ -60,6 +60,7 @@
     <nav aria-label="Inhaltsverzeichnis">
       <ul>
         <li><a href="#steuern">Steuern</a></li>
+        <li><a href="#krankenkasse">Krankenkasse</a></li>
         <li><a href="#reisen">Pendelzeiten</a></li>
         <li><a href="#grenzen">Grenzen und Prüfungen</a></li>
         <li><a href="#quellen">Quellen und Rechte</a></li>
@@ -99,9 +100,29 @@ total = bund + kanton + gemeinde + kirche + personal</code></pre>
       <li>Kinderkategorien 0, 1, 2 oder 3+; 3+ verwendet das Profil für 3 Kinder, keine individuelle Grossfamilienrechnung.</li>
       <li>Kirche: keine, reformiert oder katholisch. Andere Konstellationen sind nicht modelliert.</li>
     </ul>
-    <p>Nicht berücksichtigt werden insbesondere Miete, Krankenkassenprämien, Vermögenssteuer,
+    <p>Nicht berücksichtigt werden insbesondere Miete, Vermögenssteuer,
       individuelle Abzüge und zwei Erwerbseinkommen. Die persönliche Veranlagung kann erheblich abweichen.
       Schätzung, keine Steuerberatung; die Tabellen sind keine verbindliche ESTV-Veranlagung.</p>
+    <h2 id="krankenkasse">Krankenkasse: Prämien der Grundversicherung</h2>
+    <p>Die Rangliste zählt standardmässig zur Steuer die Jahresprämie der obligatorischen Krankenpflegeversicherung
+      (Grundversicherung, KVG) für den gewählten Haushalt. Grundlage sind die vom Bundesamt für Gesundheit (BAG)
+      genehmigten Prämien aller Versicherer für 2026 und 2027 und die Prämienregionen gemäss Verordnung des EDI
+      (SR 832.106). Jede Gemeinde erhält die Prämien ihrer Prämienregion; Fusionen werden über die BAG-Fusionsliste zugeordnet.</p>
+    <ul>
+      <li>Haushalt: eine erwerbstätige erwachsene Person ab 26 Jahren ohne Unfalldeckung (über den Arbeitgeber versichert);
+        verheiratet zusätzlich eine erwachsene Person mit Unfalldeckung; Kinder mit Unfalldeckung und Franchise CHF 0.
+        Die Erwachsenen haben die gewählte Franchise. «3+» Kinder wird als drei Kinder gerechnet.</li>
+      <li>Pro Versicherer wird der ganze Haushalt mit demselben Tarif gerechnet, inklusive der Rabatte für weitere Kinder.</li>
+      <li><strong>Median Standardmodell:</strong> Median der Haushaltsprämien aller in der Gemeinde tätigen Versicherer
+        im Standardmodell mit freier Arztwahl.</li>
+      <li><strong>Günstigstes Angebot:</strong> die tiefste Haushaltsprämie über alle Versicherer und Modelle
+        (Hausarzt, HMO, Telmed usw.), soweit sie in der Gemeinde angeboten werden.</li>
+      <li>Nicht berücksichtigt: individuelle Prämienverbilligung, Zusatzversicherungen, Kostenbeteiligung (Franchise
+        und Selbstbehalt) und Alters- oder Ausbildungsrabatte junger Erwachsener.</li>
+    </ul>
+    <p>Innerhalb einer Prämienregion sind die Prämien überall gleich; Unterschiede entstehen zwischen Kantonen und
+      Regionen. Die Ableitung (<code>scripts/kk/derive.ts</code>) wird bei jedem Build-Test aus den gespeicherten
+      BAG-Rohdaten nachgerechnet und an einer unabhängigen Rechnung geprüft.</p>
     <h2 id="reisen">Pendelzeiten: Fahrplanberechnung für 19 Arbeitsorte</h2>
     <p>Die Fahrzeiten stammen aus dem offiziellen Schweizer GTFS-Fahrplan (opentransportdata.swiss,
       Ausgabe vom 28. Oktober 2026) für Dienstag, <time datetime="2026-10-27">27. Oktober 2026</time>.
@@ -170,6 +191,12 @@ total = bund + kanton + gemeinde + kirche + personal</code></pre>
         <a href="https://github.com/devbrains-com/swisstaxcalculator">swisstaxcalculator von devbrains-com</a>
         (MIT für den Engine-Code). Ein endgültiger Vendor-/Datenstand samt Originalhinweisen und
         dokumentierten Patches ist im Release-Nachweis zu belegen; MIT allein klärt nicht alle Quelldatenbedingungen.</dd>
+      <dt>Krankenkassenprämien</dt>
+      <dd>Quelle: <strong>Bundesamt für Gesundheit (BAG)</strong>,
+        <a href="https://opendata.swiss/de/dataset/health-insurance-premiums">Prämien der obligatorischen Krankenpflegeversicherung</a>
+        (opendata.swiss, Nutzungsbedingung «Quellenangabe erforderlich»), Prämienjahre 2026 und 2027; Prämienregionen gemäss
+        Verordnung des EDI über die Prämienregionen (SR 832.106). Bearbeitet vom Projekt Steuerpendler; Rohdaten und
+        SHA-256-Prüfsummen in <code>data/kk/raw/</code>.</dd>
       <dt>Fahrplan</dt>
       <dd><a href="https://opentransportdata.swiss/">opentransportdata.swiss</a> /
         <a href="https://opendata.swiss/">opendata.swiss</a>, Quelle der GTFS-Fahrplandaten

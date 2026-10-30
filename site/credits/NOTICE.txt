@@ -16,4 +16,6 @@ Verbatim source notices retained alongside this file:
 
 Tax engine: devbrains-com/swisstaxcalculator (MIT), pinned source and full licence/patch audit in vendor/swisstaxcalculator in the source repository. Numeric estimates remain unverified; no tax advice or production approval.
 
+Health-insurance premiums: Bundesamt für Gesundheit (BAG), premiums of the mandatory health insurance 2026 and 2027, https://opendata.swiss/de/dataset/health-insurance-premiums (terms_by: source attribution required); premium regions per EDI ordinance SR 832.106. Processed by Steuerpendler (scripts/kk/derive.ts); not an official BAG publication.
+
 Timetable, OSM walking and STATPOP data are planned sources, not completed live travel datasets in this preview. No fabricated SBB travel values are shipped.

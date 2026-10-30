@@ -23,6 +23,12 @@ all 650 cases at one Gemeinde per canton; a further 3,286 ESTV results check eve
 show (all 726 within 30 minutes of a workplace, four profiles each) and all match. Estimates for VD and JU are withheld; JU's
 parish-rate issue is not settled by its sampled cases. Neither check grants official ESTV approval.
 
+**Health insurance.** `scripts/kk/derive.ts` turns the BAG premium open data for 2026 and 2027
+([opendata.swiss](https://opendata.swiss/de/dataset/health-insurance-premiums), fetched by the **BAG premiums**
+workflow into `data/kk/raw/`) and the EDI premium regions into `site/data/kk.json`: per Gemeinde, household profile
+and deductible, the median standard-model premium across insurers and the cheapest offer over all models.
+The ranking adds the selected premium to the tax by default; it can be switched off. No premium subsidies.
+
 **Commute.** `scripts/travel/matrix.py` scans every connection of the official Swiss GTFS timetable
 ([opentransportdata.swiss](https://opentransportdata.swiss), feed of 28 Oct 2026) for Tuesday 27 Oct 2026:
 shortest time from first boarding at any stop in the Gemeinde (06:30–08:30) to arrival at the workplace
@@ -62,7 +68,7 @@ frozen captures with a test, not as prose.
 
 ## Sources and rights
 
-Tax: ESTV via swisstaxcalculator (MIT). Timetable: opentransportdata.swiss. Footpaths: © OpenStreetMap
+Tax: ESTV via swisstaxcalculator (MIT). Health-insurance premiums: Federal Office of Public Health (BAG), opendata.swiss (attribution required). Timetable: opentransportdata.swiss. Footpaths: © OpenStreetMap
 contributors (ODbL). Boundaries: BFS GEOSTAT. Notices are served under `credits/`. GitHub Pages logs visitor
 IP addresses; see the draft Datenschutz page. Operator contact, legal review, commercial map rights and a
 production launch are pending.

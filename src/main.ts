@@ -12,6 +12,7 @@ import { formatCHF } from './format';
 import { createMap } from './map';
 import { renderList } from './list';
 import { renderDetail } from './detail';
+import { KK_DEDUCTIBLES, KK_YEARS, premiumFor, validateKk, type KkData, type KkMode, type KkYear } from './kk';
 import { adaptMatrix, createMatrixLoader, loadMatrixMeta, transfersFor, type MatrixDestination, type MatrixMeta } from './matrix-routes';
 const app=document.querySelector<HTMLDivElement>('#app')!;
 app.innerHTML=`<header class="site-header"><a class="brand" href="${sitePath('')}">↗ ${s.appName}</a><button id="theme" type="button" aria-label="${s.theme}" aria-pressed="false">◐</button></header>
@@ -23,10 +24,12 @@ app.innerHTML=`<header class="site-header"><a class="brand" href="${sitePath('')
 <label class="toggle"><input id="count-walk" type="checkbox"><span>${s.countWalk}</span></label><small id="walk-hint" class="field-hint" hidden>${s.walkUnmeasured}</small><label class="toggle"><input id="direct-only" type="checkbox"><span>${s.directOnly}</span></label><hr>
 <div class="field"><label for="income">${s.income}</label><input id="income" type="number" inputmode="numeric" min="40000" max="500000" step="1000" value="120000"><input id="income-slider" type="range" aria-label="${s.incomeSlider}" min="40000" max="500000" step="1000" value="120000"><small id="clamp-note" hidden>${s.clamped}</small></div>
 <div class="field"><label for="civil">${s.civil}</label><select id="civil"><option value="s">${s.single}</option><option value="m">${s.married}</option></select></div>
-<div class="paired"><div class="field"><label for="kids">${s.children}</label><select id="kids"><option>0</option><option>1</option><option>2</option><option value="3">3+</option></select></div><div class="field"><label for="church">${s.church}</label><select id="church"><option value="none">${s.none}</option><option value="reformed">${s.reformed}</option><option value="catholic">${s.catholic}</option></select></div></div></aside>
+<div class="paired"><div class="field"><label for="kids">${s.children}</label><select id="kids"><option>0</option><option>1</option><option>2</option><option value="3">3+</option></select></div><div class="field"><label for="church">${s.church}</label><select id="church"><option value="none">${s.none}</option><option value="reformed">${s.reformed}</option><option value="catholic">${s.catholic}</option></select></div></div><hr>
+<div class="field"><label for="kk">${s.kk}</label><select id="kk"><option value="median">${s.kkMedian}</option><option value="min">${s.kkMin}</option><option value="none">${s.kkNone}</option></select><small>${s.kkHint}</small></div>
+<div class="paired"><div class="field"><label for="kk-year">${s.kkYear}</label><select id="kk-year">${KK_YEARS.map(y=>`<option>${y}</option>`).join('')}</select></div><div class="field"><label for="deductible">${s.deductible}</label><select id="deductible">${KK_DEDUCTIBLES.map(d=>`<option value="${d}">${formatCHF(d)}</option>`).join('')}</select></div></div></aside>
 <section class="results"><div class="summary"><p class="eyebrow">${s.results}</p><h2 id="summary" aria-live="polite">${s.loading}</h2><p id="cheapest"></p></div><p class="assumptions">${s.assumptions} <strong>${s.disclaimer}</strong></p><p id="result-notice" class="notice">${s.unverified}</p><p id="profile-status" class="assumptions" aria-live="polite"></p><p id="data-status" class="data-status" role="status" aria-live="polite"></p>
 <section class="map-panel panel" aria-label="${s.map}"><div class="field search-field"><label for="residence">${s.residenceSearch}</label><input id="residence" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="residence-options" autocomplete="off"><div id="residence-options" role="listbox" hidden></div><small>${s.residenceHint}</small></div><div id="map"><p>${s.mapPending}</p></div><div class="legend"><span>${s.cheap}</span>${COLOURS.map(c=>`<i style="background:${c}"></i>`).join('')}<span>${s.expensive}</span><span class="legend-muted">◻ ${s.noData}</span></div><small>${s.mapHelp}</small></section>
-<section class="list-panel panel" aria-label="${s.results}"><div class="list-tools"><label for="sort">${s.sortBy}</label><select id="sort"><option value="tax">${s.sortTax}</option><option value="time">${s.sortTime}</option></select></div><table><thead><tr>${[s.rank,s.municipality,s.canton,s.travel,s.walk,s.tax,s.difference].map(label=>`<th scope="col">${label}</th>`).join('')}</tr></thead><tbody id="ranked-list"></tbody></table><button id="show-all" type="button" class="show-all" hidden></button><p id="empty-state" hidden>${s.empty}</p></section>
+<section class="list-panel panel" aria-label="${s.results}"><div class="list-tools"><label for="sort">${s.sortBy}</label><select id="sort"><option value="tax">${s.sortTax}</option><option value="time">${s.sortTime}</option></select></div><table><thead><tr>${[s.rank,s.municipality,s.canton,s.travel,s.walk,s.tax,s.premium,s.difference].map(label=>`<th scope="col">${label}</th>`).join('')}</tr></thead><tbody id="ranked-list"></tbody></table><button id="show-all" type="button" class="show-all" hidden></button><p id="empty-state" hidden>${s.empty}</p></section>
 <section id="detail" class="detail-panel panel" aria-label="${s.detail}" tabindex="-1"><p>${s.selectDetail}</p></section></section></main>
 <footer><p>${s.credits}</p><p>${s.mapSource} — <a href="https://data.geo.admin.ch/api/stac/v0.9/collections/ch.bfs.historisierte-administrative_grenzen_g1">${s.mapSourceTitle}</a>; ${s.mapAdaptation} <a href="https://opendata.swiss/en/terms-of-use#terms_by_ask">${s.mapTerms}</a> · <a href="${sitePath('credits/NOTICE.txt')}">${s.notices}</a></p><p>${s.licencePending}</p><nav><a href="${sitePath('')}pages/impressum.html">${s.impressum}</a><a href="${sitePath('')}pages/datenschutz.html">${s.privacy}</a><a href="${sitePath('')}pages/methode.html">${s.method}</a></nav></footer>`;
 const $=<T extends HTMLElement=HTMLElement>(id:string)=>document.getElementById(id) as T;
@@ -36,6 +39,9 @@ let map:ReturnType<typeof createMap>|null=null,revision=0,travelReady=false;
 let directOnly=false;
 let matrixMeta:MatrixMeta|null=null,matrixLoad:((workplace:number)=>Promise<MatrixDestination|null>)|null=null,matrixCurrent:MatrixDestination|null=null;
 let workplaces:Record<string,Gemeinde>={};
+let kkData:KkData|null=null;
+const kk:{mode:KkMode;deductible:number;year:KkYear}={mode:'median',deductible:300,year:'2026'};
+const premiumOf=(id:number|string)=>premiumFor(kkData,kk.year,id,state.civ,state.kids,kk.deductible,kk.mode);
 let reviewCantons:ReadonlySet<string>=QUARANTINED_CANTONS;
 const travelCache=new Map<number,Promise<TravelRows>>();
 let sortBy:'tax'|'time'='tax',showAll=false;
@@ -55,13 +61,14 @@ function clearPresentedResults(){
  map?.update([],state.workplace,state.selected,matrixMeta?withheldFor(state.civ,state.kids):reviewCantons);
 }
 function showError(error:unknown){$('summary').textContent=s.loadFailureSummary;$('data-status').textContent=s.loadError(error instanceof Error?error.message:String(error));$('data-status').classList.add('error');}
+function premiumDetail(id:number){const amount=premiumOf(id);return amount===undefined||kk.mode==='none'?undefined:{amount,label:s.premiumLabel(kk.mode,formatCHF(kk.deductible),kk.year)};}
 function selectGemeinde(id:number){
  if(!gemeinden[id]){$('detail').textContent=s.noData;return;}
  state.selected=id;
  $<HTMLInputElement>('residence').value=gemeinden[id][0];
  const indicative=!!matrixMeta,activeReview=indicative?withheldFor(state.civ,state.kids):reviewCantons,witnessed=!!rows.find(row=>row[0]===id);
  const notice=s.detailMatrix;
- renderDetail($('detail'),gemeinden[id],id,witnessed||!indicative||matrixMeta?breakdowns[id]??null:null,access[id],results.find(r=>r.id===id),rows.find(r=>r[0]===id)?.[1],travelReady,activeReview.has(gemeinden[id][1]),indicative,notice,matrixMeta?{maxTime:state.maxTime,transfers:transfersFor(matrixCurrent,id,directOnly)}:undefined);
+ renderDetail($('detail'),gemeinden[id],id,witnessed||!indicative||matrixMeta?breakdowns[id]??null:null,access[id],results.find(r=>r.id===id),rows.find(r=>r[0]===id)?.[1],travelReady,activeReview.has(gemeinden[id][1]),indicative,notice,matrixMeta?{maxTime:state.maxTime,transfers:transfersFor(matrixCurrent,id,directOnly)}:undefined,premiumDetail(id));
  map?.update(results,state.workplace,state.selected,activeReview);
  for(const row of $('ranked-list').querySelectorAll('tr'))row.classList.toggle('selected',row.getAttribute('data-bfs')===String(id));
 }
@@ -76,7 +83,7 @@ async function loadRows(workplace:number):Promise<TravelRows>{
  return travelCache.get(workplace)!;
 }
 async function update(){
- const current=++revision,snapshot={...state};
+ const current=++revision,snapshot={...state},kkSnapshot={...kk};
  const matrix=!!matrixMeta;
  const indicative=matrix,available=travelReady||indicative,activeReview=indicative?withheldFor(snapshot.civ,snapshot.kids):reviewCantons;
  $('time-value').textContent=`${state.maxTime} ${s.minutes}`;$('walk-value').textContent=`${state.maxWalk} ${s.minutes}`;
@@ -91,13 +98,15 @@ async function update(){
   const adapted=matrix?(destination?adaptMatrix(destination,directOnly):{access:{},rows:[]}):null;
   const [profile,newRows]=await Promise.all([repository.loadProfile(snapshot.civ,snapshot.kids),adapted?Promise.resolve(adapted.rows):travelReady?loadRows(snapshot.workplace):Promise.resolve([] as TravelRows)]);
   if(current!==revision)return;
-  $('profile-status').textContent=(indicative?s.profileLoadedIndicative:s.profileLoaded)(snapshot.civ==='m'?s.married:s.single,snapshot.kids===3?'3+':String(snapshot.kids),formatCHF(snapshot.income),s[snapshot.church]);
+  $('profile-status').textContent=(indicative?s.profileLoadedIndicative:s.profileLoaded)(snapshot.civ==='m'?s.married:s.single,snapshot.kids===3?'3+':String(snapshot.kids),formatCHF(snapshot.income),s[snapshot.church])+(kkData&&kkSnapshot.mode!=='none'?s.premiumStatus(kkSnapshot.mode,formatCHF(kkSnapshot.deductible),kkSnapshot.year):'');
   rows=newRows;breakdowns={};const totals:Record<string,number>={};
   for(const [id,g] of Object.entries(gemeinden)){if(activeReview.has(g[1]))continue;const tax=calculateTax(profile,g,snapshot.income,snapshot.church);breakdowns[id]=tax;totals[id]=tax.total;}
-  access=adapted?adapted.access:verifiedAccess;results=filterAndRank(gemeinden,access,rows,snapshot,totals,activeReview);
+  access=adapted?adapted.access:verifiedAccess;const withPremium=!!kkData&&kkSnapshot.mode!=='none';
+  const premiums=withPremium?Object.fromEntries(Object.keys(totals).map(id=>[id,premiumFor(kkData,kkSnapshot.year,id,snapshot.civ,snapshot.kids,kkSnapshot.deductible,kkSnapshot.mode)])):null;
+  results=filterAndRank(gemeinden,access,rows,snapshot,totals,activeReview,premiums);
   const workplaceName=workplaces[snapshot.workplace]?.[0]??s.workplace;
   const withheld=rows.filter(([id,minutes])=>gemeinden[id]&&activeReview.has(gemeinden[id][1])&&minutes<=snapshot.maxTime).length;
-  $('summary').textContent=(matrix?s.matrixOverview(results.length,workplaceName,snapshot.maxTime,directOnly):s.reachabilityOverview(available,results.length,workplaceName,snapshot.maxTime,snapshot.maxWalk,Object.keys(gemeinden).length))+(indicative&&withheld?s.withheld(withheld):'');$('cheapest').textContent=results[0]?(indicative?s.cheapestPreview:s.cheapest)(results[0].name,formatCHF(results[0].total)):'';
+  $('summary').textContent=(matrix?s.matrixOverview(results.length,workplaceName,snapshot.maxTime,directOnly):s.reachabilityOverview(available,results.length,workplaceName,snapshot.maxTime,snapshot.maxWalk,Object.keys(gemeinden).length))+(indicative&&withheld?s.withheld(withheld):'');$('cheapest').textContent=results[0]?(indicative?s.cheapestPreview:s.cheapest)(results[0].name,formatCHF(results[0].total),withPremium):'';
   $('result-notice').textContent=matrix?s.matrixNotice(matrixMeta!.serviceDate.split('-').reverse().join('.'),destination?.station??workplaceName):s.unverified;
   $('data-status').classList.remove('error');$('data-status').textContent=!available?s.travelPending:!indicative&&access[snapshot.workplace]==null?s.noStop:'';
   $('empty-state').textContent=matrix?s.matrixEmpty:s.empty;$('empty-state').hidden=!available||results.length>0;
@@ -117,6 +126,7 @@ $<HTMLInputElement>('direct-only').addEventListener('change',e=>{directOnly=(e.t
 function setIncome(raw:number){if(!Number.isFinite(raw)){showError(new Error(s.invalidIncome));return;}const income=Math.min(500000,Math.max(40000,raw));state.income=income;$<HTMLInputElement>('income').value=String(income);$<HTMLInputElement>('income-slider').value=String(income);$('clamp-note').hidden=income===raw;void update();}
 $('income').addEventListener('change',e=>setIncome(Number((e.target as HTMLInputElement).value)));$('income-slider').addEventListener('input',e=>setIncome(Number((e.target as HTMLInputElement).value)));
 $('civil').addEventListener('change',e=>{state.civ=(e.target as HTMLSelectElement).value as 's'|'m';void update();});$('kids').addEventListener('change',e=>{state.kids=Number((e.target as HTMLSelectElement).value);void update();});$('church').addEventListener('change',e=>{state.church=(e.target as HTMLSelectElement).value as typeof state.church;void update();});
+$<HTMLSelectElement>('kk').addEventListener('change',e=>{kk.mode=(e.target as HTMLSelectElement).value as KkMode;void update();});$<HTMLSelectElement>('deductible').addEventListener('change',e=>{kk.deductible=Number((e.target as HTMLSelectElement).value);void update();});$<HTMLSelectElement>('kk-year').addEventListener('change',e=>{kk.year=(e.target as HTMLSelectElement).value as KkYear;void update();});
 $('theme').onclick=()=>{const dark=document.documentElement.dataset.theme==='dark'||(!document.documentElement.dataset.theme&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.dataset.theme=dark?'light':'dark';$('theme').setAttribute('aria-pressed',String(!dark));};
 async function init(){
  if(!DATA_RELEASE.availability.tax){void update();return;}
@@ -124,6 +134,9 @@ async function init(){
   gemeinden=await repository.loadGemeinden();
   workplaces=workplaceGemeinden(gemeinden);
   const coverage=document.createElement('p');coverage.dataset.testid='candidate-coverage';coverage.className='assumptions';coverage.textContent=s.coverage(Object.keys(gemeinden).length,Object.keys(workplaces).length);coverage.dataset.residences=String(Object.keys(gemeinden).length);coverage.dataset.workplaces=String(Object.keys(workplaces).length);$('profile-status').after(coverage);
+  // Premiums are optional: without the file the controls are hidden and the ranking is tax only.
+  if(DATA_RELEASE.files['kk.json'])kkData=validateKk(await repository.json<unknown>('kk.json'));
+  for(const id of ['kk','deductible','kk-year'])$(id).closest('.field')!.toggleAttribute('hidden',!kkData);
   reviewCantons=withheldCantons(Object.values(gemeinden).map(g=>g[1]),!!DATA_RELEASE.approvals.estv,QUARANTINED_CANTONS);
   if(DATA_RELEASE.availability.map){const topology=await repository.json<any>('map/switzerland-2026.json');map=createMap($('map'),topology,gemeinden,selectGemeinde);}
   matrixMeta=await loadMatrixMeta(repository,DATA_RELEASE.files,DATA_RELEASE.availability.matrix===true);
