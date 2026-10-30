@@ -1,0 +1,8 @@
+{
+ "purpose": "VS single low-income deduction: exact edges in CHF 1 steps inside the three windows that matter from CHF 40,000 (Sion, single without church).",
+ "cases": [
+  { "bfs": 6266, "civil": "single", "kids": 0, "church": "none", "from": 41700, "to": 41725, "step": 1 },
+  { "bfs": 6266, "civil": "single", "kids": 0, "church": "none", "from": 43500, "to": 43525, "step": 1 },
+  { "bfs": 6266, "civil": "single", "kids": 0, "church": "none", "from": 45275, "to": 45300, "step": 1 }
+ ]
+}
