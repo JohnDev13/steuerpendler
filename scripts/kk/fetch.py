@@ -54,8 +54,10 @@ CSV_WANTED = ("Prämien_CH.csv", "Tarife.csv", "Einzugsgebiete.csv", "Eingeschr.
 
 def year_of(data: bytes) -> str:
     """Premium year (Geschäftsjahr) of a premium CSV."""
-    reader = csv.DictReader(io.StringIO(data.decode("utf-8-sig")))
-    return next(reader)["Geschäftsjahr"]
+    text = data.decode("utf-8-sig")
+    head = text.split("\n", 1)[0]
+    reader = csv.DictReader(io.StringIO(text), delimiter=";" if head.count(";") > head.count(",") else ",")
+    return str(next(reader)["Geschäftsjahr"]).strip()
 
 
 def store_csv(name: str, data: bytes, source: str, manifest: list[dict]) -> None:
@@ -77,7 +79,7 @@ def main() -> int:
     resources = [{"name": (r.get("name") if isinstance(r.get("name"), str) else json.dumps(r.get("name"), ensure_ascii=False)),
                   "url": r.get("url") or r.get("download_url"), "format": r.get("format")} for r in package["resources"]]
     (OUT / "resources.json").write_text(json.dumps(resources, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
-    print("::notice title=KK resources::" + " | ".join(f"{r['name']}" for r in resources)[:3900])
+    print(f"KK resources: {len(resources)}")
     by_name = {}
     for r in resources:
         try:
