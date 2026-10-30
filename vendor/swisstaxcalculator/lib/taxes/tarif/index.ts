@@ -314,7 +314,18 @@ const calculateTaxesByTypeFormel = (amount: Dinero<number>, tarif: TaxTarif) => 
 //  split100  floor income to 100 (X), divide by the splitting factor, floor to 100 (y), tax = rate(y) x X
 //  income100 floor income to 100 (X), divide exactly, tax = tax(X / s) x s                               (AG)
 //  exact     no rounding, tax = tax(x / s) x s                     (SO, GR, GE, UR and formula tariffs)
-export type TariffRounding = 'split100' | 'income100' | 'exact';
+export type TariffRounding = 'split100' | 'income100' | 'exact' | 'quotient';
+// Steuerpendler patch 29: VD quotient familial. Parts q0 = 1 single, 1.3 single parent, 1.8 married, plus 0.5 per child.
+// The rate-determining income is floor100(X')/q up to a cap threshold, above it the extra income counts with q0 only:
+// y = floor100(cap/q + (X' - cap)/q0); tax = rate(y) x X', X' = floor100(taxable). Cap = 178,600 + 22,300 per child.
+// Evidence: official 2026 ESTV results, tests/reference/estv-2026-probes/vd-vs-grid.jsonl and vd-edges.jsonl (all 336
+// Lausanne cases with a taxable income; caps 200,900 / 223,200 / 245,500 are each the only CHF 100 value that fits).
+export interface Quotient { q0: number; cap: number }
+export const householdQuotient = (cantonId: number, married: boolean, kids: number): { split: number } & Quotient | undefined => {
+  if (cantonId !== 23) return undefined;
+  const q0 = married ? 1.8 : kids > 0 ? 1.3 : 1;
+  return { split: q0 + 0.5 * kids, q0, cap: kids > 0 ? 178600 + 22300 * kids : 0 };
+};
 const EXACT_CANTONS = new Set([8, 10, 18, 22]); // GE, GR, SO, UR
 export const tariffRounding = (cantonId: number, tableType: string): TariffRounding =>
   tableType === 'FORMEL' || EXACT_CANTONS.has(cantonId) ? 'exact' : cantonId === 1 ? 'income100' : 'split100';
@@ -323,11 +334,17 @@ export const applyTariffRounding = (
   rounding: TariffRounding,
   income: number,
   split: number,
-  taxOf: (amount: number) => number
+  taxOf: (amount: number) => number,
+  quotient?: Quotient
 ): number => {
   const reciprocal = Math.round((1 / split) * 1e5) / 1e5;
   const floor100 = (value: number) => Math.floor(value / 100 + 1e-9) * 100;
   if (rounding === 'exact') return taxOf(income * reciprocal) * split;
+  if (rounding === 'quotient') {
+    const whole = floor100(income), cap = quotient?.cap ?? 0, q0 = quotient?.q0 ?? split;
+    const y = floor100(cap > 0 && whole > cap ? cap / split + (whole - cap) / q0 : whole / split);
+    return y > 0 ? (taxOf(y) / y) * whole : 0;
+  }
   const whole = floor100(income);
   if (rounding === 'income100') return taxOf(whole * reciprocal) * split;
   if (split === 1) return taxOf(whole);
@@ -340,7 +357,8 @@ export const calculateTaxesForTarif = async (
   year: number,
   tarifGroup: TaxTarifGroupWithFallback,
   tarifType: TaxType,
-  taxableIncome: DineroChf
+  taxableIncome: DineroChf,
+  household?: { married: boolean; kids: number }
 ) => {
   const [tarifIncome, tarifGroupUsed] = await getTaxTarifTable(
     cantonId,
@@ -348,13 +366,15 @@ export const calculateTaxesForTarif = async (
     tarifType,
     tarifGroup
   );
-  const split =
-    tarifIncome.splitting > 0 && isGroupEligableForSplitting(tarifGroupUsed) ? tarifIncome.splitting : 1;
+  const quotient = household && tarifType === 'EINKOMMENSSTEUER' ? householdQuotient(cantonId, household.married, household.kids) : undefined;
+  const split = quotient?.split ??
+    (tarifIncome.splitting > 0 && isGroupEligableForSplitting(tarifGroupUsed) ? tarifIncome.splitting : 1);
   const result = applyTariffRounding(
-    tariffRounding(cantonId, tarifIncome.tableType),
+    quotient ? 'quotient' : tariffRounding(cantonId, tarifIncome.tableType),
     dineroToNumber(taxableIncome),
     split,
-    (amount) => dineroToNumber(calculateTaxesAmount(dineroChf(amount, 5), tarifIncome))
+    (amount) => dineroToNumber(calculateTaxesAmount(dineroChf(amount, 5), tarifIncome)),
+    quotient
   );
   return dineroChf(result, 5);
 };

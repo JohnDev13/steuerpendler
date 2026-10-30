@@ -1,7 +1,7 @@
 // Compares the shipped browser tax calculation with the ESTV results for every reachable Gemeinde
 // (tests/reference/estv-2026-probes/gemeinden-reachable.jsonl) and the SO/BL follow-up captures,
 // all captured by the ESTV probe workflow.
-// Usage: npx tsx --tsconfig scripts/tax/tsconfig.json scripts/tax/gemeinden.ts [--fail] [--canton XX]
+// Usage: npx tsx --tsconfig scripts/tax/tsconfig.json scripts/tax/gemeinden.ts [--fail] [--canton XX] [--probes a,b]
 import { readFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -12,9 +12,9 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 export const COMPONENTS = ['federal', 'canton', 'city', 'church', 'personal'] as const;
 export const GEMEINDE_PROBES = ['gemeinden-reachable', 'so-personal-bl-church', 'so-personal-rest'];
 
-export async function runGemeinden(root = ROOT) {
+export async function runGemeinden(root = ROOT, probes = GEMEINDE_PROBES) {
   const cases = [];
-  for (const probe of GEMEINDE_PROBES) {
+  for (const probe of probes) {
     const text = await readFile(resolve(root, 'tests/reference/estv-2026-probes', `${probe}.jsonl`), 'utf8');
     cases.push(...text.trimEnd().split('\n').map(line => JSON.parse(line)));
   }
@@ -38,7 +38,8 @@ export async function runGemeinden(root = ROOT) {
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   const args = process.argv.slice(2), canton = args.includes('--canton') ? args[args.indexOf('--canton') + 1] : undefined;
-  const results = (await runGemeinden()).filter(r => !canton || r.canton === canton);
+  const probes = args.includes('--probes') ? args[args.indexOf('--probes') + 1].split(',') : undefined;
+  const results = (await runGemeinden(ROOT, probes)).filter(r => !canton || r.canton === canton);
   const byCanton = new Map<string, typeof results>();
   for (const r of results) byCanton.set(r.canton, [...(byCanton.get(r.canton) ?? []), r]);
   console.log(`gemeinden: ${results.filter(r => r.passed).length}/${results.length} within max(5, 0.1%)`);

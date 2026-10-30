@@ -6,6 +6,7 @@ import {
   dinero,
   down,
   halfEven,
+  halfUp,
   maximum,
   minimum,
   multiply,
@@ -27,6 +28,10 @@ export const transformNumber = ({ value }: { value: string; currency: Currency<n
 
 export const dineroRound = (input: Dinero<number>, scale = 0) =>
   transformScale(input, scale, halfEven);
+
+// Steuerpendler patch 30: whole francs, halves rounded up (ESTV social contributions: 1.1 % x 123,500 = 1,358.5 -> 1,359;
+// every half-franc AHV/ALV case in the captured ESTV results rounds up).
+export const dineroRoundHalfUp = (input: Dinero<number>) => transformScale(input, 0, halfUp);
 
 // Steuerpendler patch 17: whole francs, rounded down (ESTV percentage deductions, e.g. 3% x 89,662 = 2,689).
 export const dineroRoundDown = (input: Dinero<number>) => transformScale(input, 0, down);

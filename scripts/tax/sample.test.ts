@@ -7,7 +7,7 @@ import { QUARANTINED_CANTONS, TAX_WITHHELD } from '../../src/withheld';
 const ROOT = resolve(import.meta.dirname, '../..');
 // Ratchet: cases of the broad official sample outside max(CHF 5, 0.1%). May only go down; lower it in the same
 // PR that fixes cases.
-const MAX_SAMPLE_FAILURES = 46;
+const MAX_SAMPLE_FAILURES = 25;
 
 test('broad ESTV sample covers every canton and profile with official evidence', async () => {
   const cases = await loadSample(ROOT);

@@ -9,11 +9,14 @@ export type Gemeinde = readonly [name:string,canton:string,rateCanton:number,rat
 export type DeductionFormat = 'ZERO'|'STANDARDIZED'|'MAXIMUM'|'PERCENT'|'PERCENT,MAXIMUM'|'PERCENT,MINIMUM,MAXIMUM'|'STANDARDIZED,PERCENT,MAXIMUM';
 export interface DeductionOp {source:'net'|'constant'|'rent30';value:number;format:DeductionFormat;amount:number;percent:number;minimum:number;maximum:number;multiplier:number}
 export type TariffType = 'BUND'|'ZUERICH'|'FORMEL'|'FREIBURG'|'FLATTAX';
-export type TariffRounding='split100'|'income100'|'exact';
-export interface PreciseTariff {type:TariffType;split:number;rounding:TariffRounding;table:{amount:number;percent:number;taxes:number;formula:string}[]}
+export type TariffRounding = 'split100'|'income100'|'exact'|'quotient';
+// quotient (vendor patch 29, VD): split = household parts q; q0 = parts without children; cap = taxable income above which
+// extra income counts with q0 only (0 = no cap).
+export interface PreciseTariff {type:TariffType;split:number;rounding:TariffRounding;q0?:number;cap?:number;table:{amount:number;percent:number;taxes:number;formula:string}[]}
 // Cantonal deductions on the income after the ordinary ones (vendor patch 22). All fields numeric; unused ones 0.
 // addBack: ordinary deductions added to the basis (constant per profile); addBackLate: indices of earlier late ones.
-export interface PreciseLate {kind:'fixed'|'percent'|'linear'|'step'|'bands';amount:number;rate:number;max:number;threshold:number;base:number;step:number;reduction:number;roundUp:number;min:number;bands:[number,number][];addBack:number;addBackLate:number[]}
+// rent (vendor patch 28, VD housing): threshold = cap of ESTV's default rent, rate = share of the basis, max = maximum.
+export interface PreciseLate {kind:'fixed'|'percent'|'linear'|'step'|'bands'|'rent';amount:number;rate:number;max:number;threshold:number;base:number;step:number;reduction:number;roundUp:number;min:number;ceiling?:number;bands:[number,number][];addBack:number;addBackLate:number[]}
 export interface PreciseCanton {bund:{deductions:DeductionOp[];tariff:PreciseTariff;late?:PreciseLate[]};canton:{deductions:DeductionOp[];tariff:PreciseTariff;late?:PreciseLate[];reduction?:number};credit:number;cantonReduction:number;personal:number;personalChurch:{reformed:number;catholic:number};churchTaxable?:('reformed'|'catholic')[];kids:number;persons:number}
 export interface TaxProfile {meta:{year:number;incomes:{from:number;step:number;count:number};pensionDefault?:PensionDefault;budgetDefault?:BudgetDefault;[key:string]:unknown};cantons:Record<string,number[][]>;precision?:Record<string,PreciseCanton>}
 // Integer ties-to-even, matching the engine's monetary rounding, not display rounding.
@@ -39,9 +42,9 @@ function validatePrecision(value:unknown):value is PreciseCanton {
  for(const part of [p.bund,p.canton]){
   if(!part||!Array.isArray(part.deductions)||!part.tariff)return false;
   for(const op of part.deductions)if(!op||!['net','constant','rent30'].includes(op.source)||!deductionFormats.has(op.format)||![op.value,op.amount,op.percent,op.minimum,op.maximum,op.multiplier].every(Number.isFinite))return false;
-  for(const l of part.late??[])if(!l||!['fixed','percent','linear','step','bands'].includes(l.kind)||!Array.isArray(l.bands)||!l.bands.every(b=>Array.isArray(b)&&b.length===2&&b.every(Number.isFinite))||![l.amount,l.rate,l.max,l.threshold,l.base,l.step,l.reduction,l.roundUp,l.min,l.addBack].every(Number.isFinite)||(l.kind==='step'&&l.step<=0)||!Array.isArray(l.addBackLate)||!l.addBackLate.every(Number.isInteger))return false;
+  for(const l of part.late??[])if(!l||!['fixed','percent','linear','step','bands','rent'].includes(l.kind)||!Array.isArray(l.bands)||!l.bands.every(b=>Array.isArray(b)&&b.length===2&&b.every(Number.isFinite))||![l.amount,l.rate,l.max,l.threshold,l.base,l.step,l.reduction,l.roundUp,l.min,l.addBack].every(Number.isFinite)||(l.kind==='step'&&l.step<=0)||(l.ceiling!==undefined&&!(Number.isFinite(l.ceiling)&&l.ceiling>=0))||!Array.isArray(l.addBackLate)||!l.addBackLate.every(Number.isInteger))return false;
   const tariff=part.tariff;
-  if(!tariffTypes.has(tariff.type)||!['split100','income100','exact'].includes(tariff.rounding)||!Number.isFinite(tariff.split)||tariff.split<=0||!Array.isArray(tariff.table)||tariff.table.length===0)return false;
+  if(!tariffTypes.has(tariff.type)||!['split100','income100','exact','quotient'].includes(tariff.rounding)||(tariff.rounding==='quotient'&&!(Number.isFinite(tariff.q0)&&(tariff.q0 as number)>0&&Number.isFinite(tariff.cap)&&(tariff.cap as number)>=0))||!Number.isFinite(tariff.split)||tariff.split<=0||!Array.isArray(tariff.table)||tariff.table.length===0)return false;
   for(const row of tariff.table){
    if(!row||![row.amount,row.percent,row.taxes].every(Number.isFinite)||typeof row.formula!=='string')return false;
    try { formulaValue(row.formula,100000); } catch { return false; }
@@ -53,7 +56,9 @@ function validatePrecision(value:unknown):value is PreciseCanton {
 export function preciseBase(p:PreciseCanton,income:number,pensionDefault?:PensionDefault,budgetDefault?:BudgetDefault):[number,number,number,number] {
  const gross=Math.round(income*100)/100;
  const pension=pensionDefault==='ESTV2026Age35'?calculateBvg2026Age35(gross):0;
- const net=gross-halfEven(gross*.053)-halfEven(Math.min(gross,148200)*.011)-halfEven(Math.min(gross,148200)*.004)-pension;
+ // Social contributions: whole francs, halves up as ESTV does (vendor patch 30).
+ const halfUp=(x:number)=>Math.floor(x+.5+1e-9);
+ const net=gross-halfUp(gross*.053)-halfUp(Math.min(gross,148200)*.011)-halfUp(Math.min(gross,148200)*.004)-pension;
  const taxable=(part:PreciseCanton['bund'])=>{
   let deductions=0;
   for(const op of part.deductions){const estimatedRent=Math.round(net*.25/10)*10;const v=op.source==='net'?net:op.source==='rent30'&&budgetDefault==='ESTV2026Age35'?estimatedRent*.3:op.value;let d=0;
@@ -66,7 +71,7 @@ export function preciseBase(p:PreciseCanton,income:number,pensionDefault?:Pensio
    else if(op.format==='STANDARDIZED,PERCENT,MAXIMUM')d=Math.min(op.maximum,op.amount+floorChf(v*op.percent/100));
    deductions+=d*op.multiplier;
   }
-  return applyLate(part.late??[],Math.max(0,halfEven(net-deductions)));
+  return applyLate(part.late??[],Math.max(0,halfEven(net-deductions)),net);
  };
  const tax=(part:PreciseCanton['bund'],x=taxable(part))=>preciseTariffTax(part.tariff,x);
  const cantonTaxable=taxable(p.canton);
@@ -75,11 +80,11 @@ export function preciseBase(p:PreciseCanton,income:number,pensionDefault?:Pensio
  return [bund<25?0:bund,Math.max(0,tax(p.canton,cantonTaxable)-(p.canton.reduction??0)),p.personal,cantonTaxable];
 }
 // Late cantonal deductions in order (vendor patch 22); returns the taxable income.
-export function applyLate(late:PreciseLate[],income:number):number {
+export function applyLate(late:PreciseLate[],income:number,net=0):number {
  const done:number[]=[];let remaining=income;
  for(const l of late){
   const basis=remaining+l.addBack+l.addBackLate.reduce((s,i)=>s+done[i],0);
-  const d=l.kind==='bands'?(l.bands.find(([upTo])=>basis<=upTo)?.[1]??0):l.kind==='fixed'?l.amount:l.kind==='percent'?Math.min(l.max,Math.floor(l.rate*basis+1e-9)):l.kind==='linear'?Math.max(0,Math.floor(l.rate*(l.threshold-basis)+1e-9)):Math.max(l.min,l.base-(l.roundUp?Math.ceil(Math.max(0,basis-l.threshold)/l.step-1e-9):Math.floor(Math.max(0,basis-l.threshold)/l.step+1e-9))*l.reduction);
+  const d=l.kind==='step'&&l.ceiling&&basis>l.ceiling?0:l.kind==='rent'?Math.max(0,Math.min(l.max,Math.floor(Math.min(Math.round(net*.25/10)*10,l.threshold)-l.rate*basis+1e-9))):l.kind==='bands'?(l.bands.find(([upTo])=>basis<=upTo)?.[1]??0):l.kind==='fixed'?l.amount:l.kind==='percent'?Math.min(l.max,Math.floor(l.rate*basis+1e-9)):l.kind==='linear'?Math.max(0,Math.floor(l.rate*(l.threshold-basis)+1e-9)):Math.max(l.min,l.base-(l.roundUp?Math.ceil(Math.max(0,basis-l.threshold)/l.step-1e-9):Math.floor(Math.max(0,basis-l.threshold)/l.step+1e-9))*l.reduction);
   done.push(d);remaining-=d;
  }
  return Math.max(0,remaining);
@@ -102,6 +107,7 @@ export function preciseTariffTax(tariff:PreciseTariff,taxable:number):number {
   return result;
  };
  if(tariff.rounding==='exact')return taxOf(taxable*reciprocal)*split;
+ if(tariff.rounding==='quotient'){const whole=floor100(taxable),cap=tariff.cap??0,q0=tariff.q0??split;const y=floor100(cap>0&&whole>cap?cap/split+(whole-cap)/q0:whole/split);return y>0?taxOf(y)/y*whole:0;}
  const whole=floor100(taxable);
  if(tariff.rounding==='income100')return taxOf(whole*reciprocal)*split;
  if(split===1)return taxOf(whole);

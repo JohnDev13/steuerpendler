@@ -3,6 +3,7 @@ import { sortArray } from '~/lib/utils/array';
 import {
   dineroChf,
   dineroRound,
+  dineroRoundHalfUp,
   dineroRoundDown,
   dineroToNumber,
   dineroSubtractMany,
@@ -372,11 +373,12 @@ export const calculateGrossNetDetails = (taxInput: TaxInput): TaxGrossNetDetail[
 
     const maxSalaryNbuAlvDinero = dineroChf(maxSalaryNbuAlv);
     const grossIncome = dineroChf(person.income);
-    const ahvIvEoDeduction = dineroRound(multiplyDineroPercent(grossIncome, 5.3, 1));
-    const alvDeduction = dineroRound(
+    // Steuerpendler patch 30: ESTV rounds the contributions half up.
+    const ahvIvEoDeduction = dineroRoundHalfUp(multiplyDineroPercent(grossIncome, 5.3, 1));
+    const alvDeduction = dineroRoundHalfUp(
       multiplyDineroPercent(dineroMin(grossIncome, maxSalaryNbuAlvDinero), 1.1, 1)
     );
-    const nbuDeduction = dineroRound(
+    const nbuDeduction = dineroRoundHalfUp(
       multiplyDineroPercent(dineroMin(grossIncome, maxSalaryNbuAlvDinero), 0.4, 1)
     );
     const pkDeduction = dineroChf(person.pkDeduction ?? 0);

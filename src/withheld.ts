@@ -1,8 +1,8 @@
 // Cantons whose estimates are withheld for every profile. scripts/tax/official.test.ts fails if any canton
 // deviates from its ESTV reference case by more than 5% without being listed here.
 // VS: cantonal rebates/coefficients not modelled (ESTV case off by ~270%).
-// VD: quotient familial not modelled (~19%). GE left the quarantine once its 12% cantonal reduction and
-// 1% home-care levy were modelled (data correction; frozen case and 25/25 sample cases match).
+// VD: rules modelled and matching Lausanne (patches 28-30); withheld until the other VD Gemeinden are checked.
+// GE left the quarantine once its 12% cantonal reduction and 1% home-care levy were modelled (data correction; frozen case and 25/25 sample cases match).
 // JU: official 2026 parish rates disagree with the factor table for merged municipalities (#58). Its
 // deductions now match ESTV (sample 25/25 for Delémont); the parish reconciliation is still open.
 export const QUARANTINED_CANTONS: ReadonlySet<string> = new Set(['VS','JU','VD']);

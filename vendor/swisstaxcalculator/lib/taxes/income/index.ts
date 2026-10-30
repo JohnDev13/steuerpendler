@@ -245,7 +245,8 @@ export const calculateTaxableAmount = async (taxInput: TaxInput) => {
     )));
     const ordinary = new Map<string, number>();
     for (const item of deductionsIncome) ordinary.set(item.id, (ordinary.get(item.id) ?? 0) + dineroToNumber(item.amountCanton));
-    for (const [id, value] of applyLateRules(rules.late, before, ordinary))
+    const net = dineroToNumber(grossNetDetails.reduce((acc, item) => dineroAddMany(acc, dineroChf(item.netIncome)), dineroChf(0)));
+    for (const [id, value] of applyLateRules(rules.late, before, ordinary, net))
       if (value > 0) deductionsIncome.push({ id, name: id, target: '', amountCanton: dineroChf(value), amountBund: dineroChf(0) });
   }
 
@@ -305,7 +306,8 @@ export const calculateTaxesBase = async (
     taxInput.year,
     tarifGroup,
     'EINKOMMENSSTEUER',
-    taxableIncomeCanton
+    taxableIncomeCanton,
+    { married: ['m', 'rp'].includes(taxInput.relationship), kids: taxInput.children }
   );
   const taxesFortuneBase = await calculateTaxesForTarif(
     taxInput.cantonId,
