@@ -63,7 +63,7 @@ def year_of(data: bytes) -> str:
 def store_csv(name: str, data: bytes, source: str, manifest: list[dict]) -> None:
     sha = hashlib.sha256(data).hexdigest()
     path = OUT / (name + ".gz")
-    with gzip.open(path, "wb", mtime=0) as f:
+    with open(path, "wb") as raw, gzip.GzipFile(fileobj=raw, mode="wb", mtime=0) as f:
         f.write(data)
     manifest.append({"file": path.name, "source": source, "sha256": sha, "bytes": len(data), "gzipped": True})
     print(f"::notice title=KK fetch::{path.name} {len(data)} bytes sha256={sha[:16]}")
