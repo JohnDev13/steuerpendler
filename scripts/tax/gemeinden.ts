@@ -10,7 +10,7 @@ import { officialTolerance } from './official';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 export const COMPONENTS = ['federal', 'canton', 'city', 'church', 'personal'] as const;
-export const GEMEINDE_PROBES = ['gemeinden-reachable', 'so-personal-bl-church', 'so-personal-rest'];
+export const GEMEINDE_PROBES = ['gemeinden-reachable', 'gemeinden-profiles-2', 'so-personal-bl-church', 'so-personal-rest'];
 
 export async function runGemeinden(root = ROOT, probes = GEMEINDE_PROBES) {
   const cases = [];
