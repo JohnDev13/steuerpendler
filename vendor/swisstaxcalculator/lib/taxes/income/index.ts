@@ -68,7 +68,8 @@ export const calculateTaxesIncomeAndFortune = async (taxInput: TaxInput): Promis
     taxInput,
     taxesIncomeBase,
     taxesIncomeBase,
-    taxesFortuneBase
+    taxesFortuneBase,
+    taxableIncomeCanton
   );
 
   const taxesPersonnel = calculateTaxesPersonnel(taxInput);

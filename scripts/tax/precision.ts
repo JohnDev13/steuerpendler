@@ -5,6 +5,7 @@ import { cantonalReductions, cantonalRules } from '../../vendor/swisstaxcalculat
 import { getTaxDecutionTable } from '../../vendor/swisstaxcalculator/lib/taxes/deduction/provider';
 import { getTaxTarifGroup, isGroupEligableForSplitting, tariffRounding } from '../../vendor/swisstaxcalculator/lib/taxes/tarif';
 import { getTaxTarifTable } from '../../vendor/swisstaxcalculator/lib/taxes/tarif/provider';
+import { churchOnTaxableIncome } from '../../vendor/swisstaxcalculator/lib/taxes/factor';
 import { calculateTaxesPersonnel } from '../../vendor/swisstaxcalculator/lib/taxes/personnel';
 import { dineroToNumber } from '../../vendor/swisstaxcalculator/lib/utils/dinero';
 import type { TaxInput } from '../../vendor/swisstaxcalculator/lib/taxes/typesClient';
@@ -64,5 +65,6 @@ export async function compilePrecision(input:TaxInput):Promise<PreciseCanton> {
  const personal=(confession:'other'|'protestant'|'roman')=>dineroToNumber(calculateTaxesPersonnel({...input,persons:input.persons.map(p=>({...p,confession}))}));
  const cantonTable=await getTaxDecutionTable(input.cantonId,2026,'EINKOMMENSSTEUER');
  const {credit,cantonReduction}=cantonalReductions({cantonId:input.cantonId,married:['m','rp'].includes(input.relationship),kids:input.children},cantonTable);
- return {bund:await compile(0),canton:await compile(input.cantonId),credit,cantonReduction,personal:personal('other'),personalChurch:{reformed:personal('protestant')-personal('other'),catholic:personal('roman')-personal('other')},kids:input.children,persons:input.persons.length};
+ const churchTaxable=(['reformed','catholic'] as const).filter(c=>churchOnTaxableIncome(input.cantonId,c==='reformed'?'protestant':'roman'));
+ return {bund:await compile(0),canton:await compile(input.cantonId),credit,cantonReduction,...(churchTaxable.length?{churchTaxable}:{}),personal:personal('other'),personalChurch:{reformed:personal('protestant')-personal('other'),catholic:personal('roman')-personal('other')},kids:input.children,persons:input.persons.length};
 }

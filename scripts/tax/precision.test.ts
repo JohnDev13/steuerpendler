@@ -73,7 +73,8 @@ test('Freienbach precision preserves the authentic capped percentage professiona
  const precision=await compilePrecision(input);
  const op=precision.canton.deductions.find(x=>x.format==='PERCENT,MAXIMUM');
  expect(op).toMatchObject({source:'net',percent:20,maximum:6900});
- expect(preciseBase(precision,120000,'ESTV2026Age35','ESTV2026Age35')).toEqual(await buildRow(input));
+ // [federal, simple tax, personal] equal the engine row; the fourth value is the cantonal taxable income (patch 26).
+ expect(preciseBase(precision,120000,'ESTV2026Age35','ESTV2026Age35').slice(0,3)).toEqual(await buildRow(input));
 });
 
 test('TG tracer: preserves taxable CHF100 steps rather than interpolating across them', async () => {

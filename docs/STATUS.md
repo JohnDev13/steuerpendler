@@ -15,7 +15,9 @@ keep it short and update it in the same PR that changes what it describes.
 - Walking from home to the first stop is not measured (0 min); the walk controls are disabled and say so.
 - Withheld ("Daten in Prüfung"): VS, VD, JU for every profile, plus every canton × profile that the broad
   ESTV sample shows more than 5 % off (`src/withheld.ts`). Outside the three quarantined cantons every sampled
-  profile matches, but the 650 cases cover only one Gemeinde per canton; this is not all-Gemeinde validation.
+  profile matches. Every Gemeinde the site can show (726, all within 30 minutes of a workplace) matches ESTV for
+  two profiles (single 90k reformed, married with 2 children 150k catholic); the other profiles are checked at the
+  capitals only.
 
 ## Gates
 
@@ -25,6 +27,7 @@ keep it short and update it in the same PR that changes what it describes.
 | Tax off-grid, 300 cases vs engine | pass, max CHF 0 | `npm run tax:test` |
 | Tax vs official ESTV, 29 frozen cases | 27 pass, 2 fail (VD, VS; ratchet: may only improve) | `npm run tax:official` |
 | Tax vs broad official sample, 650 cases (26 capitals × 6 profiles × 4 incomes + church) | 606 pass (up from 604 before #78); VD 6/25, VS 0/25, every other canton 25/25 | `npx tsx --tsconfig scripts/tax/tsconfig.json scripts/tax/sample.ts --fail` |
+| Tax vs ESTV in every Gemeinde the site can show: 726 reachable Gemeinden × 2 profiles, plus all 104 SO Gemeinden and BL cross-checks (1,834 cases) | 1,834 pass | `npx tsx --tsconfig scripts/tax/tsconfig.json scripts/tax/gemeinden.ts --fail` (`scripts/tax/gemeinden.test.ts`) |
 | Canton × profile more than 5 % off ESTV is withheld | enforced by test (`src/withheld.ts`) | `npm test` |
 | Travel vs SBB, 30 pairs, ± 3 min | pass: 29 within 3 min, Wollerau consistent (SBB 38 min > cap) | `python3 scripts/travel/compare_reference.py --require-complete` |
 | Unit, release, map, content, e2e | pass | see CI |

@@ -1,0 +1,49 @@
+{
+ "purpose": "SO personal tax for the SO Gemeinden not reachable within 30 min (so every SO Gemeinde has evidence): single without church, reformed and catholic.",
+ "cases": [
+  {
+   "bfs": [
+    2402,
+    2404,
+    2408,
+    2421,
+    2424,
+    2425,
+    2427,
+    2428,
+    2445,
+    2461,
+    2476,
+    2477,
+    2479,
+    2491,
+    2502,
+    2549,
+    2571,
+    2575,
+    2578,
+    2585,
+    2611,
+    2612,
+    2613,
+    2614,
+    2615,
+    2616,
+    2617,
+    2618,
+    2619,
+    2620,
+    2621,
+    2622
+   ],
+   "civil": "single",
+   "kids": 0,
+   "church": [
+    "none",
+    "reformed",
+    "catholic"
+   ],
+   "income": 90000
+  }
+ ]
+}
