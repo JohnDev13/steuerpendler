@@ -39,7 +39,7 @@ travel) and the approval flags stay false; the preview uses `availability.matrix
 Tax tables were refreshed from ESTV on 29 Oct 2026 (new tariffs for JU, NW, SZ, TI, VD, VS; six data corrections
 became unnecessary). The 650-case sample exposed low-income deductions, cantonal married and single-parent
 deduction rules, tax reductions per child (e.g. BL), and the still-unresolved VD family quotient. Supported rules were
-added canton by canton (vendor patches 20–25). Patch 25 models the VD family deduction on declaration code 650:
+added canton by canton (vendor patches 20–25; 26–27 fix BL reformed church tax and SO personal tax by Gemeinde). Patch 25 models the VD family deduction on declaration code 650:
 2026 indexed thresholds from the VD deduction table, with completed-tranche semantics from the VD 2025 instructions
 and corroborating anonymous 2026 ESTV captures (see vendor patch log and `tests/reference/vd-family-2026.json`).
 The frozen VD family's taxable-income stage now matches, but its total still differs by CHF 2,413; VD passes only
@@ -62,14 +62,26 @@ GE left the quarantine once its 12 % cantonal reduction and 1 % home-care levy w
   (or manually). Pages uses GitHub Actions from `main`; the former `gh-pages` branch was deleted and its
   last tip retained as the `archive/gh-pages` tag. The Pages API may still show the old source-branch field.
 
+## Owner decisions (30 Oct 2026)
+
+- **Reference for 2026 tax rules:** where a canton has not yet published its 2026 rules or instructions, the
+  official ESTV tax calculator (2026) is the reference. Rules are modelled from captured ESTV results
+  (`tests/reference/estv-2026-probes/`) and must reproduce them within max(CHF 5, 0.1 %); no residual fitting
+  of totals. Earlier-year documents may explain a mechanism but do not set 2026 amounts.
+- **VD and VS:** model them against that reference so the frozen gate can reach 29/29. They stay withheld
+  until a canton-wide check passes; today no VD/VS Gemeinde is within 30 minutes of a workplace.
+- **JU:** out of scope while no JU Gemeinde is reachable within the 30-minute cap. JU stays quarantined
+  (fail-closed); the parish-rate representation is only needed if the cap or workplaces change.
+- **Walking from home to the first stop:** not measured, by decision. The site keeps stating that the
+  access walk is 0 min and unmeasured; the measured-access pilot (Aarau) is closed as out of scope.
+- **Release** (owner sign-off, Impressum O5, commercial map rights, production host): deferred, unchanged.
+
 ## Open tasks
 
-- Walking from home to the first stop is not measured. Frequency trips and the feed's trip-pair transfer
-  rules are modelled; the matrix is still one reference day's first-board-to-arrival result, not a measured
-  residential route or service reliability claim.
-- Resolve VD and VS official mismatches and JU parish rates with source-backed, municipality-aware evidence;
-  passing one capital's sample cases alone cannot lift a canton-wide quarantine.
-- Production host (Cloudflare per SPEC §3), Impressum details (O5), commercial map rights.
+- Frequency trips and the feed's trip-pair transfer rules are modelled; the matrix is one reference day's
+  first-board-to-arrival result, not a service-reliability claim.
+- VD and VS against the ESTV 2026 reference (see Owner decisions); broader profile coverage per Gemeinde.
+- Production host (Cloudflare per SPEC §3), Impressum details (O5), commercial map rights — deferred.
 
 ## History
 

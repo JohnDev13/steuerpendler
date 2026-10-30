@@ -14,7 +14,7 @@ no backend, cookies or analytics.
 ## How the numbers are made
 
 **Tax.** The vendored open-source engine [`swisstaxcalculator`](https://github.com/devbrains-com/swisstaxcalculator)
-with ESTV 2026 data and 25 recorded patches (`vendor/swisstaxcalculator/STEUERPENDLER-PATCHES.md`) generates
+with ESTV 2026 data and 27 recorded patches (`vendor/swisstaxcalculator/STEUERPENDLER-PATCHES.md`) generates
 one profile per civil status and number of children. The browser evaluates the tariffs exactly between the
 CHF 1,000 grid rows. Assumptions: gross employment income, age 35, no wealth, ESTV standard deductions,
 married couples with one income. Checked against 29 frozen cases from the official ESTV calculator:
