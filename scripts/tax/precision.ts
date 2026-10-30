@@ -3,9 +3,9 @@
 import { calculateDeductionByDefinition, calculateGrossNetDetails, taxDeductionDefinitions } from '../../vendor/swisstaxcalculator/lib/taxes/deduction';
 import { cantonalReductions, cantonalRules } from '../../vendor/swisstaxcalculator/lib/taxes/deduction/cantonal';
 import { getTaxDecutionTable } from '../../vendor/swisstaxcalculator/lib/taxes/deduction/provider';
-import { getTaxTarifGroup, householdQuotient, isGroupEligableForSplitting, tariffRounding } from '../../vendor/swisstaxcalculator/lib/taxes/tarif';
-import { getTaxTarifTable } from '../../vendor/swisstaxcalculator/lib/taxes/tarif/provider';
-import { churchOnTaxableIncome } from '../../vendor/swisstaxcalculator/lib/taxes/factor';
+import { getTaxTarifGroup, householdQuotient, isGroupEligableForSplitting, tariffRounding, VS_CANTON_INDEX_2026 } from '../../vendor/swisstaxcalculator/lib/taxes/tarif';
+import { getCommunalIncomeTarif, getTaxTarifTable } from '../../vendor/swisstaxcalculator/lib/taxes/tarif/provider';
+import { churchOnCommunalTax, churchOnTaxableIncome } from '../../vendor/swisstaxcalculator/lib/taxes/factor';
 import { calculateTaxesPersonnel } from '../../vendor/swisstaxcalculator/lib/taxes/personnel';
 import { dineroToNumber } from '../../vendor/swisstaxcalculator/lib/utils/dinero';
 import type { TaxInput } from '../../vendor/swisstaxcalculator/lib/taxes/typesClient';
@@ -61,11 +61,13 @@ export async function compilePrecision(input:TaxInput):Promise<PreciseCanton> {
   const [tariff,used]=await getTaxTarifTable(id,2026,'EINKOMMENSSTEUER',group);
   const quotient=id===0?undefined:householdQuotient(id,['m','rp'].includes(input.relationship),input.children);
   const reductions=id===0?{simpleReduction:0,cantonReduction:0,credit:0}:cantonalReductions({cantonId:id,married:['m','rp'].includes(input.relationship),kids:input.children},deductions);
-  return {deductions:ops,...(late.length?{late}:{}),...(reductions.simpleReduction?{reduction:reductions.simpleReduction}:{}),tariff:quotient?{type:tariff.tableType,split:quotient.split,rounding:'quotient',q0:quotient.q0,cap:quotient.cap,table:tariff.table}:{type:tariff.tableType,split:tariff.splitting>0&&isGroupEligableForSplitting(used)?tariff.splitting:1,rounding:tariffRounding(id,tariff.tableType),table:tariff.table}};
+  return {deductions:ops,...(late.length?{late}:{}),...(reductions.simpleReduction?{reduction:reductions.simpleReduction}:{}),tariff:quotient?{type:tariff.tableType,split:quotient.split,rounding:'quotient',q0:quotient.q0,cap:quotient.cap,table:tariff.table}:id===24?{type:tariff.tableType,split:1,rounding:'index',index:VS_CANTON_INDEX_2026,table:tariff.table}:{type:tariff.tableType,split:tariff.splitting>0&&isGroupEligableForSplitting(used)?tariff.splitting:1,rounding:tariffRounding(id,tariff.tableType),table:tariff.table}};
  };
  const personal=(confession:'other'|'protestant'|'roman')=>dineroToNumber(calculateTaxesPersonnel({...input,persons:input.persons.map(p=>({...p,confession}))}));
  const cantonTable=await getTaxDecutionTable(input.cantonId,2026,'EINKOMMENSSTEUER');
- const {credit,cantonReduction}=cantonalReductions({cantonId:input.cantonId,married:['m','rp'].includes(input.relationship),kids:input.children},cantonTable);
+ const communalTarif=await getCommunalIncomeTarif(input.cantonId,2026);
+ const communal=input.cantonId===24&&communalTarif?{communal:{type:communalTarif.tableType,split:1,rounding:'index' as const,index:100,table:communalTarif.table}}:{};
+ const {credit,cantonReduction,rebate}=cantonalReductions({cantonId:input.cantonId,married:['m','rp'].includes(input.relationship),kids:input.children},cantonTable);
  const churchTaxable=(['reformed','catholic'] as const).filter(c=>churchOnTaxableIncome(input.cantonId,c==='reformed'?'protestant':'roman'));
- return {bund:await compile(0),canton:await compile(input.cantonId),credit,cantonReduction,...(churchTaxable.length?{churchTaxable}:{}),personal:personal('other'),personalChurch:{reformed:personal('protestant')-personal('other'),catholic:personal('roman')-personal('other')},kids:input.children,persons:input.persons.length};
+ return {bund:await compile(0),canton:await compile(input.cantonId),credit,cantonReduction,...(churchTaxable.length?{churchTaxable}:{}),...(rebate?{rebate}:{}),...communal,...(churchOnCommunalTax(input.cantonId)?{churchOnCity:true}:{}),personal:personal('other'),personalChurch:{reformed:personal('protestant')-personal('other'),catholic:personal('roman')-personal('other')},kids:input.children,persons:input.persons.length};
 }

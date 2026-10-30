@@ -128,6 +128,11 @@ export const cantonalRules = (h: Household, table: TaxDeductionTable): CantonalR
         bands: vdFamilyBands(familyAmount, amount(table, 'SozFamAbzugSchwellwertAus1_EK'), amount(table, 'SozFamAbzugSchwellwertAus2_EK')) });
       return { disable: ['SozVerheiratet_EK', 'SozKindAlleinerzieher_EK', 'SozKind_EK', 'SozminderjKinder_EK'], late };
     }
+    case 24: // VS (vendor patch 31): single people without children, low-income deduction of CHF 2,125 per completed
+      // CHF 1,580 below 35,471 (at most 12 steps = 25,500). Exact ESTV edges at 32,310 / 33,890 / 35,470
+      // (tests/reference/estv-2026-probes/vs-modest-edges.jsonl); fits every Sion capture from CHF 30,000.
+      return { disable: [], late: h.married || h.kids > 0 ? [] : [
+        { kind: 'step', id: 'VsModeste_EK', base: 25500, threshold: 16511, step: 1580, reduction: 2125, addBack: [] }] };
     case 6: case 11: case 22: case 25: // BS, JU, UR, ZG: single parents get the single-parent deduction instead of the single deduction
       return { disable: singleParent ? ['SozLedig_EK'] : [], late: [] };
     default:
@@ -167,9 +172,21 @@ export const applyLateRules = (rules: LateRule[], income: number, ordinary: Map<
 //  cantonReduction: subtracted from the cantonal tax (after the cantonal multiplier) only, not below 0 (NE 200 per child)
 //  credit:          subtracted from the cantonal, communal, church and personal tax, not below 0 (ESTV TaxCredit:
 //                   SH 320, TG 100 per child)
-export interface Reductions { simpleReduction: number; cantonReduction: number; credit: number }
+//  rebate:          VS family rebate (vendor patch 31) on the cantonal tax (canton) and on the communal tax after the
+//                   coefficient (city): min(max(rate x tax, min), max) + perChild x kids, not below 0; the cantonal tax
+//                   is at least `minimum`. Married couples and single parents; ESTV Sion grid, all 280 cases.
+export interface PercentRebate { rate: number; min: number; max: number; perChild: number }
+export interface Reductions { simpleReduction: number; cantonReduction: number; credit: number;
+  rebate?: { canton?: PercentRebate; city?: PercentRebate; minimum: number } }
+export const percentRebate = (r: PercentRebate | undefined, tax: number, kids: number) =>
+  r ? Math.min(Math.max(r.rate * tax, r.min), r.max) + r.perChild * kids : 0;
 export const cantonalReductions = (h: Household, table: TaxDeductionTable): Reductions => {
   const none = { simpleReduction: 0, cantonReduction: 0, credit: 0 };
+  if (h.cantonId === 24) {
+    const family = h.married || h.kids > 0;
+    const rebate = { rate: 0.35, min: 680, max: 4900, perChild: 0 };
+    return { ...none, rebate: { minimum: 10, ...(family ? { canton: { ...rebate, perChild: 300 }, city: rebate } : {}) } };
+  }
   if (h.cantonId === 5) return { ...none, simpleReduction: h.kids * amount(table, 'StErmässigungProKind_EK') };
   if (h.cantonId === 13) return { ...none, cantonReduction: 200 * h.kids };
   if (h.cantonId === 17) return { ...none, credit: 320 * h.kids };

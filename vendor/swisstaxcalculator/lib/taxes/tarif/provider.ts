@@ -1,3 +1,4 @@
+import { readFileSync } from 'fs';
 import { readFile } from 'fs/promises';
 import path from 'path';
 import { TaxTarif, TaxTarifGroup, TaxTarifGroupWithFallback } from './types';
@@ -65,4 +66,30 @@ export const getTaxTarifTable = async (
   throw new Error(
     `Tarif not found for cantonId: ${cantonId}, tarifType: ${taxType}, tarifGroup: ${tarifGroup}`
   );
+};
+
+// Steuerpendler patch 31: communal income-tax tariff (ESTV Target GEMEINDE, e.g. VS) and the communal index by Gemeinde.
+const communalTarifs = new Map<string, TaxTarif | undefined>();
+export const getCommunalIncomeTarif = async (cantonId: number, year: number): Promise<TaxTarif | undefined> => {
+  const key = `${year}-${cantonId}`;
+  if (!communalTarifs.has(key)) {
+    const file = path.resolve(`${dataParsedBasePath}${year}/tarifs/${cantonId}-gemeinde.json`);
+    let table: TaxTarif | undefined;
+    try {
+      const tarifs: TaxTarif[] = JSON.parse((await readFile(file)).toString());
+      table = tarifs.find((t) => t.taxType === 'EINKOMMENSSTEUER');
+    } catch { table = undefined; }
+    communalTarifs.set(key, table);
+  }
+  return communalTarifs.get(key);
+};
+const communalIndexByYear = new Map<number, Record<string, { name: string; index: number }>>();
+export const getCommunalIndex = (year: number, bfs: number): number | undefined => {
+  if (!communalIndexByYear.has(year)) {
+    const file = path.resolve(`${dataParsedBasePath}../communal-index/${year}.json`);
+    let data: Record<string, { name: string; index: number }> = {};
+    try { data = JSON.parse(readFileSync(file, 'utf8')).gemeinden; } catch { data = {}; }
+    communalIndexByYear.set(year, data);
+  }
+  return communalIndexByYear.get(year)![String(bfs)]?.index;
 };

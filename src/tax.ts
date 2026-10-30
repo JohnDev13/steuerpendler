@@ -4,24 +4,31 @@ export type CivilStatus = 's' | 'm';
 export type PensionDefault = 'ESTV2026Age35';
 export type BudgetDefault = 'ESTV2026Age35';
 export type Church = 'none' | 'reformed' | 'catholic';
-// Optional 7th field (vendor patch 27): personal tax per person in this Gemeinde [without church, reformed extra, catholic extra].
-export type Gemeinde = readonly [name:string,canton:string,rateCanton:number,rateGemeinde:number,rateReformed:number,rateCatholic:number,personal?:readonly [number,number,number]];
+// Optional 7th field (vendor patch 27): personal tax per person in this Gemeinde [without church, reformed extra, catholic extra]
+// (null when absent). Optional 8th field (vendor patch 31): the commune's income-tax index (VS).
+export type Gemeinde = readonly [name:string,canton:string,rateCanton:number,rateGemeinde:number,rateReformed:number,rateCatholic:number,personal?:readonly [number,number,number]|null,communalIndex?:number];
 export type DeductionFormat = 'ZERO'|'STANDARDIZED'|'MAXIMUM'|'PERCENT'|'PERCENT,MAXIMUM'|'PERCENT,MINIMUM,MAXIMUM'|'STANDARDIZED,PERCENT,MAXIMUM';
 export interface DeductionOp {source:'net'|'constant'|'rent30';value:number;format:DeductionFormat;amount:number;percent:number;minimum:number;maximum:number;multiplier:number}
 export type TariffType = 'BUND'|'ZUERICH'|'FORMEL'|'FREIBURG'|'FLATTAX';
-export type TariffRounding = 'split100'|'income100'|'exact'|'quotient';
+export type TariffRounding = 'split100'|'income100'|'exact'|'quotient'|'index';
 // quotient (vendor patch 29, VD): split = household parts q; q0 = parts without children; cap = taxable income above which
 // extra income counts with q0 only (0 = no cap).
-export interface PreciseTariff {type:TariffType;split:number;rounding:TariffRounding;q0?:number;cap?:number;table:{amount:number;percent:number;taxes:number;formula:string}[]}
+// index (vendor patch 31, VS): the tariff applies to floor100(taxable) de-indexed by `index` %.
+export interface PreciseTariff {type:TariffType;split:number;rounding:TariffRounding;q0?:number;cap?:number;index?:number;table:{amount:number;percent:number;taxes:number;formula:string}[]}
 // Cantonal deductions on the income after the ordinary ones (vendor patch 22). All fields numeric; unused ones 0.
 // addBack: ordinary deductions added to the basis (constant per profile); addBackLate: indices of earlier late ones.
 // rent (vendor patch 28, VD housing): threshold = cap of ESTV's default rent, rate = share of the basis, max = maximum.
 export interface PreciseLate {kind:'fixed'|'percent'|'linear'|'step'|'bands'|'rent';amount:number;rate:number;max:number;threshold:number;base:number;step:number;reduction:number;roundUp:number;min:number;ceiling?:number;bands:[number,number][];addBack:number;addBackLate:number[]}
-export interface PreciseCanton {bund:{deductions:DeductionOp[];tariff:PreciseTariff;late?:PreciseLate[]};canton:{deductions:DeductionOp[];tariff:PreciseTariff;late?:PreciseLate[];reduction?:number};credit:number;cantonReduction:number;personal:number;personalChurch:{reformed:number;catholic:number};churchTaxable?:('reformed'|'catholic')[];kids:number;persons:number}
+export interface PreciseCanton {bund:{deductions:DeductionOp[];tariff:PreciseTariff;late?:PreciseLate[]};canton:{deductions:DeductionOp[];tariff:PreciseTariff;late?:PreciseLate[];reduction?:number};credit:number;cantonReduction:number;personal:number;personalChurch:{reformed:number;catholic:number};churchTaxable?:('reformed'|'catholic')[];rebate?:{canton?:PercentRebate;city?:PercentRebate;minimum:number};communal?:PreciseTariff;churchOnCity?:boolean;kids:number;persons:number}
+// VS family rebate (vendor patch 31): min(max(rate x tax, min), max) + perChild x kids.
+export interface PercentRebate {rate:number;min:number;max:number;perChild:number}
 export interface TaxProfile {meta:{year:number;incomes:{from:number;step:number;count:number};pensionDefault?:PensionDefault;budgetDefault?:BudgetDefault;[key:string]:unknown};cantons:Record<string,number[][]>;precision?:Record<string,PreciseCanton>}
 // Integer ties-to-even, matching the engine's monetary rounding, not display rounding.
 // ESTV rounds percentage deductions down to whole francs.
 const floorChf=(x:number)=>Math.floor(x+1e-9);
+// VS de-indexing (vendor patch 31): divide by 1.1 per ten index points, then by 1.0u, truncating to whole francs each time.
+export function deindex(income:number,index:number):number {let x=Math.floor(income);const tens=Math.floor((index-100)/10),units=(index-100)%10;for(let i=0;i<tens;i++)x=Math.floor(10*x/11);if(units)x=Math.floor(100*x/(100+units));return x;}
+const rebateOf=(r:PercentRebate|undefined,tax:number,kids:number)=>r?Math.min(Math.max(r.rate*tax,r.min),r.max)+r.perChild*kids:0;
 export function halfEven(x:number):number {const f=Math.floor(x),d=x-f;return Math.abs(d-.5)<1e-8?(f%2===0?f:f+1):Math.round(x);}
 function formulaValue(formula:string,wert:number):number {
  const compact=formula.replace(/\s/g,'');
@@ -38,13 +45,17 @@ function validatePrecision(value:unknown):value is PreciseCanton {
  if(!value||typeof value!=='object')return false;
  const p=value as PreciseCanton;
  if(!Number.isFinite(p.credit)||p.credit<0||!Number.isFinite(p.cantonReduction)||p.cantonReduction<0||(p.canton&&p.canton.reduction!==undefined&&!(Number.isFinite(p.canton.reduction)&&p.canton.reduction>=0))||!Number.isFinite(p.personal)||!p.personalChurch||!Number.isFinite(p.personalChurch.reformed)||!Number.isFinite(p.personalChurch.catholic)||!Number.isInteger(p.kids)||p.kids<0||p.kids>3||!Number.isInteger(p.persons)||p.persons<1||p.persons>2)return false;
+ const rebateOk=(r:unknown)=>r===undefined||(!!r&&typeof r==='object'&&[(r as PercentRebate).rate,(r as PercentRebate).min,(r as PercentRebate).max,(r as PercentRebate).perChild].every(v=>Number.isFinite(v)&&v>=0));
+ if(p.rebate!==undefined&&!(p.rebate&&Number.isFinite(p.rebate.minimum)&&p.rebate.minimum>=0&&rebateOk(p.rebate.canton)&&rebateOk(p.rebate.city)))return false;
+ if(p.churchOnCity!==undefined&&typeof p.churchOnCity!=='boolean')return false;
+ if(p.communal!==undefined&&!(p.communal&&tariffTypes.has(p.communal.type)&&p.communal.rounding==='index'&&Array.isArray(p.communal.table)&&p.communal.table.length>0&&p.communal.table.every(row=>row&&[row.amount,row.percent,row.taxes].every(Number.isFinite)&&typeof row.formula==='string')))return false;
  if(p.churchTaxable!==undefined&&!(Array.isArray(p.churchTaxable)&&p.churchTaxable.every(c=>c==='reformed'||c==='catholic')))return false;
  for(const part of [p.bund,p.canton]){
   if(!part||!Array.isArray(part.deductions)||!part.tariff)return false;
   for(const op of part.deductions)if(!op||!['net','constant','rent30'].includes(op.source)||!deductionFormats.has(op.format)||![op.value,op.amount,op.percent,op.minimum,op.maximum,op.multiplier].every(Number.isFinite))return false;
   for(const l of part.late??[])if(!l||!['fixed','percent','linear','step','bands','rent'].includes(l.kind)||!Array.isArray(l.bands)||!l.bands.every(b=>Array.isArray(b)&&b.length===2&&b.every(Number.isFinite))||![l.amount,l.rate,l.max,l.threshold,l.base,l.step,l.reduction,l.roundUp,l.min,l.addBack].every(Number.isFinite)||(l.kind==='step'&&l.step<=0)||(l.ceiling!==undefined&&!(Number.isFinite(l.ceiling)&&l.ceiling>=0))||!Array.isArray(l.addBackLate)||!l.addBackLate.every(Number.isInteger))return false;
   const tariff=part.tariff;
-  if(!tariffTypes.has(tariff.type)||!['split100','income100','exact','quotient'].includes(tariff.rounding)||(tariff.rounding==='quotient'&&!(Number.isFinite(tariff.q0)&&(tariff.q0 as number)>0&&Number.isFinite(tariff.cap)&&(tariff.cap as number)>=0))||!Number.isFinite(tariff.split)||tariff.split<=0||!Array.isArray(tariff.table)||tariff.table.length===0)return false;
+  if(!tariffTypes.has(tariff.type)||!['split100','income100','exact','quotient','index'].includes(tariff.rounding)||(tariff.rounding==='index'&&!(Number.isInteger(tariff.index)&&(tariff.index as number)>=100))||(tariff.rounding==='quotient'&&!(Number.isFinite(tariff.q0)&&(tariff.q0 as number)>0&&Number.isFinite(tariff.cap)&&(tariff.cap as number)>=0))||!Number.isFinite(tariff.split)||tariff.split<=0||!Array.isArray(tariff.table)||tariff.table.length===0)return false;
   for(const row of tariff.table){
    if(!row||![row.amount,row.percent,row.taxes].every(Number.isFinite)||typeof row.formula!=='string')return false;
    try { formulaValue(row.formula,100000); } catch { return false; }
@@ -107,6 +118,7 @@ export function preciseTariffTax(tariff:PreciseTariff,taxable:number):number {
   return result;
  };
  if(tariff.rounding==='exact')return taxOf(taxable*reciprocal)*split;
+ if(tariff.rounding==='index'){const whole=floor100(taxable),y=deindex(whole,tariff.index??100);return y>0?taxOf(y)/y*whole:0;}
  if(tariff.rounding==='quotient'){const whole=floor100(taxable),cap=tariff.cap??0,q0=tariff.q0??split;const y=floor100(cap>0&&whole>cap?cap/split+(whole-cap)/q0:whole/split);return y>0?taxOf(y)/y*whole:0;}
  const whole=floor100(taxable);
  if(tariff.rounding==='income100')return taxOf(whole*reciprocal)*split;
@@ -125,11 +137,15 @@ export function calculateTax(profile:TaxProfile,g:Gemeinde,income:number,church:
  const precise=profile.precision?.[g[1]];
  // BL reformed church tax is levied on the cantonal taxable income (vendor patch 26): always the exact program.
  const onTaxable=!!precise?.churchTaxable?.includes(church as 'reformed'|'catholic');
- const row=precise&&(onTaxable||(t!==0&&t!==1))?preciseBase(precise,clampedIncome,profile.meta.pensionDefault,profile.meta.budgetDefault):table[i].map((v,k)=>v+(table[i+1][k]-v)*t);
+ const communal=precise?.communal&&g[7]!==undefined?{...precise.communal,index:g[7]}:undefined;
+ const row=precise&&(onTaxable||communal||(t!==0&&t!==1))?preciseBase(precise,clampedIncome,profile.meta.pensionDefault,profile.meta.budgetDefault):table[i].map((v,k)=>v+(table[i+1][k]-v)*t);
  const rate=church==='reformed'?g[4]:church==='catholic'?g[5]:0;
  const round=precise?halfEven:(x:number)=>x;
  const churchRate=precise?Math.round(rate/precise.persons*100)/100*precise.persons:rate;
- const bund=row[0],kanton=Math.max(0,round(row[1]*g[2]/100)-(precise?precise.cantonReduction:0)),gemeinde=round(row[1]*g[3]/100),kirche=round((onTaxable?row[3]:row[1])*churchRate/100),personal=g[6]&&precise?precise.persons*(g[6][0]+(church==='reformed'?g[6][1]:church==='catholic'?g[6][2]:0)):row[2]+(precise&&church!=='none'?precise.personalChurch[church]:0);
+ let kanton=Math.max(0,round(row[1]*g[2]/100)-(precise?precise.cantonReduction:0)),gemeinde=round((communal?preciseTariffTax(communal,row[3]):row[1])*g[3]/100);
+ // VS family rebates and minimum cantonal tax (vendor patch 31).
+ if(precise?.rebate){kanton=Math.max(precise.rebate.minimum,halfEven(kanton-rebateOf(precise.rebate.canton,kanton,precise.kids)));gemeinde=Math.max(0,halfEven(gemeinde-rebateOf(precise.rebate.city,gemeinde,precise.kids)));}
+ const bund=row[0],kirche=round((precise?.churchOnCity?gemeinde:onTaxable?row[3]:row[1])*churchRate/100),personal=g[6]&&precise?precise.persons*(g[6][0]+(church==='reformed'?g[6][1]:church==='catholic'?g[6][2]:0)):row[2]+(precise&&church!=='none'?precise.personalChurch[church]:0);
  // Cantonal tax credit per child (vendor patch 24), not below 0.
  const credit=precise?Math.min(precise.credit,Math.max(0,kanton+gemeinde+kirche+personal)):0;
  const total=bund+kanton+gemeinde+kirche+personal-credit;
@@ -168,7 +184,7 @@ export class TaxRepository {
   return this.once('gemeinden-2026.json',data=>{
    const values=(data as {gemeinden?:Record<string,unknown>})?.gemeinden;
    if(!values||!Object.keys(values).length) throw new Error('Gemeindedaten fehlen.');
-   for(const [id,row] of Object.entries(values)) if(!/^\d+$/.test(id)||!Array.isArray(row)||!((row.length===6||(row.length===7&&Array.isArray(row[6])&&row[6].length===3&&row[6].every((v:unknown)=>Number.isFinite(v)&&(v as number)>=0)))&&typeof row[0]==='string'&&typeof row[1]==='string'&&row.slice(2,6).every(Number.isFinite))) throw new Error('Ungültiges Gemeindeformat.');
+   for(const [id,row] of Object.entries(values)) if(!/^\d+$/.test(id)||!Array.isArray(row)||!((row.length===6||((row.length===7||row.length===8)&&(row[6]===null||(Array.isArray(row[6])&&row[6].length===3&&row[6].every((v:unknown)=>Number.isFinite(v)&&(v as number)>=0)))&&(row.length===7||(Number.isInteger(row[7])&&row[7]>=100))))&&typeof row[0]==='string'&&typeof row[1]==='string'&&row.slice(2,6).every(Number.isFinite))) throw new Error('Ungültiges Gemeindeformat.');
    return values as Record<string,Gemeinde>;
   });
  }

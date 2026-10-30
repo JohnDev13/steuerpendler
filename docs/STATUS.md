@@ -13,8 +13,8 @@ keep it short and update it in the same PR that changes what it describes.
   transfer rules (with their service days) are modelled; a Gemeinde without a row has no connection
   within the selected time in this timetable (access walk to the first stop: 0 min, unmeasured). The old observed-positive export and its probes are removed.
 - Walking from home to the first stop is not measured (0 min); the walk controls are disabled and say so.
-- Withheld ("Daten in Prüfung"): VS, VD, JU for every profile, plus every canton × profile that the broad
-  ESTV sample shows more than 5 % off (`src/withheld.ts`). Outside the three quarantined cantons every sampled
+- Withheld ("Daten in Prüfung"): VD, JU for every profile, plus every canton × profile that the broad
+  ESTV sample shows more than 5 % off (`src/withheld.ts`). Outside the two quarantined cantons every sampled
   profile matches. Every Gemeinde the site can show (726, all within 30 minutes of a workplace) matches ESTV for
   four profiles (single 90k reformed; married with 2 children 150k catholic; single parent with 2 children 60k
   without church; married without children 220k reformed); the remaining profiles are checked at the capitals only.
@@ -25,15 +25,14 @@ keep it short and update it in the same PR that changes what it describes.
 | --- | --- | --- |
 | Tax on-grid, 500 cases vs engine (`src/tax.ts`) | pass, max CHF 0 | `npm run tax:test` |
 | Tax off-grid, 300 cases vs engine | pass, max CHF 0 | `npm run tax:test` |
-| Tax vs official ESTV, 29 frozen cases | 28 pass, 1 fail (VS; ratchet: may only improve) | `npm run tax:official` |
-| Tax vs broad official sample, 650 cases (26 capitals × 6 profiles × 4 incomes + church) | 625 pass; VS 0/25, every other canton 25/25 | `npx tsx --tsconfig scripts/tax/tsconfig.json scripts/tax/sample.ts --fail` |
+| Tax vs official ESTV, 29 frozen cases | 29 pass (ratchet: may only improve) | `npm run tax:official` |
+| Tax vs broad official sample, 650 cases (26 capitals × 6 profiles × 4 incomes + church) | 650 pass (every canton 25/25) | `npx tsx --tsconfig scripts/tax/tsconfig.json scripts/tax/sample.ts --fail` |
 | Tax vs ESTV in every Gemeinde the site can show: 726 reachable Gemeinden × 4 profiles, plus all 104 SO Gemeinden and BL cross-checks (3,286 cases) | 3,286 pass | `npx tsx --tsconfig scripts/tax/tsconfig.json scripts/tax/gemeinden.ts --fail` (`scripts/tax/gemeinden.test.ts`) |
 | Canton × profile more than 5 % off ESTV is withheld | enforced by test (`src/withheld.ts`) | `npm test` |
 | Travel vs SBB, 30 pairs, ± 3 min | pass: 29 within 3 min, Wollerau consistent (SBB 38 min > cap) | `python3 scripts/travel/compare_reference.py --require-complete` |
 | Unit, release, map, content, e2e | pass | see CI |
 
-The green `tax-accuracy` job checks engine parity, not the independently failing ESTV gate;
-`npm run tax:official` still exits 1 (1/29 cases fail: VS). `availability.travel` (official, audited
+The `tax-accuracy` job checks engine parity; `npm run tax:official` passes all 29 frozen cases. `availability.travel` (official, audited
 travel) and the approval flags stay false; the preview uses `availability.matrix`.
 
 Tax tables were refreshed from ESTV on 29 Oct 2026 (new tariffs for JU, NW, SZ, TI, VD, VS; six data corrections
@@ -45,7 +44,8 @@ and corroborating anonymous 2026 ESTV captures (see vendor patch log and `tests/
 Patches 28–30 complete VD against the 2026 ESTV reference (family deduction in CHF 2,000 steps, housing and
 modest-income deductions, the family quotient with its cap, half-up social contributions): all 592 Lausanne
 captures from CHF 40,000, 25/25 sample cases and the frozen case match. VD stays withheld until its other
-Gemeinden are checked. Remaining gaps: VS rebates/coefficient rules, VD Gemeinden beyond Lausanne, and JU parish
+Gemeinden are checked. VS was completed by patch 31 (index, communal tariffs, family rebates, church base; every VS commune checked)
+and left the quarantine. Remaining gaps: VD Gemeinden beyond Lausanne, and JU parish
 rates of merged municipalities (out of scope while unreachable; its deductions match).
 GE left the quarantine once its 12 % cantonal reduction and 1 % home-care levy were modelled.
 
@@ -81,8 +81,7 @@ GE left the quarantine once its 12 % cantonal reduction and 1 % home-care levy w
 
 - Frequency trips and the feed's trip-pair transfer rules are modelled; the matrix is one reference day's
   first-board-to-arrival result, not a service-reliability claim.
-- VS against the ESTV 2026 reference (see Owner decisions); VD Gemeinden beyond Lausanne; broader profile
-  coverage per Gemeinde.
+- VD Gemeinden beyond Lausanne (then lift the VD quarantine); broader profile coverage per Gemeinde.
 - Production host (Cloudflare per SPEC §3), Impressum details (O5), commercial map rights — deferred.
 
 ## History
