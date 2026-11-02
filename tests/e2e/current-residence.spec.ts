@@ -57,3 +57,27 @@ test('equality is zero; a withheld current home never creates fictitious savings
   await expect(page.locator('#ranked-list tr').first().locator('td:nth-child(8)')).toHaveText('—');
   await expect(page.locator('#ranked-list tr')).not.toHaveCount(0);
 });
+
+test('a pending profile change hides old savings until matching profile data loads',async({page})=>{
+  let profileRequested!:()=>void,releaseProfile!:()=>void;
+  const requested=new Promise<void>(resolve=>{profileRequested=resolve;});
+  const gate=new Promise<void>(resolve=>{releaseProfile=resolve;});
+  await page.route('**/data/tax-2026-m-0.json?*',async route=>{profileRequested();await gate;await route.continue();});
+  await page.goto('./');
+  await page.getByRole('button',{name:'aktueller Wohnort abweichend',exact:true}).click();
+  const current=page.getByRole('combobox',{name:'Aktueller Wohnort',exact:true});
+  await current.fill('Genève');await current.press('Enter');
+  const comparison=page.getByRole('region',{name:'Jährlicher Vergleich zum aktuellen Wohnort'});
+  await expect(comparison).toContainText('Jährliches Sparpotenzial');
+
+  await page.getByLabel('Zivilstand',{exact:true}).selectOption('m');
+  await requested;
+  await expect(page.locator('#ranked-list tr')).toHaveCount(0);
+  const selection=page.getByRole('combobox',{name:'Wohngemeinde suchen',exact:true});
+  await selection.fill('Bern');await selection.press('Enter');
+  await expect(page.locator('#detail')).not.toContainText('Jährliches Sparpotenzial');
+  await expect(page.locator('#detail')).not.toContainText('CHF');
+  releaseProfile();
+  await expect(page.locator('#profile-status')).toContainText('Verheiratet');
+  await expect(page.locator('#detail')).toContainText('Jährliches Sparpotenzial');
+});

@@ -23,9 +23,11 @@ keep it short and update it in the same PR that changes what it describes.
 - Walking from home to the first stop is not measured (0 min); the walk controls are disabled and say so.
 - Withheld ("Daten in Prüfung"): VD, JU for every profile, plus every canton × profile that the broad
   ESTV sample shows more than 5 % off (`src/withheld.ts`). Outside the two quarantined cantons every sampled
-  profile matches. Every Gemeinde the site can show (726, all within 30 minutes of a workplace) matches ESTV for
+  profile matches. The 726 Gemeinden with an eligible reference-day route within 30 minutes of a workplace
+  match ESTV for
   four profiles (single 90k reformed; married with 2 children 150k catholic; single parent with 2 children 60k
   without church; married without children 220k reformed); the remaining profiles are checked at the capitals only.
+  This is **not** independent ESTV coverage of every optional current-home baseline among all 2,110 Gemeinden.
 
 ## Gates
 
@@ -35,7 +37,7 @@ keep it short and update it in the same PR that changes what it describes.
 | Tax off-grid, 300 cases vs engine | pass, max CHF 0 | `npm run tax:test` |
 | Tax vs official ESTV, 29 frozen cases | 29/29 numeric within tolerance; **overall exit 1**, comparability and official approval owner-pending | `npm run tax:official` |
 | Tax vs broad official sample, 650 cases (26 capitals × 6 profiles × 4 incomes + church) | 650 pass (every canton 25/25) | `npx tsx --tsconfig scripts/tax/tsconfig.json scripts/tax/sample.ts --fail` |
-| Tax vs ESTV in every Gemeinde the site can show: 726 reachable Gemeinden × 4 profiles, plus all 104 SO Gemeinden and BL cross-checks (3,286 cases) | 3,286 pass | `npx tsx --tsconfig scripts/tax/tsconfig.json scripts/tax/gemeinden.ts --fail` (`scripts/tax/gemeinden.test.ts`) |
+| Tax vs ESTV in 726 reference-day reachable Gemeinden × 4 profiles, plus all 104 SO Gemeinden and BL cross-checks (3,286 cases); **not** all current-home baselines | 3,286 pass | `npx tsx --tsconfig scripts/tax/tsconfig.json scripts/tax/gemeinden.ts --fail` (`scripts/tax/gemeinden.test.ts`) |
 | Canton × profile more than 5 % off ESTV is withheld | enforced by test (`src/withheld.ts`) | `npm test` |
 | Travel vs SBB, 30 pairs, ± 3 min | pass: 29 within 3 min, Wollerau consistent (SBB 38 min > cap) | `python3 scripts/travel/compare_reference.py --require-complete` |
 | Unit, release, map, content, e2e | pass | see CI |

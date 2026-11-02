@@ -37,7 +37,7 @@ app.innerHTML=`<header class="site-header"><a class="brand" href="${sitePath('')
 const $=<T extends HTMLElement=HTMLElement>(id:string)=>document.getElementById(id) as T;
 const state={...initialState},repository=new TaxRepository(fetch,sitePath('data'),DATA_RELEASE.release,DATA_RELEASE.files);
 let gemeinden:Record<string,Gemeinde>={},access:Access={},verifiedAccess:Access={},rows:TravelRows=[],results:RankedResult[]=[],breakdowns:Record<string,TaxBreakdown>={};
-let map:ReturnType<typeof createMap>|null=null,revision=0,travelReady=false;
+let map:ReturnType<typeof createMap>|null=null,revision=0,readyRevision=0,travelReady=false;
 let directOnly=false;
 let matrixMeta:MatrixMeta|null=null,matrixLoad:((workplace:number)=>Promise<MatrixDestination|null>)|null=null,matrixCurrent:MatrixDestination|null=null;
 let workplaces:Record<string,Gemeinde>={};
@@ -56,7 +56,7 @@ function presentList(){
  const more=$('show-all');more.hidden=showAll||ordered.length<=LIST_LIMIT;more.textContent=s.showAll(ordered.length);
 }
 function clearPresentedResults(){
- rows=[];results=[];breakdowns={};access={};
+ readyRevision=0;rows=[];results=[];breakdowns={};access={};comparisonPremiums=null;comparisonReview=new Set();
  renderList($<HTMLTableSectionElement>('ranked-list'),[],null,selectGemeinde);
  $('cheapest').textContent='';$('summary').textContent=s.loading;$('profile-status').textContent=s.loading;
  $('data-status').textContent='';$('data-status').classList.remove('error');$('empty-state').hidden=true;
@@ -81,6 +81,7 @@ function selectGemeinde(id:number){
  if(!gemeinden[id]){$('detail').textContent=s.noData;return;}
  state.selected=id;
  $<HTMLInputElement>('residence').value=gemeinden[id][0];
+ if(readyRevision!==revision){$('detail').textContent=s.loading;map?.update([],state.workplace,id,matrixMeta?withheldFor(state.civ,state.kids):reviewCantons);return;}
  const indicative=!!matrixMeta,activeReview=indicative?withheldFor(state.civ,state.kids):reviewCantons,witnessed=!!rows.find(row=>row[0]===id);
  const notice=s.detailMatrix;
  renderDetail($('detail'),gemeinden[id],id,witnessed||!indicative||matrixMeta?breakdowns[id]??null:null,access[id],results.find(r=>r.id===id),rows.find(r=>r[0]===id)?.[1],travelReady,activeReview.has(gemeinden[id][1]),indicative,notice,matrixMeta?{maxTime:state.maxTime,transfers:transfersFor(matrixCurrent,id,directOnly)}:undefined,premiumDetail(id));
@@ -100,6 +101,7 @@ async function loadRows(workplace:number):Promise<TravelRows>{
 }
 async function update(){
  const current=++revision,snapshot={...state},kkSnapshot={...kk};
+ clearPresentedResults();
  const matrix=!!matrixMeta;
  const indicative=matrix,available=travelReady||indicative,activeReview=indicative?withheldFor(snapshot.civ,snapshot.kids):reviewCantons;
  $('time-value').textContent=`${state.maxTime} ${s.minutes}`;$('walk-value').textContent=`${state.maxWalk} ${s.minutes}`;
@@ -125,6 +127,7 @@ async function update(){
   $('difference-heading').textContent=snapshot.currentResidence===null?s.difference:`${s.differenceCurrentResidence}: ${gemeinden[snapshot.currentResidence]?.[0]??snapshot.currentResidence}`;
   const workplaceName=workplaces[snapshot.workplace]?.[0]??s.workplace;
   const withheld=rows.filter(([id,minutes])=>gemeinden[id]&&activeReview.has(gemeinden[id][1])&&minutes<=snapshot.maxTime).length;
+  readyRevision=current;
   $('summary').textContent=(matrix?s.matrixOverview(results.length,workplaceName,snapshot.maxTime,directOnly):s.reachabilityOverview(available,results.length,workplaceName,snapshot.maxTime,snapshot.maxWalk,Object.keys(gemeinden).length))+(indicative&&withheld?s.withheld(withheld):'');$('cheapest').textContent=results[0]?(indicative?s.cheapestPreview:s.cheapest)(results[0].name,formatCHF(results[0].total),withPremium):'';
   $('result-notice').textContent=matrix?s.matrixNotice(matrixMeta!.serviceDate.split('-').reverse().join('.'),destination?.station??workplaceName):s.unverified;
   $('data-status').classList.remove('error');$('data-status').textContent=!available?s.travelPending:!indicative&&access[snapshot.workplace]==null?s.noStop:'';
@@ -134,7 +137,7 @@ async function update(){
   if(state.selected!==null)selectGemeinde(state.selected);
  }catch(error){if(current===revision){clearPresentedResults();showError(error);}}
 }
-function chooseWorkplace(id:number){if(!workplaces[id])return;state.workplace=id;state.selected=id;showAll=false;clearPresentedResults();void update();}
+function chooseWorkplace(id:number){if(!workplaces[id])return;state.workplace=id;state.selected=id;showAll=false;void update();}
 installMunicipalitySearch($<HTMLInputElement>('workplace'),$('workplace-options'),()=>workplaces,()=>workplaces[state.workplace]?.[0]??'',chooseWorkplace);
 installMunicipalitySearch($<HTMLInputElement>('residence'),$('residence-options'),()=>gemeinden,()=>gemeinden[state.selected??state.workplace]?.[0]??'',selectGemeinde);
 installMunicipalitySearch($<HTMLInputElement>('current-residence'),$('current-residence-options'),()=>gemeinden,()=>gemeinden[state.currentResidence??state.workplace]?.[0]??'',id=>{state.currentResidence=id;$<HTMLInputElement>('current-residence').value=gemeinden[id][0];void update();});
