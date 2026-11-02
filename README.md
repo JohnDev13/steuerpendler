@@ -3,9 +3,12 @@
 **Non-production, non-commercial test preview. Estimates only, no tax advice.**
 
 Pick the town you work in (one of 19 German-speaking cantonal capitals) and how long you are willing to
-commute by public transport; get the Gemeinden within that commute ranked by total yearly income tax
-(Bund + Kanton + Gemeinde + Kirche), on a map and as a list. Static site, all calculations in the browser,
-no backend, cookies or analytics.
+commute by public transport; get the Gemeinden within that commute ranked by estimated annual income tax
+plus selected household basic-health-insurance premium (or tax-only), on a map and as a list. Optionally
+choose your **current residence** among all Swiss Gemeinden to see signed annual cost differences and
+potential savings against that home, even if it has no qualifying commute. These are not net moving savings:
+rent, commuting expenses, subsidies and out-of-pocket health costs are excluded. Static site, all calculations
+in the browser, no backend, cookies or analytics.
 
 - Preview: https://johndev13.github.io/steuerpendler/
 - Current state, gates and open decisions: [`docs/STATUS.md`](docs/STATUS.md)

@@ -52,10 +52,11 @@
     <h1>Methode und Quellen – Entwurf</h1>
     <p class="notice"><strong>Entwicklung, keine freigegebenen Empfehlungen.</strong>
       Die Steuerformel ist im lokalen Code vorhanden; eine vollständige, offiziell geprüfte Datenfreigabe
-      ist damit nicht belegt. Der Testbetrieb zeigt quellengestützte, provisorische Reise-Positivfälle,
-      aber keine vollständige Erreichbarkeit und keine nachweislich global schnellsten Wege.
+      ist damit nicht belegt. Der Testbetrieb verwendet für 19 Arbeitsorte eine Fahrplanmatrix vom 27. Oktober 2026
+      für Wege ab dem ersten Einstieg bis zum Zielbahnhof, aber keinen gemessenen Weg von
+      der Wohnung zur ersten Haltestelle und keine Aussage zur heutigen Zuverlässigkeit.
       Betreiber-, Inhalts-, Rechte- und Produktivfreigabe sind ausstehend.</p>
-    <p><strong>Aktueller Umfang (Build Spec v1.4):</strong> Als Arbeitsorte sind 19 deutschsprachige Kantonshauptorte bzw. Regierungssitze wählbar. Als Wohnorte und Steuerkandidaten bleiben alle 2'110 Schweizer Gemeinden in allen 26 Kantonen erhalten, auch Nicht-Hauptorte und Nachbarkantone. Die Wohngemeindesuche ändert nicht den Arbeitsort. Fahrzeit und maximaler Fussweg zur Ausgangshaltestelle sind getrennte Grenzen, solange «Fussweg zur Fahrzeit zählen» ausgeschaltet ist.</p>
+    <p><strong>Aktueller Umfang (Build Spec v1.4 und §22):</strong> Als Arbeitsorte sind 19 deutschsprachige Kantonshauptorte bzw. Regierungssitze wählbar. Als Wohnorte und Steuerkandidaten bleiben alle 2'110 Schweizer Gemeinden in allen 26 Kantonen erhalten, auch Nicht-Hauptorte und Nachbarkantone. Die Wohngemeindesuche ändert nicht den Arbeitsort. Über «aktueller Wohnort abweichend» lässt sich unabhängig davon eine bisherige Wohngemeinde als Vergleichsbasis wählen, auch wenn sie für den gewählten Arbeitsort nicht in der Fahrzeitgrenze liegt. Die Fusswegregler sind deaktiviert: Der Weg von der Wohnung zur ersten Haltestelle ist nicht gemessen und wird mit 0 Minuten angenommen.</p>
     <p>Die Karte lässt sich mit +/−, Mausrad oder zwei Fingern vergrössern und durch Ziehen verschieben. «Zurücksetzen» zeigt wieder die Schweiz; per Tastatur funktionieren +/− und 0 bzw. Home. Die gewählte Ansicht bleibt beim Auswählen einer Gemeinde erhalten. Diese Bedienfunktionen belegen keine bestandene Steuer- oder Fahrplanprüfung.</p>
     <nav aria-label="Inhaltsverzeichnis">
       <ul>
@@ -123,6 +124,16 @@ total = bund + kanton + gemeinde + kirche + personal</code></pre>
     <p>Innerhalb einer Prämienregion sind die Prämien überall gleich; Unterschiede entstehen zwischen Kantonen und
       Regionen. Die Ableitung (<code>scripts/kk/derive.ts</code>) wird bei jedem Build-Test aus den gespeicherten
       BAG-Rohdaten nachgerechnet und an einer unabhängigen Rechnung geprüft.</p>
+    <h3>Vergleich zum aktuellen Wohnort</h3>
+    <p>Ohne Auswahl eines bisherigen Wohnorts ist die Differenz in der Rangliste die Jahreskostendifferenz
+      zum Arbeitsort. Wird «aktueller Wohnort abweichend» gewählt und eine Gemeinde verbindlich ausgewählt,
+      wird stattdessen ihre Jahreskostensumme aus Steuer und gewählter Krankenkassenprämie als Vergleichsbasis
+      verwendet. Bei «Nicht einrechnen» gilt nur die Steuer. Die Rangfolge und Fahrzeitgrenze ändern sich
+      nicht; die bisherige Gemeinde braucht keine passende Verbindung. Im Detail bedeutet ein positives
+      Sparpotenzial tiefere geschätzte Jahreskosten am Kandidaten, ein negatives höhere. 2027er Prämien
+      ändern das Steuerjahr 2026 nicht. Bei zurückgehaltenen Steuerdaten oder fehlender gewählter Prämie
+      wird kein Sparbetrag berechnet. Es handelt sich nicht um einen Netto-Umzugsgewinn: Miete,
+      Umzugskosten, Prämienverbilligung, weitere Gesundheits- und Pendelkosten sind nicht einbezogen.</p>
     <h2 id="reisen">Pendelzeiten: Fahrplanberechnung für 19 Arbeitsorte</h2>
     <p>Die Fahrzeiten stammen aus dem offiziellen Schweizer GTFS-Fahrplan (opentransportdata.swiss,
       Ausgabe vom 28. Oktober 2026) für Dienstag, <time datetime="2026-10-27">27. Oktober 2026</time>.
@@ -153,9 +164,11 @@ total = bund + kanton + gemeinde + kirche + personal</code></pre>
       Vergleich bei jeder Änderung.</p>
     <h2 id="grenzen">Daten in Prüfung und Grenzen</h2>
     <p>Direkter Vergleich mit dem offiziellen ESTV-Steuerrechner (29 eingefrorene Fälle, alle 26 Kantone):
-      die ausgelieferte Berechnung besteht <strong>29 von 29</strong> Fällen; <strong>0 von 29</strong>
+      die ausgelieferte Berechnung trifft <strong>29 von 29</strong> numerisch; <strong>0 von 29</strong>
       verfehlen die Zielgenauigkeit (pro Fall maximal CHF 5 oder 0,1 % des offiziellen Betrags).
-      Die Steuertabellen wurden am 29. Oktober 2026 bei der ESTV neu bezogen.</p>
+      Der gesamte Befehl <code>npm run tax:official</code> beendet sich dennoch mit Fehlerstatus 1:
+      Vergleichbarkeit und offizielle Freigabe stehen durch den Betreiber noch aus. Die Steuertabellen
+      wurden am 29. Oktober 2026 bei der ESTV neu bezogen.</p>
     <p>Eine breitere Stichprobe von 650 offiziellen ESTV-Berechnungen (alle 26 Hauptorte; ledig ohne und
       mit Kindern, verheiratet mit 0 bis 3 Kindern; CHF 50'000 bis 300'000) dient als Prüfstein. Kantonale
       Abzüge für bescheidene Einkommen, einkommensabhängige Verheirateten- und Alleinerziehendenabzüge,
@@ -166,7 +179,7 @@ total = bund + kanton + gemeinde + kirche + personal</code></pre>
       innert 30 Minuten von einem Arbeitsort erreichbar sind, mit vier Profilen (ledig, CHF 90'000, reformiert;
       verheiratet mit 2 Kindern, CHF 150'000, katholisch; alleinerziehend mit 2 Kindern, CHF 60'000, ohne Kirche;
       verheiratet ohne Kinder, CHF 220'000, reformiert) bei der ESTV nachgerechnet: alle 3'286 Fälle stimmen.
-      Diese Schätzungen sind nicht numerisch freigegeben.</p>
+      Die numerische Übereinstimmung ist keine offizielle Freigabe dieser Schätzungen.</p>
     <p>Gesperrt («Daten in Prüfung»), also ohne Steuertotal, Aufschlüsselung, Rang, günstigste
       Gemeinde, Farbgruppe und Differenzen:</p>
     <ul>
@@ -264,8 +277,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</pre>
       sind die jeweils geltenden Bedingungen und Hinweise versionsgenau zu sichern; die Rechte- und Inhaltsfreigabe
       durch die verantwortliche Person und gegebenenfalls fachkundige Prüfung bleiben ausstehend.</p>
     <h2 id="stand">Versionen, Herkunft und Dokumentationsdrift</h2>
-    <p>Aktualisiert am <time datetime="2026-10-27">27. Oktober 2026 (UTC)</time> nach
-      <code>SPEC.md</code> v1.4 (§§6.5a, 8, 18–21) und
+    <p>Produktstand nach PR #85 (<code>ba2edc6</code>), Textabgleich am
+      <time datetime="2026-11-02">2. November 2026 (UTC)</time> nach
+      <code>SPEC.md</code> v1.4 (§§6.5a, 8, 18–22) und
       <code>docs/spec-amendments-v1.4.md</code>. Frühere eingefrorene Fassungen
       bleiben getrennt nachvollziehbar. Der ursprüngliche Implementierungsstand und Prototyp
       sind nicht wiederhergestellt.</p>
