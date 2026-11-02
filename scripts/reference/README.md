@@ -15,12 +15,12 @@ Live collection uses `python3 scripts/reference/estv_collector.py`. It caches im
 
 Each operation has exact UTF-8 request bytes, original response bytes, URL, UTC time, HTTP status, content type and SHA-256 sidecars. Response headers are not persisted; no authentication, outgoing cookies, tokens or browser profiles are used. Requests are serial, at least 0.4 seconds apart, timeout 25 seconds, maximum response 16 MB, with no retries. Redirects are blocked. HTTP barriers, non-JSON responses, diagnostics and mismatched input/location/arithmetic fail closed. Source-year availability and API version are retained separately: an API version's build date is not the tax year. `validate_catalogue` additionally checks all 87 case operations, all 29 CSV rows, source/year/version/replay sidecars, sanitized metadata and every entry in `tests/reference/SHA256SUMS`. The readable evidence report is `docs/reference/estv-2026-capture.md`.
 
-## Frozen input contract
+## Frozen input contract (capture-time status; later owner decision below)
 
 - Year 2026, gross **employment** earnings, primary age 35, net wealth 0.
-- Relationship 1=single, 2=married. Partner earns 0; for married households partner age 35 and the same confession as primary are explicit **owner-pending proposals**. No partner fields for singles.
+- Relationship 1=single, 2=married. Partner earns 0; for married households partner age 35 and the same confession as primary were **owner-pending at capture time**; later accepted for the frozen 29 cases only. No partner fields for singles.
 - Church uses the exact §11.1 value: 4=none, 1=reformed, 2=Roman Catholic. Married partners have the same selected church, not an invented church exemption.
-- Each child is `{Age:10}`. Age 10 for every child, dependent-child treatment and the resulting deduction comparability remain **owner pending**, not approved.
+- Each child is `{Age:10}`. Child age 10 and the native-default deduction comparison were **owner-pending at capture time**; later accepted for the frozen 29 cases only, not for every possible household.
 - RevenueType1=1 is EMPLOYED and receives the unchanged gross income. The client maps BRUTTO to this enum; NETTO maps to SELF_EMPLOYED=2, **not employee take-home pay**. This collector never changes income basis to improve agreement.
 - `Budget:[]` means ESTV native default deductions, **not zero deductions**. Per-case `*-budget.response.json` captures actual native budget entries. No custom commuting, meals, pillar 3a, childcare, property or interest overrides are selected. Gross-to-net contributions and all federal/cantonal deduction lines are retained in the raw detailed-tax response.
 - Municipality lookup is matched by the exact requested BFS and canton, preferring the exact city name then lowest official TaxLocationID. No BFS-to-TaxLocationID arithmetic is assumed. Tax results must return the requested BFS/canton.
@@ -35,6 +35,6 @@ These are integration diagnostics, not a complete cause attribution or a tax-eng
 
 ## Status and boundaries
 
-The CSV leaves engine/frontend values and release identity **empty**. All official-gate fields remain **pending**. Capture verifies source provenance, exact case coverage and official response arithmetic, not shipped frontend accuracy, owner comparability, tax-engine parity, CI, quarantine status, redistribution rights or release approval. The parent owns §7.1/T9 direct frontend comparisons and any SPEC/config/launch changes. No tax implementation, release config or approval document is edited by this collector.
+The CSV leaves engine/frontend values and release identity **empty**. Its capture-time official-gate fields remain **pending**. Capture verifies source provenance, exact case coverage and official response arithmetic, not shipped frontend accuracy, owner comparability, tax-engine parity, CI, quarantine status, redistribution rights or release approval. The parent owns §7.1/T9 direct frontend comparisons and any SPEC/config/launch changes. No tax implementation, release config or approval document is edited by this collector. A separate **2 Nov 2026** owner decision later accepted the bounded 29-case comparator after its direct numeric comparison; see `docs/tax/owner-comparator-acceptance-2026-11-02.json` and `docs/STATUS.md`. That decision does not alter these frozen capture records or authorize production.
 
 The older genuine Zürich response is retained only as a replay baseline. A new independent anonymous request must match its exact raw digest before scaling. Old nineteen-capital results are not reused as mixed-profile coverage. `verification.json` records every live request and all captured case totals; `SHA256SUMS` binds the committed evidence files.

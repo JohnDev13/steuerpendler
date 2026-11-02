@@ -52,7 +52,7 @@ npm ci
 npm run dev                 # local site
 npm test                    # unit tests (includes tax regression vs engine and ESTV ratchet)
 npm run tax:test            # SPEC 7.1 numeric gates
-npm run tax:official        # 29 official ESTV cases
+npm run tax:official        # owner-accepted 29-case comparison against ESTV captures (not ESTV certification)
 python3 -m unittest discover -s tests/travel
 npx playwright install --with-deps chromium && npm run test:e2e
 PAGES_BASE=/steuerpendler/ npm run build
