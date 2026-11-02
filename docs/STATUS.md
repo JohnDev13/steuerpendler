@@ -35,17 +35,19 @@ keep it short and update it in the same PR that changes what it describes.
 | --- | --- | --- |
 | Tax on-grid, 500 cases vs engine (`src/tax.ts`) | pass, max CHF 0 | `npm run tax:test` |
 | Tax off-grid, 300 cases vs engine | pass, max CHF 0 | `npm run tax:test` |
-| Tax vs official ESTV, 29 frozen cases | 29/29 numeric within tolerance; **overall exit 1**, comparability and official approval owner-pending | `npm run tax:official` |
+| Tax vs ESTV, 29 frozen cases | 29/29 numeric within tolerance; **overall exit 0**, bounded comparator accepted by owner on 2 Nov 2026; not ESTV endorsement or production approval | `npm run tax:official` |
 | Tax vs broad official sample, 650 cases (26 capitals × 6 profiles × 4 incomes + church) | 650 pass (every canton 25/25) | `npx tsx --tsconfig scripts/tax/tsconfig.json scripts/tax/sample.ts --fail` |
 | Tax vs ESTV in 726 reference-day reachable Gemeinden × 4 profiles, plus all 104 SO Gemeinden and BL cross-checks (3,286 cases); **not** all current-home baselines | 3,286 pass | `npx tsx --tsconfig scripts/tax/tsconfig.json scripts/tax/gemeinden.ts --fail` (`scripts/tax/gemeinden.test.ts`) |
 | Canton × profile more than 5 % off ESTV is withheld | enforced by test (`src/withheld.ts`) | `npm test` |
 | Travel vs SBB, 30 pairs, ± 3 min | pass: 29 within 3 min, Wollerau consistent (SBB 38 min > cap) | `python3 scripts/travel/compare_reference.py --require-complete` |
 | Unit, release, map, content, e2e | pass | see CI |
 
-The `tax-accuracy` job checks engine parity; `npm run tax:official` has zero numeric failures but exits 1
-(`comparability=owner_pending`, `officialApproval=pending`, `passed=false`). Numeric agreement is **not**
-complete official acceptance. `availability.travel` (official, audited travel) and all five approval flags
-stay false; the preview uses `availability.matrix`.
+The `tax-accuracy` job checks engine parity; `npm run tax:official` additionally checks the frozen 29-case
+ESTV comparator. After the owner's 2 Nov 2026 decision it exits 0 **only with** intact accepted evidence,
+exact coverage and zero numeric failures. The capture-time `owner_pending` values remain frozen; the later
+owner acceptance is a separately versioned, evidence-bound decision. This does **not** claim ESTV certification,
+approval of every tax profile or current-home baseline, or release approval. `availability.travel` (official,
+audited travel) and all five release approval flags stay false; the preview uses `availability.matrix`.
 
 Tax tables were refreshed from ESTV on 29 Oct 2026 (new tariffs for JU, NW, SZ, TI, VD, VS; six data corrections
 became unnecessary). The 650-case sample exposed low-income deductions, cantonal married and single-parent
@@ -65,7 +67,7 @@ GE left the quarantine once its 12 % cantonal reduction and 1 % home-care levy w
 
 - `.github/workflows/ci.yml` on every PR and push to main: `web` (types, unit, release, map, build, manifest
   current, content, e2e), `travel` (Python), `tax-accuracy` (engine parity only). All three are required on
-  `main` with strict checks and admin enforcement; this does not make `tax:official` green.
+  `main` with strict checks and admin enforcement; `tax:official` is a separate bounded, owner-accepted gate.
 - `.github/workflows/estv-refresh.yml` (manual, on a `claude/estv-refresh*` branch): refreshes the ESTV tables,
   re-asks ESTV for the 29 cases and captures a new broad sample.
 - `.github/workflows/travel-evidence.yml` (manual): downloads the newest GTFS feed, pins its hash, builds the
@@ -81,9 +83,13 @@ GE left the quarantine once its 12 % cantonal reduction and 1 % home-care levy w
   official ESTV tax calculator (2026) is the reference. Rules are modelled from captured ESTV results
   (`tests/reference/estv-2026-probes/`) and must reproduce them within max(CHF 5, 0.1 %); no residual fitting
   of totals. Earlier-year documents may explain a mechanism but do not set 2026 amounts.
+- **Bounded ESTV comparator (2 Nov 2026):** the owner accepted comparability of the 29 frozen cases under
+  the captured child-age, partner and native-default budget assumptions. The decision is bound to the frozen
+  evidence and evaluated artifacts (`docs/tax/owner-comparator-acceptance-2026-11-02.json`). This changes the comparator's
+  pass/exit contract, not its tolerance or scope, and does not grant ESTV endorsement or a release approval.
 - **VD and VS (decision of 30 Oct, outcome as of 2 Nov):** both now match the frozen numeric reference;
   VS has left quarantine after checks across its communes. VD remains withheld pending checks of Gemeinden
-  beyond Lausanne; matching the frozen reference alone never grants official approval.
+  beyond Lausanne; passing the 29-case comparator alone never unwithholds VD.
 - **JU:** out of scope while no JU Gemeinde is reachable within the 30-minute cap. JU stays quarantined
   (fail-closed); the parish-rate representation is only needed if the cap or workplaces change.
 - **Walking from home to the first stop:** not measured, by decision. The site keeps stating that the

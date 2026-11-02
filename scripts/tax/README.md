@@ -9,7 +9,7 @@ node_modules/.bin/tsx --tsconfig scripts/tax/tsconfig.json scripts/tax/selftest.
 node_modules/.bin/tsx --tsconfig scripts/tax/tsconfig.json scripts/tax/reference.ts --report docs/tax/reference-report.json
 ```
 
-Both comparison CLIs accept `--data directory` and `--report file`, print JSON, save the report when requested, and exit 1 on an accuracy failure or execution error. Selftest currently **exits 1**; do not hide it with a success fallback. Reference's pass means table reconstruction only, never official acceptance.
+Both comparison CLIs accept `--data directory` and `--report file`, print JSON, save the report when requested, and exit 1 on an accuracy failure or execution error. At the historical reconstruction milestone below, selftest **exited 1**; do not hide a failure with a success fallback. The current integrated `npm run tax:test` passes 500 on-grid and 300 off-grid cases; `npm run tax:official` separately checks the 29-case owner-accepted, evidence-bound ESTV comparator (2 Nov 2026). Neither is ESTV certification or production approval. Reference's pass means table reconstruction only, never that comparator's acceptance; see `docs/STATUS.md` for the current release state.
 
 ## Inputs and assumptions
 

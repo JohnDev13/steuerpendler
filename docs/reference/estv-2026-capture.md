@@ -46,3 +46,14 @@ A separate anonymous replay at `2026-10-17T12:09:01.924189+00:00` used the exact
 - Official frontend comparison: `pending_not_executed`.
 - Input/deduction comparability: `owner_pending`.
 - Engine/frontend/release fields remain empty; no local-engine output is labelled official.
+
+## Later owner decision (2 November 2026; not a rewrite of the capture)
+
+The capture and CSV above record their **17 October 2026** state and retain their original pending fields and
+checksums. Following a 29/29 numeric comparison of the shipped tax calculation, the project owner said:
+“Then change the contract as for me it Passes”. The separate dated decision in
+`docs/tax/owner-comparator-acceptance-2026-11-02.json` accepts the child-age, married-partner and ESTV native-default-budget
+mapping for this **29-case 2026 comparator only**, bound to the frozen evidence and evaluated tax artifacts.
+`npm run tax:official` can pass without changing capture-time provenance or numerical tolerances. Neither the
+owner nor this project can issue ESTV certification by passing its own comparator. The decision does not lift
+VD/JU withholding or the independent production-release gates; see `docs/STATUS.md`.
