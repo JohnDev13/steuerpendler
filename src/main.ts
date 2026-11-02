@@ -8,17 +8,19 @@ import { sitePath } from './paths';
 import { withheldCantons } from './policy';
 import { filterAndRank, type Access, type TravelRows, type RankedResult } from './filter';
 import { DATA_RELEASE, QUARANTINED_CANTONS, COLOURS, withheldFor } from './config';
-import { formatCHF } from './format';
+import { formatCHF, formatDelta } from './format';
 import { createMap } from './map';
 import { renderList } from './list';
 import { renderDetail } from './detail';
 import { KK_DEDUCTIBLES, KK_YEARS, premiumFor, validateKk, type KkData, type KkMode, type KkYear } from './kk';
+import { compareAnnualCosts } from './current-residence';
 import { adaptMatrix, createMatrixLoader, loadMatrixMeta, transfersFor, type MatrixDestination, type MatrixMeta } from './matrix-routes';
 const app=document.querySelector<HTMLDivElement>('#app')!;
 app.innerHTML=`<header class="site-header"><a class="brand" href="${sitePath('')}">↗ ${s.appName}</a><button id="theme" type="button" aria-label="${s.theme}" aria-pressed="false">◐</button></header>
 <section class="hero"><p class="eyebrow">${s.eyebrow}</p><h1>${s.appName}</h1><p class="hero-copy">${s.intro}</p><p class="release-status" data-testid="release-status">${s.preview}</p></section>
 <main class="workspace"><aside class="controls panel"><h2>${s.filters}</h2>
 <div class="field search-field"><label for="workplace">${s.workplace}</label><input id="workplace" value="Aarau" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="workplace-options" autocomplete="off"><div id="workplace-options" role="listbox" hidden></div><small>${s.workplaceHint}</small></div>
+<button id="current-residence-toggle" class="secondary-action" type="button" aria-expanded="false" aria-controls="current-residence-field">${s.currentResidenceToggle}</button><div id="current-residence-field" class="field search-field current-residence-field" hidden><label for="current-residence">${s.currentResidence}</label><input id="current-residence" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="current-residence-options" autocomplete="off"><div id="current-residence-options" role="listbox" hidden></div><small>${s.currentResidenceHint}</small><button id="current-residence-reset" class="text-action" type="button">${s.currentResidenceReset}</button></div>
 <div class="field"><div class="label-row"><label for="max-time">${s.maxTime}</label><output id="time-value">25 ${s.minutes}</output></div><input id="max-time" type="range" min="5" max="30" step="1" value="25"></div>
 <div class="field"><div class="label-row"><label for="max-walk">${s.maxWalk}</label><output id="walk-value">10 ${s.minutes}</output></div><input id="max-walk" type="range" min="0" max="15" step="1" value="10"></div>
 <label class="toggle"><input id="count-walk" type="checkbox"><span>${s.countWalk}</span></label><small id="walk-hint" class="field-hint" hidden>${s.walkUnmeasured}</small><label class="toggle"><input id="direct-only" type="checkbox"><span>${s.directOnly}</span></label><hr>
@@ -29,7 +31,7 @@ app.innerHTML=`<header class="site-header"><a class="brand" href="${sitePath('')
 <div class="paired"><div class="field"><label for="kk-year">${s.kkYear}</label><select id="kk-year">${KK_YEARS.map(y=>`<option>${y}</option>`).join('')}</select></div><div class="field"><label for="deductible">${s.deductible}</label><select id="deductible">${KK_DEDUCTIBLES.map(d=>`<option value="${d}">${formatCHF(d)}</option>`).join('')}</select></div></div></aside>
 <section class="results"><div class="summary"><p class="eyebrow">${s.results}</p><h2 id="summary" aria-live="polite">${s.loading}</h2><p id="cheapest"></p></div><p class="assumptions">${s.assumptions} <strong>${s.disclaimer}</strong></p><p id="result-notice" class="notice">${s.unverified}</p><p id="profile-status" class="assumptions" aria-live="polite"></p><p id="data-status" class="data-status" role="status" aria-live="polite"></p>
 <section class="map-panel panel" aria-label="${s.map}"><div class="field search-field"><label for="residence">${s.residenceSearch}</label><input id="residence" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="residence-options" autocomplete="off"><div id="residence-options" role="listbox" hidden></div><small>${s.residenceHint}</small></div><div id="map"><p>${s.mapPending}</p></div><div class="legend"><span>${s.cheap}</span>${COLOURS.map(c=>`<i style="background:${c}"></i>`).join('')}<span>${s.expensive}</span><span class="legend-muted">◻ ${s.noData}</span></div><small>${s.mapHelp}</small></section>
-<section class="list-panel panel" aria-label="${s.results}"><div class="list-tools"><label for="sort">${s.sortBy}</label><select id="sort"><option value="tax">${s.sortTax}</option><option value="time">${s.sortTime}</option></select></div><table><thead><tr>${[s.rank,s.municipality,s.canton,s.travel,s.walk,s.tax,s.premium,s.difference].map(label=>`<th scope="col">${label}</th>`).join('')}</tr></thead><tbody id="ranked-list"></tbody></table><button id="show-all" type="button" class="show-all" hidden></button><p id="empty-state" hidden>${s.empty}</p></section>
+<section class="list-panel panel" aria-label="${s.results}"><div class="list-tools"><label for="sort">${s.sortBy}</label><select id="sort"><option value="tax">${s.sortTax}</option><option value="time">${s.sortTime}</option></select></div><table><thead><tr>${[s.rank,s.municipality,s.canton,s.travel,s.walk,s.tax,s.premium].map(label=>`<th scope="col">${label}</th>`).join('')}<th id="difference-heading" scope="col">${s.difference}</th></tr></thead><tbody id="ranked-list"></tbody></table><button id="show-all" type="button" class="show-all" hidden></button><p id="empty-state" hidden>${s.empty}</p></section>
 <section id="detail" class="detail-panel panel" aria-label="${s.detail}" tabindex="-1"><p>${s.selectDetail}</p></section></section></main>
 <footer><p>${s.credits}</p><p>${s.mapSource} — <a href="https://data.geo.admin.ch/api/stac/v0.9/collections/ch.bfs.historisierte-administrative_grenzen_g1">${s.mapSourceTitle}</a>; ${s.mapAdaptation} <a href="https://opendata.swiss/en/terms-of-use#terms_by_ask">${s.mapTerms}</a> · <a href="${sitePath('credits/NOTICE.txt')}">${s.notices}</a></p><p>${s.licencePending}</p><nav><a href="${sitePath('')}pages/impressum.html">${s.impressum}</a><a href="${sitePath('')}pages/datenschutz.html">${s.privacy}</a><a href="${sitePath('')}pages/methode.html">${s.method}</a></nav></footer>`;
 const $=<T extends HTMLElement=HTMLElement>(id:string)=>document.getElementById(id) as T;
@@ -40,6 +42,7 @@ let directOnly=false;
 let matrixMeta:MatrixMeta|null=null,matrixLoad:((workplace:number)=>Promise<MatrixDestination|null>)|null=null,matrixCurrent:MatrixDestination|null=null;
 let workplaces:Record<string,Gemeinde>={};
 let kkData:KkData|null=null;
+let comparisonPremiums:Record<string,number|undefined>|null=null,comparisonReview:ReadonlySet<string>=new Set();
 const kk:{mode:KkMode;deductible:number;year:KkYear}={mode:'median',deductible:300,year:'2026'};
 const premiumOf=(id:number|string)=>premiumFor(kkData,kk.year,id,state.civ,state.kids,kk.deductible,kk.mode);
 let reviewCantons:ReadonlySet<string>=QUARANTINED_CANTONS;
@@ -62,6 +65,18 @@ function clearPresentedResults(){
 }
 function showError(error:unknown){$('summary').textContent=s.loadFailureSummary;$('data-status').textContent=s.loadError(error instanceof Error?error.message:String(error));$('data-status').classList.add('error');}
 function premiumDetail(id:number){const amount=premiumOf(id);return amount===undefined||kk.mode==='none'?undefined:{amount,label:s.premiumLabel(kk.mode,formatCHF(kk.deductible),kk.year)};}
+function appendCurrentResidenceComparison(candidateId:number){
+ if(state.currentResidence===null)return;
+ const comparison=compareAnnualCosts(state.currentResidence,candidateId,gemeinden,Object.fromEntries(Object.entries(breakdowns).map(([id,tax])=>[id,tax.total])),comparisonPremiums,comparisonReview);
+ const section=document.createElement('section');section.className='current-residence-comparison';section.setAttribute('aria-label',s.currentResidenceComparison);section.setAttribute('aria-live','polite');
+ const heading=document.createElement('h3');heading.textContent=s.currentResidenceComparison;section.append(heading);
+ const baseline=document.createElement('p'),name=gemeinden[state.currentResidence]?.[0]??String(state.currentResidence);
+ const label=document.createElement('strong');label.textContent=`${s.currentResidenceBaseline}:`;
+ baseline.append(label,` ${name}${comparison.baselineCost===null?'':` · ${formatCHF(comparison.baselineCost)}`}`);section.append(baseline);
+ if(comparison.unavailable){const status=document.createElement('p');status.className='comparison-unavailable';status.textContent=comparison.unavailable==='withheld'?s.currentResidenceUnavailableWithheld:comparison.unavailable==='premium'?s.currentResidenceUnavailablePremium:s.currentResidenceUnavailable;section.append(status);}
+ else {const dl=document.createElement('dl');for(const [label,value] of [[s.candidateDelta,comparison.candidateDelta!],[s.annualSavings,comparison.savings!]] as const){const dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=label;dd.textContent=formatDelta(value)+(label===s.annualSavings?` · ${value>0?s.savings:value<0?s.extraCost:s.noDifference}`:'');dl.append(dt,dd);}section.append(dl);}
+ const disclaimer=document.createElement('p');disclaimer.className='comparison-disclaimer';disclaimer.textContent=s.currentResidenceDisclaimer;section.append(disclaimer);$('detail').append(section);
+}
 function selectGemeinde(id:number){
  if(!gemeinden[id]){$('detail').textContent=s.noData;return;}
  state.selected=id;
@@ -69,6 +84,7 @@ function selectGemeinde(id:number){
  const indicative=!!matrixMeta,activeReview=indicative?withheldFor(state.civ,state.kids):reviewCantons,witnessed=!!rows.find(row=>row[0]===id);
  const notice=s.detailMatrix;
  renderDetail($('detail'),gemeinden[id],id,witnessed||!indicative||matrixMeta?breakdowns[id]??null:null,access[id],results.find(r=>r.id===id),rows.find(r=>r[0]===id)?.[1],travelReady,activeReview.has(gemeinden[id][1]),indicative,notice,matrixMeta?{maxTime:state.maxTime,transfers:transfersFor(matrixCurrent,id,directOnly)}:undefined,premiumDetail(id));
+ appendCurrentResidenceComparison(id);
  map?.update(results,state.workplace,state.selected,activeReview);
  for(const row of $('ranked-list').querySelectorAll('tr'))row.classList.toggle('selected',row.getAttribute('data-bfs')===String(id));
 }
@@ -104,6 +120,9 @@ async function update(){
   access=adapted?adapted.access:verifiedAccess;const withPremium=!!kkData&&kkSnapshot.mode!=='none';
   const premiums=withPremium?Object.fromEntries(Object.keys(totals).map(id=>[id,premiumFor(kkData,kkSnapshot.year,id,snapshot.civ,snapshot.kids,kkSnapshot.deductible,kkSnapshot.mode)])):null;
   results=filterAndRank(gemeinden,access,rows,snapshot,totals,activeReview,premiums);
+  comparisonPremiums=premiums;comparisonReview=activeReview;
+  if(snapshot.currentResidence!==null)results=results.map(result=>({...result,delta:compareAnnualCosts(snapshot.currentResidence!,result.id,gemeinden,totals,premiums,activeReview).candidateDelta}));
+  $('difference-heading').textContent=snapshot.currentResidence===null?s.difference:`${s.differenceCurrentResidence}: ${gemeinden[snapshot.currentResidence]?.[0]??snapshot.currentResidence}`;
   const workplaceName=workplaces[snapshot.workplace]?.[0]??s.workplace;
   const withheld=rows.filter(([id,minutes])=>gemeinden[id]&&activeReview.has(gemeinden[id][1])&&minutes<=snapshot.maxTime).length;
   $('summary').textContent=(matrix?s.matrixOverview(results.length,workplaceName,snapshot.maxTime,directOnly):s.reachabilityOverview(available,results.length,workplaceName,snapshot.maxTime,snapshot.maxWalk,Object.keys(gemeinden).length))+(indicative&&withheld?s.withheld(withheld):'');$('cheapest').textContent=results[0]?(indicative?s.cheapestPreview:s.cheapest)(results[0].name,formatCHF(results[0].total),withPremium):'';
@@ -118,6 +137,9 @@ async function update(){
 function chooseWorkplace(id:number){if(!workplaces[id])return;state.workplace=id;state.selected=id;showAll=false;clearPresentedResults();void update();}
 installMunicipalitySearch($<HTMLInputElement>('workplace'),$('workplace-options'),()=>workplaces,()=>workplaces[state.workplace]?.[0]??'',chooseWorkplace);
 installMunicipalitySearch($<HTMLInputElement>('residence'),$('residence-options'),()=>gemeinden,()=>gemeinden[state.selected??state.workplace]?.[0]??'',selectGemeinde);
+installMunicipalitySearch($<HTMLInputElement>('current-residence'),$('current-residence-options'),()=>gemeinden,()=>gemeinden[state.currentResidence??state.workplace]?.[0]??'',id=>{state.currentResidence=id;$<HTMLInputElement>('current-residence').value=gemeinden[id][0];void update();});
+$('current-residence-toggle').addEventListener('click',()=>{const field=$('current-residence-field'),open=field.hidden;field.hidden=!open;$('current-residence-toggle').setAttribute('aria-expanded',String(open));if(open)$<HTMLInputElement>('current-residence').focus();});
+$('current-residence-reset').addEventListener('click',()=>{state.currentResidence=null;$<HTMLInputElement>('current-residence').value=gemeinden[state.workplace]?.[0]??'';$('difference-heading').textContent=s.difference;void update();});
 for(const [id,key] of [['max-time','maxTime'],['max-walk','maxWalk']] as const)$<HTMLInputElement>(id).addEventListener('input',e=>{state[key]=Number((e.target as HTMLInputElement).value);void update();});
 $<HTMLSelectElement>('sort').addEventListener('change',e=>{sortBy=(e.target as HTMLSelectElement).value as 'tax'|'time';presentList();});
 $('show-all').addEventListener('click',()=>{showAll=true;presentList();});

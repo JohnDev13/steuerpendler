@@ -5,8 +5,13 @@ keep it short and update it in the same PR that changes what it describes.
 
 ## What the preview shows
 
-- All 19 workplaces, all 2,110 Gemeinden as homes. Tax-first ranking of Gemeinden with a public-transport
-  connection to the workplace, with indicative tax totals and the difference to the workplace.
+- All 19 workplaces, all 2,110 Gemeinden as homes. Indicative annual **2026 tax plus selected household
+  basic-health-insurance premium** ranks Gemeinden with a public-transport connection to the workplace;
+  tax-only is available. The difference defaults to the workplace cost. An optional "aktueller Wohnort
+  abweichend" control compares candidates with any explicitly selected Swiss Gemeinde, even when that
+  current home has no qualifying route. It changes neither commute eligibility nor ranks. The detail
+  shows the current annual cost and signed yearly saving (or higher cost); withheld tax or a missing
+  selected premium never produces a fabricated comparison.
 - Travel: full timetable matrix (`site/data/travel/matrix/`, SPEC §6.5c) from the official GTFS feed
   `gtfs_fp2026_20261028.zip` (SHA-256 `f4d87e84…a782`) for Tuesday 27 Oct 2026, all 19 workplaces,
   any number of changes, up to 30 minutes. Frequency-based trips (cable cars, funiculars, boats) and the feed's trip-pair
@@ -28,19 +33,21 @@ keep it short and update it in the same PR that changes what it describes.
 | --- | --- | --- |
 | Tax on-grid, 500 cases vs engine (`src/tax.ts`) | pass, max CHF 0 | `npm run tax:test` |
 | Tax off-grid, 300 cases vs engine | pass, max CHF 0 | `npm run tax:test` |
-| Tax vs official ESTV, 29 frozen cases | 29 pass (ratchet: may only improve) | `npm run tax:official` |
+| Tax vs official ESTV, 29 frozen cases | 29/29 numeric within tolerance; **overall exit 1**, comparability and official approval owner-pending | `npm run tax:official` |
 | Tax vs broad official sample, 650 cases (26 capitals × 6 profiles × 4 incomes + church) | 650 pass (every canton 25/25) | `npx tsx --tsconfig scripts/tax/tsconfig.json scripts/tax/sample.ts --fail` |
 | Tax vs ESTV in every Gemeinde the site can show: 726 reachable Gemeinden × 4 profiles, plus all 104 SO Gemeinden and BL cross-checks (3,286 cases) | 3,286 pass | `npx tsx --tsconfig scripts/tax/tsconfig.json scripts/tax/gemeinden.ts --fail` (`scripts/tax/gemeinden.test.ts`) |
 | Canton × profile more than 5 % off ESTV is withheld | enforced by test (`src/withheld.ts`) | `npm test` |
 | Travel vs SBB, 30 pairs, ± 3 min | pass: 29 within 3 min, Wollerau consistent (SBB 38 min > cap) | `python3 scripts/travel/compare_reference.py --require-complete` |
 | Unit, release, map, content, e2e | pass | see CI |
 
-The `tax-accuracy` job checks engine parity; `npm run tax:official` passes all 29 frozen cases. `availability.travel` (official, audited
-travel) and the approval flags stay false; the preview uses `availability.matrix`.
+The `tax-accuracy` job checks engine parity; `npm run tax:official` has zero numeric failures but exits 1
+(`comparability=owner_pending`, `officialApproval=pending`, `passed=false`). Numeric agreement is **not**
+complete official acceptance. `availability.travel` (official, audited travel) and all five approval flags
+stay false; the preview uses `availability.matrix`.
 
 Tax tables were refreshed from ESTV on 29 Oct 2026 (new tariffs for JU, NW, SZ, TI, VD, VS; six data corrections
 became unnecessary). The 650-case sample exposed low-income deductions, cantonal married and single-parent
-deduction rules, tax reductions per child (e.g. BL), and the still-unresolved VD family quotient. Supported rules were
+deduction rules, tax reductions per child (e.g. BL), and the VD family quotient subsequently modelled in patch 29. Supported rules were
 added canton by canton (vendor patches 20–25; 26–27 fix BL reformed church tax and SO personal tax by Gemeinde; 28–30 complete VD). Patch 25 models the VD family deduction on declaration code 650:
 2026 indexed thresholds from the VD deduction table, with completed-tranche semantics from the VD 2025 instructions
 and corroborating anonymous 2026 ESTV captures (see vendor patch log and `tests/reference/vd-family-2026.json`).
@@ -72,8 +79,9 @@ GE left the quarantine once its 12 % cantonal reduction and 1 % home-care levy w
   official ESTV tax calculator (2026) is the reference. Rules are modelled from captured ESTV results
   (`tests/reference/estv-2026-probes/`) and must reproduce them within max(CHF 5, 0.1 %); no residual fitting
   of totals. Earlier-year documents may explain a mechanism but do not set 2026 amounts.
-- **VD and VS:** model them against that reference so the frozen gate can reach 29/29. They stay withheld
-  until a canton-wide check passes; today no VD/VS Gemeinde is within 30 minutes of a workplace.
+- **VD and VS (decision of 30 Oct, outcome as of 2 Nov):** both now match the frozen numeric reference;
+  VS has left quarantine after checks across its communes. VD remains withheld pending checks of Gemeinden
+  beyond Lausanne; matching the frozen reference alone never grants official approval.
 - **JU:** out of scope while no JU Gemeinde is reachable within the 30-minute cap. JU stays quarantined
   (fail-closed); the parish-rate representation is only needed if the cap or workplaces change.
 - **Walking from home to the first stop:** not measured, by decision. The site keeps stating that the
@@ -85,6 +93,9 @@ GE left the quarantine once its 12 % cantonal reduction and 1 % home-care levy w
 - Frequency trips and the feed's trip-pair transfer rules are modelled; the matrix is one reference day's
   first-board-to-arrival result, not a service-reliability claim.
 - VD Gemeinden beyond Lausanne (then lift the VD quarantine); broader profile coverage per Gemeinde.
+- Independent BAG premium spot checks beyond Zürich/2026/single/CHF 300 and an owner decision on the
+  default combined-cost ranking; current-residence comparisons are indicative, not net moving savings
+  (rent, commuting expenses, subsidies and out-of-pocket health costs are excluded).
 - Production host (Cloudflare per SPEC §3), Impressum details (O5), commercial map rights — deferred.
 
 ## History
